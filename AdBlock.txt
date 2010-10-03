@@ -1,0 +1,6 @@
+[Adblock Plus 1.1]
+! Sample blocklist
+.googleadservices.com
+|http://pagead2.googlesyndication.com/*
+||doubleclick.net^
+google-analytics.com*/

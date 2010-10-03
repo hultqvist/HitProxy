@@ -1,0 +1,49 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PersonalProxy", "PersonalProxy.csproj", "{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Debug|x86.ActiveCfg = Debug|x86
+		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Debug|x86.Build.0 = Debug|x86
+		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Release|x86.ActiveCfg = Release|x86
+		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = PersonalProxy.csproj
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = Hierarchical
+		$1.ResourceNamePolicy = FileFormatDefault
+		$0.TextStylePolicy = $2
+		$2.TabWidth = 4
+		$2.inheritsSet = Mono
+		$2.inheritsScope = text/plain
+		$2.scope = text/plain
+		$0.TextStylePolicy = $3
+		$3.inheritsSet = null
+		$3.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $4
+		$4.inheritsSet = Mono
+		$4.inheritsScope = text/x-csharp
+		$4.scope = text/x-csharp
+		$0.StandardHeader = $5
+		$5.Text = 
+		$5.inheritsSet = Apache2License
+		$0.VersionControlPolicy = $6
+		$6.inheritsSet = Mono
+		$0.ChangeLogPolicy = $7
+		$7.inheritsSet = Mono
+		$0.TextStylePolicy = $8
+		$8.inheritsSet = null
+		$8.scope = application/xml
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

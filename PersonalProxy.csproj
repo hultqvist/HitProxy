@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>PersonalProxy</RootNamespace>
+    <AssemblyName>PersonalProxy</AssemblyName>
+    <StartupObject>PersonalProxy.MainClass</StartupObject>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Main.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Proxy.cs" />
+    <Compile Include="ProxySession.cs" />
+    <Compile Include="ConnectProxy.cs" />
+    <Compile Include="BlockedResponse.cs" />
+    <Compile Include="Header.cs" />
+    <Compile Include="Request.cs" />
+    <Compile Include="Response.cs" />
+    <Compile Include="ErrorResponse.cs" />
+    <Compile Include="Filters\Filter.cs" />
+    <Compile Include="Filters\Password.cs" />
+    <Compile Include="Filters\ProxyHeaders.cs" />
+    <Compile Include="Filters\Referer.cs" />
+    <Compile Include="Filters\Rewrite.cs" />
+    <Compile Include="Filters\Tamper.cs" />
+    <Compile Include="Filters\TransparentSSL.cs" />
+    <Compile Include="Filters\WebUI.cs" />
+    <Compile Include="Filters\Joke.cs" />
+    <Compile Include="Filters\Cache.cs" />
+    <Compile Include="Filters\Cookies.cs" />
+    <Compile Include="Filters\CustomError.cs" />
+    <Compile Include="Filters\TriggerTrue.cs" />
+    <Compile Include="Filters\BlockBreak.cs" />
+    <Compile Include="Filters\NoScript.cs" />
+    <Compile Include="Filters\TriggerFalse.cs" />
+    <Compile Include="Filters\Trigger.cs" />
+    <Compile Include="Filters\Block.cs" />
+    <Compile Include="Filters\TriggerLunchBreak.cs" />
+    <Compile Include="ConnectionManager.cs" />
+    <Compile Include="CachedConnection.cs" />
+    <Compile Include="CachedServer.cs" />
+    <Compile Include="Filters\Slow.cs" />
+    <Compile Include="Filters\AdBlock.cs" />
+    <Compile Include="Filters\FilterList.cs" />
+    <Compile Include="Filters\FilterListAnd.cs" />
+    <Compile Include="Filters\FilterListFirst.cs" />
+    <Compile Include="Filters\FilterListOr.cs" />
+    <Compile Include="HttpProxy.cs" />
+    <Compile Include="SocketData.cs" />
+    <Compile Include="Filters\Command.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Filters\FilterListBlock.cs" />
+    <Compile Include="Filters\UserAgent.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <DotNetNamingPolicy DirectoryNamespaceAssociation="Hierarchical" ResourceNamePolicy="FileName" />
+        </Policies>
+        <Deployment.LinuxDeployData scriptName="privateproxy" />
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="Filters\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PersonalProxy.userprefs">
+      <Visible>False</Visible>
+    </None>
+  </ItemGroup>
+</Project>

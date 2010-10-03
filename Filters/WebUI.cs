@@ -14,6 +14,8 @@ namespace PersonalProxy.Filters
 	/// </summary>
 	public class WebUI : Filter
 	{
+		public static readonly string ConfigHost = "pp";
+
 		Proxy proxy;
 		ConnectionManager connectionManager;
 
@@ -25,7 +27,7 @@ namespace PersonalProxy.Filters
 
 		public override bool Apply (Request request)
 		{
-			if (request.Uri.IsAbsoluteUri == true && request.Uri.Host != "pp" && (request.Uri.Host == "localhost" && request.Uri.Port == proxy.Port) == false)
+			if (request.Uri.IsAbsoluteUri == true && request.Uri.Host != ConfigHost && (request.Uri.Host == "localhost" && request.Uri.Port == proxy.Port) == false)
 				return false;
 			
 			string[] path = request.Uri.AbsolutePath.Split ('/');
@@ -42,7 +44,8 @@ namespace PersonalProxy.Filters
 				request.Response = ConnectionPage (path, httpGet);
 				break;
 			case "Filter":
-				request.Response = FiltersPage (path, httpGet, request);
+				request.Response = new Response (HttpStatusCode.OK);
+				FiltersPage (path, httpGet, request);
 				break;
 			case "favicon.ico":
 				request.Response = new BlockedResponse ("No favicon");
@@ -53,8 +56,11 @@ namespace PersonalProxy.Filters
 			}
 			
 			if (httpGet.Count > 0) {
-				request.Response = new Response (HttpStatusCode.Found);
-				request.Response.Add ("Location: http://pp" + request.Uri.AbsolutePath);
+				if (request.Response.GetHeader ("Location") == null)
+				{
+					request.Response = new Response (HttpStatusCode.Found);
+					request.Response.SetHeader ("Location", "http://" + ConfigHost + request.Uri.AbsolutePath);
+				}
 			}
 			request.Response.KeepAlive = true;
 			
@@ -67,7 +73,7 @@ namespace PersonalProxy.Filters
 			
 			string data = "";
 			if (request.Uri.Host == "localhost")
-				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://pp/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
+				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://" + ConfigHost + "/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
 			
 			data = Template ("Hi", "", data);
 			response.SetData (data);
@@ -226,10 +232,18 @@ namespace PersonalProxy.Filters
 			return data;
 		}
 
-
-		private Response FiltersPage (string[] path, NameValueCollection httpGet, Request request)
+		static internal string FilterUrl ()
 		{
-			Response response = new Response (HttpStatusCode.OK);
+			return "http://" + ConfigHost + "/Filter/";
+		}
+		static internal string FilterUrl (Filter filter)
+		{
+			return FilterUrl () + filter.GetHashCode () + "/";
+		}
+
+		private void FiltersPage (string[] path, NameValueCollection httpGet, Request request)
+		{
+			Response response = request.Response;
 			string data = "";
 			
 			if (path.Length <= 2 || path[2] == "") {
@@ -249,25 +263,24 @@ namespace PersonalProxy.Filters
 				data += ListFilters (proxy.FilterResponse);
 				
 				data = Template ("Filters", "", data);
-			
+				
 			} else {
 				int filterCode = 0;
 				int.TryParse (path[2], out filterCode);
 				Filter f = FindFilter (proxy.FilterRequest, filterCode);
 				if (f == null)
 					f = FindFilter (proxy.FilterResponse, filterCode);
-				if (f == null)
-				{
+				if (f == null) {
 					response.HttpCode = HttpStatusCode.Found;
-					response.SetData ("<p>Filter not found.</p><p><a href=\"/Filter/\">back</a></p>");
-					response.Add ("Location: /Filter/");
-					return response;
+					response.SetData ("<p>Filter not found.</p><p><a href=\"" + FilterUrl () + "\">back</a></p>");
+					response.SetHeader ("Location", FilterUrl ());
+					return;
 				}
 				data = Template ("" + f, "", f.Status (httpGet, request));
 			}
 			
 			response.SetData (data);
-			return response;
+			return;
 		}
 
 		private void DeleteFilter (NameValueCollection keys)
@@ -337,11 +350,11 @@ namespace PersonalProxy.Filters
 
 		private string ListFilters (Filter filter)
 		{
-			string data = "<li><a href=\"/Filter/" + filter.GetHashCode () + "/\">" + filter + "</a>";
+			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter + "</a>";
 			
 			//Don't show delete on root filters
 			if (filter != proxy.FilterRequest && filter != proxy.FilterResponse)
-				data += " (<a href=\"/Filter?delete=" + filter.GetHashCode () + "\">delete</a>)";
+				data += " (<a href=\"" + FilterUrl () + "?delete=" + filter.GetHashCode () + "\">delete</a>)";
 			
 			FilterList list = filter as FilterList;
 			if (list != null) {
@@ -349,7 +362,7 @@ namespace PersonalProxy.Filters
 				foreach (Filter f in list.ToArray ())
 					data += ListFilters (f);
 				
-				data += "<li>" + "<form method=\"get\" action=\"/Filter/\">" + "<input type=\"hidden\" name=\"add\" value=\"" + list.GetHashCode () + "\" />" + "<input type=\"text\" name=\"type\" />" + "<input type=\"submit\" value=\"Add\" />" + "</form>" + "</li>";
+				data += "<li>" + "<form method=\"get\" action=\"" + FilterUrl () + "\">" + "<input type=\"hidden\" name=\"add\" value=\"" + list.GetHashCode () + "\" />" + "<input type=\"text\" name=\"type\" />" + "<input type=\"submit\" value=\"Add\" />" + "</form>" + "</li>";
 				
 				data += "</ul>";
 			}

@@ -105,7 +105,12 @@ namespace PersonalProxy.Filters
 				foreach (RefererPair pair in watchlist) {
 					if (pair.Match (requestPair)) {
 						if (pair.Filter == RefererFiltering.Block) {
-							httpRequest.Block ("Blocked thirdparty: " + requestPair + ", by: " + pair);
+							httpRequest.Block ("Blocked thirdparty", @"
+<h1 style=""text-align:center""><a href=""" + httpRequest.Uri + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
+<p>Blocked by: " + pair + @"
+<a href=""" + WebUI.FilterUrl (this) + "?delete=" + pair.GetHashCode () + "&amp;return=" + Uri.EscapeUriString(httpRequest.Uri.ToString())+"\">delete</a></p>");
+							httpRequest.Response.SetHeader ("Cache-Control", "no-cache, must-revalidate");
+							httpRequest.Response.SetHeader ("Pragma", "no-cache");
 							httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: " + pair);
 							return true;
 						}
@@ -141,7 +146,18 @@ namespace PersonalProxy.Filters
 			if (requestPair.FromHost == ".")
 				return false;
 			
-			httpRequest.Block ("Referer mismatch", "<p>" + Response.Html (requestPair.ToString ()) + "</p>" + "<p><strong>Continute to:</strong> <a href=\"" + httpRequest.Uri + "\" >" + httpRequest.Uri + "</a></p>");
+			httpRequest.Block ("Referer mismatch", @"<h1 style=""text-align:center""><a href=""" + Response.Html(httpRequest.Uri.ToString()) + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
+<form action=""" + WebUI.FilterUrl (this) + @""" method=""get"">
+	<input type=""hidden"" name=""return"" value=""" + Response.Html( httpRequest.Uri.ToString()) + @""" />
+	<input type=""text"" name=""from"" value=""" + Response.Html(requestPair.FromHost.ToString()) + @""" />
+	<input type=""text"" name=""to"" value=""" + Response.Html(requestPair.ToHost.ToString()) + @""" />
+	<input type=""submit"" name=""action"" value=""Pass"" />
+	<input type=""submit"" name=""action"" value=""Fake"" />
+	<input type=""submit"" name=""action"" value=""Remove"" />
+	<input type=""submit"" name=""action"" value=""Block"" />
+</form>");
+			httpRequest.Response.SetHeader ("Cache-Control", "no-cache, must-revalidate");
+			httpRequest.Response.SetHeader ("Pragma", "no-cache");
 			httpRequest.Response.HttpCode = HttpStatusCode.ServiceUnavailable;
 			httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: Unmatched");
 			
@@ -160,6 +176,10 @@ namespace PersonalProxy.Filters
 				<p>From: Empty = any but existing referer</p>
 				<p>From: . = no referer</p>";
 			
+			if (httpGet["return"] != null) {
+				request.Response.SetHeader ("Location", httpGet["return"]);
+				request.Response.HttpCode = HttpStatusCode.Redirect;
+			}
 			
 			if (httpGet["delete"] != null) {
 				int item = int.Parse (httpGet["delete"]);
@@ -195,8 +215,7 @@ namespace PersonalProxy.Filters
 					p.Filter = RefererFiltering.Remove;
 				if (httpGet["action"] == "Block")
 					p.Filter = RefererFiltering.Block;
-				
-				
+								
 				try {
 					listLock.EnterWriteLock ();
 					watchlist.Add (p);

@@ -6,6 +6,8 @@ namespace PersonalProxy
 {
 	class MainClass
 	{
+		public const int ProxyPort = 8080;
+		
 		public static void Main (string[] args)
 		{
 			//Prepare config folder
@@ -13,7 +15,7 @@ namespace PersonalProxy
 			Directory.CreateDirectory (configPath);
 			
 			ConnectionManager connectionManager = new ConnectionManager ();
-			Proxy proxy = new Proxy (8080, connectionManager);
+			Proxy proxy = new Proxy (ProxyPort, connectionManager);
 			System.Threading.Thread.CurrentThread.Name = "Main";
 			
 			//Setup default filters

@@ -76,13 +76,14 @@ namespace PersonalProxy.Filters
 				using (TextReader reader = new StreamReader (new FileStream (configPath, FileMode.Open, FileAccess.Read))) {
 					string pattern;
 					while ((pattern = reader.ReadLine ()) != null) {
-						string[] parts = pattern.Split (' ');
-						if (parts.Length != 2)
+						string[] parts = pattern.Split (new char[] {' '}, 3);
+						if (parts.Length != 3)
 							continue;
 						
 						UserAgentRule rule = new UserAgentRule ();
 						rule.Domain = parts[0];
-						rule.UserAgent = parts[1];
+						rule.Lang = parts[1];
+						rule.UserAgent = parts[2];
 						rule.Permanent = true;
 						if (rule.UserAgent.ToLowerInvariant () == "random") {
 							rule.Random = true;
@@ -110,7 +111,7 @@ namespace PersonalProxy.Filters
 					if (rule.Random)
 						writer.WriteLine (rule.Domain + " Random");
 					else
-						writer.WriteLine (rule.Domain + " " + rule.UserAgent);
+						writer.WriteLine (rule.Domain + " " + rule.Lang + " " + rule.UserAgent);
 				}
 			} finally {
 				listLock.ExitReadLock ();
@@ -124,19 +125,34 @@ namespace PersonalProxy.Filters
 				request.Response.Add ("X-PP-User-Agent: " + request.GetHeader ("User-Agent"));
 				return false;
 			}
-			request.ReplaceHeader ("Accept-Language", GetRandom (lang));
 			
 			try {
 				listLock.EnterReadLock ();
 				
 				if (staticAgent.ContainsKey (request.Uri.Host)) {
-					string agent = staticAgent[request.Uri.Host].UserAgent;
-					if (agent == "")
+					UserAgentRule r = staticAgent[request.Uri.Host];
+					
+					if (r.UserAgent == "")
 						request.RemoveHeader ("User-Agent");
-					else if (agent.ToLowerInvariant () != "pass")
-						request.ReplaceHeader ("User-Agent", staticAgent[request.Uri.Host].UserAgent);
+					else if (r.UserAgent.ToLowerInvariant () == "pass")
+						;
+					else if (r.UserAgent.ToLowerInvariant () == "random")
+						request.ReplaceHeader ("User-Agent", RandomUserAgent ());
+					else
+						request.ReplaceHeader ("User-Agent", r.UserAgent);
+					
+					if (r.Lang == "")
+						request.RemoveHeader ("Accept-Language");
+					else if (r.Lang.ToLowerInvariant () == "pass")
+						;
+					else if (r.Lang.ToLowerInvariant () == "random")
+						request.ReplaceHeader ("Accept-Language", GetRandom (lang));
+					else
+						request.ReplaceHeader ("Accept-Language", r.Lang);
+					
 				} else {
 					request.ReplaceHeader ("User-Agent", RandomUserAgent ());
+					request.ReplaceHeader ("Accept-Language", GetRandom (lang));
 				}
 			} finally {
 				listLock.TryExitReadLock ();
@@ -169,6 +185,7 @@ namespace PersonalProxy.Filters
 			if (httpGet["action"] != null) {
 				UserAgentRule r = new UserAgentRule ();
 				r.Domain = httpGet["domain"];
+				r.Lang = httpGet["lang"];
 				if (httpGet["action"] == "Permanent")
 					r.Permanent = true;
 				r.UserAgent = httpGet["agent"];
@@ -190,6 +207,7 @@ namespace PersonalProxy.Filters
 			
 			html += @"<form action=""?"" method=""get"">
 								<p><label for=""domain"">Domain</label>: <input type=""text"" name=""domain"" value="""" /></p>
+								<p><label for=""lang"">Language</label>: <input type=""text"" name=""lang"" value="""" /></p>
 								<p><label for=""agent"">User-Agent</label>: <input type=""text"" name=""agent"" value="""" />
 									""random"" = change every session.
 									""pass"" = pass through unmodified</p>
@@ -220,6 +238,10 @@ namespace PersonalProxy.Filters
 			/// </summary>
 			public string UserAgent;
 			/// <summary>
+			/// User-Agent language
+			/// </summary>
+			public string Lang;
+			/// <summary>
 			/// Generate new random User-Agent at startup
 			/// </summary>
 			public bool Random = false;
@@ -235,7 +257,7 @@ namespace PersonalProxy.Filters
 					name += "(random) ";
 				if (Permanent)
 					name += "(permanent) ";
-				return name + this.UserAgent;
+				return name + this.Lang + ": " + this.UserAgent;
 			}
 		}
 	}

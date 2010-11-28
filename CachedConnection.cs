@@ -16,7 +16,7 @@ namespace PersonalProxy
 		}
 		private bool busy = true;
 		public Socket remoteSocket;
-
+		
 		/// <summary>
 		/// Statistics: Number of requests served using this connection
 		/// </summary>

@@ -167,6 +167,7 @@ namespace PersonalProxy.Filters
 		public override string Status (NameValueCollection httpGet, Request request)
 		{
 			string html = @"
+			<div style=""float:right;"">
 				<ul>
 					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
 					<li><strong>Fake</strong> Change referer to the root of the target host</li>
@@ -174,7 +175,8 @@ namespace PersonalProxy.Filters
 					<li><strong>Block</strong> Block the entire request</li>
 				</ul>
 				<p>From: Empty = any but existing referer</p>
-				<p>From: . = no referer</p>";
+				<p>From: . = no referer</p>
+			</div>";
 			
 			if (httpGet["return"] != null) {
 				request.Response.SetHeader ("Location", httpGet["return"]);

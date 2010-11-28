@@ -69,7 +69,7 @@ namespace PersonalProxy
 		{
 			DataSocket = new SocketData (socket);
 			Method = "NULL";
-			Uri = new Uri ("http://localhost:8080");
+			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);
 		}
 		public override void Dispose ()
 		{

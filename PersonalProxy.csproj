@@ -81,6 +81,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="Filters\FilterListBlock.cs" />
     <Compile Include="Filters\UserAgent.cs" />
+    <Compile Include="Filters\DelaySlow.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -95,10 +96,5 @@
   </ProjectExtensions>
   <ItemGroup>
     <Folder Include="Filters\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PersonalProxy.userprefs">
-      <Visible>False</Visible>
-    </None>
   </ItemGroup>
 </Project>

@@ -81,11 +81,11 @@ namespace PersonalProxy
 			byte b;
 			
 			while (true) {
-				if (socket.Poll (60000000, SelectMode.SelectRead)) {
+				if (socket.Poll (120000000, SelectMode.SelectRead)) {
 					if (socket.Available == 0)
 						throw new HeaderException ("Connection closed", HttpStatusCode.BadGateway);
 				} else {
-					throw new HeaderException ("Timeout, 60s, without receiving any headers", HttpStatusCode.RequestTimeout);
+					throw new HeaderException ("Timeout, 120 s, without receiving any headers", HttpStatusCode.RequestTimeout);
 				}
 				int received = socket.Receive (header, index, 1, SocketFlags.None);
 				if (received != 1)

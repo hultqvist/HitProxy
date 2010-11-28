@@ -28,9 +28,9 @@ namespace PersonalProxy
 				
 				//Fix config urls
 				if (request.Uri == null)
-					request.Uri = new Uri ("http://localhost:" + 8080 + "/");
+					request.Uri = new Uri ("http://localhost:" + MainClass.ProxyPort + "/");
 				if (request.Uri.Scheme == "file")
-					request.Uri = new Uri ("http://localhost:" + 8080 + "/" + request.Uri.PathAndQuery);
+					request.Uri = new Uri ("http://localhost:" + MainClass.ProxyPort + "/" + request.Uri.PathAndQuery);
 				if (request.Uri.Host == "")
 					request.Uri = new Uri ("connect://" + request.Uri.OriginalString);
 			} catch (HeaderException e) {
@@ -46,7 +46,7 @@ namespace PersonalProxy
 		/// </summary>
 		public CachedConnection ConnectRequest (Request request, ConnectionManager connectionManager)
 		{
-			if (request.Uri.Host == "localhost") {
+			if (request.Uri.Host == "localhost" && request.Uri.Port == MainClass.ProxyPort) {
 				request.Block ("Loopback protection");
 				return null;
 			}

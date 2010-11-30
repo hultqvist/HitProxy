@@ -76,7 +76,7 @@ namespace PersonalProxy.Filters
 				using (TextReader reader = new StreamReader (new FileStream (configPath, FileMode.Open, FileAccess.Read))) {
 					string pattern;
 					while ((pattern = reader.ReadLine ()) != null) {
-						string[] parts = pattern.Split (new char[] {' '}, 3);
+						string[] parts = pattern.Split (new char[] { ' ' }, 3);
 						if (parts.Length != 3)
 							continue;
 						
@@ -133,21 +133,15 @@ namespace PersonalProxy.Filters
 					UserAgentRule r = staticAgent[request.Uri.Host];
 					
 					if (r.UserAgent == "")
-						request.RemoveHeader ("User-Agent");
-					else if (r.UserAgent.ToLowerInvariant () == "pass")
-						;
-					else if (r.UserAgent.ToLowerInvariant () == "random")
-						request.ReplaceHeader ("User-Agent", RandomUserAgent ());
-					else
+						request.RemoveHeader ("User-Agent"); else if (r.UserAgent.ToLowerInvariant () == "random")
+						request.ReplaceHeader ("User-Agent", RandomUserAgent ()); else if (r.UserAgent.ToLowerInvariant () != "pass")
 						request.ReplaceHeader ("User-Agent", r.UserAgent);
 					
 					if (r.Lang == "")
 						request.RemoveHeader ("Accept-Language");
-					else if (r.Lang.ToLowerInvariant () == "pass")
-						;
 					else if (r.Lang.ToLowerInvariant () == "random")
 						request.ReplaceHeader ("Accept-Language", GetRandom (lang));
-					else
+					else if (r.Lang.ToLowerInvariant () != "pass")
 						request.ReplaceHeader ("Accept-Language", r.Lang);
 					
 				} else {

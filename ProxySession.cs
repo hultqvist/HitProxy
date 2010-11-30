@@ -177,7 +177,7 @@ namespace PersonalProxy
 				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, "Remote connect failed, " + request + ", " + e.Message);
 			}
 			
-			//So far all responses are generated
+			//So far all responses are generated from errors
 			if (request.Response != null) {
 				Status = "Sending response";
 				request.Response.SendResponse (clientSocket);

@@ -35,6 +35,12 @@ namespace PersonalProxy
 		public string UserAgent;
 
 		/// <summary>
+		/// If set connection is made to this host rather than from Uri.
+		/// Used to pipe to http proxies
+		/// </summary>
+		public Uri Proxy;
+		
+		/// <summary>
 		/// Start time of request
 		/// </summary>
 		public DateTime Start = DateTime.Now;
@@ -49,7 +55,12 @@ namespace PersonalProxy
 		}
 
 		public override string FirstLine {
-			get { return Method + " " + Uri.PathAndQuery + " " + HttpVersion; }
+			get {
+				if (Proxy == null)
+					return Method + " " + Uri.PathAndQuery + " " + HttpVersion;
+				else
+					return Method + " " + Uri.AbsoluteUri + " " + HttpVersion;
+			}
 			set {
 				string[] parts = value.Split (' ');
 				if (parts.Length != 3)

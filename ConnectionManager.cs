@@ -43,15 +43,21 @@ namespace PersonalProxy
 		public CachedConnection Connect (Request request)
 		{
 			//DNS lookup caching
-			IPAddress[] dns = GetCachedDns (request.Uri.Host);
+			IPAddress[] dns;
+			if (request.Proxy == null)
+				dns = GetCachedDns (request.Uri.Host);
+			else
+				dns = GetCachedDns (request.Proxy.Host);
+			
 			if (dns == null) {
 				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, "Lookup of " + request.Uri.Host + " failed");
 				return null;
 			}
 			
-			CachedConnection connection = GetCachedConnection (dns, request.Uri.Port, true, true);
-			
-			return connection;
+			if (request.Proxy == null)
+				return GetCachedConnection (dns, request.Uri.Port, true, true);
+			else
+				return GetCachedConnection (dns, request.Proxy.Port, true, true);
 		}
 
 		/// <summary>

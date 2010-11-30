@@ -28,6 +28,7 @@ namespace PersonalProxy
 			list.Add (new Referer ());
 			list.Add (new UserAgent ());
 			list.Add (new ProxyHeaders ());
+			list.Add (new I2PProxy ());
 			//list.Add (new Tamper ("After filtering"));
 			
 			proxy.FilterRequest = list;

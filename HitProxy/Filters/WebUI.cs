@@ -14,7 +14,7 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class WebUI : Filter
 	{
-		public static readonly string ConfigHost = "pp";
+		public static readonly string ConfigHost = "hit";
 
 		Proxy proxy;
 		ConnectionManager connectionManager;

@@ -40,8 +40,8 @@ namespace HitProxy
 			
 			proxy.Start ();
 			
-			//System.Threading.Thread.Sleep(3000);
-			//System.Diagnostics.Process.Start("http://localhost:"+proxy.Port+"/");
+			System.Threading.Thread.Sleep(3000);
+			System.Diagnostics.Process.Start("http://localhost:"+proxy.Port+"/");
 			
 			proxy.Wait ();
 			proxy.Stop ();

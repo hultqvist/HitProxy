@@ -75,7 +75,7 @@ namespace HitProxy.Filters
 			if (request.Uri.Host == "localhost")
 				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://" + ConfigHost + "/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
 			
-			data = Template ("Hi", "", data);
+			data = Template ("HitProxy", "", data);
 			response.SetData (data);
 			return response;
 		}

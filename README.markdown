@@ -12,8 +12,9 @@ Available filters:
   * AdBlock - implementation of the popular filtering plugin for Firefox but here usable on all browsers such as Chrome
   * Custom 404 messages for all sites
   * Pass to another proxy: Now implemented to I2P proxy
-  * Block third party request - the heaviest ad- and privacy blocking functionality, but it does require advanced user interaction to make most pages work.
+  * Referer - Block third party request - the heaviest ad- and privacy blocking functionality, but it does require advanced user interaction to make most pages work.
   * UserAgent and Language - Randomized your UserAgent and Accept-Language headers for every request.
+  * Cookie - Basic third party and cross domain blocking, similar configuration as with Referer will come here.
 
 There are many more ideas not yet implemented.
 Have a look at HitProxy/Filters to get an idea.

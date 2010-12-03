@@ -165,7 +165,7 @@ namespace HitProxy.Filters
 		public override string Status (NameValueCollection httpGet, Request request)
 		{
 			string html = @"
-			<div style=""float:right;"">
+			<div style=""float:right; max-width: 40%;"">
 				<ul>
 					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
 					<li><strong>Fake</strong> Change referer to the root of the target host</li>

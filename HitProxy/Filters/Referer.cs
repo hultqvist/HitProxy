@@ -103,6 +103,7 @@ namespace HitProxy.Filters
 			try {
 				listLock.EnterReadLock ();
 				foreach (RefererPair pair in watchlist) {
+				
 					if (pair.Match (requestPair)) {
 						if (pair.Filter == RefererFiltering.Block) {
 							httpRequest.Block ("Blocked thirdparty", @"
@@ -128,9 +129,6 @@ namespace HitProxy.Filters
 				listLock.ExitReadLock ();
 			}
 			
-			if (requestPair.FromHost == "")
-				requestPair.FromHost = ".";
-			
 			try {
 				listLock.EnterUpgradeableReadLock ();
 				if (blocked.Contains (requestPair) == false) {
@@ -143,7 +141,7 @@ namespace HitProxy.Filters
 				listLock.ExitUpgradeableReadLock ();
 			}
 			
-			if (requestPair.FromHost == ".")
+			if (requestPair.FromHost == "")
 				return false;
 			
 			httpRequest.Block ("Referer mismatch", @"<h1 style=""text-align:center""><a href=""" + Response.Html(httpRequest.Uri.ToString()) + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
@@ -174,8 +172,8 @@ namespace HitProxy.Filters
 					<li><strong>Remove</strong> Remove the referer header</li>
 					<li><strong>Block</strong> Block the entire request</li>
 				</ul>
-				<p>From: Empty = any but existing referer</p>
-				<p>From: . = no referer</p>
+				<p>From/To: Wildcard(*) allowed in start only, applies to subdomains only</p>
+				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
 			</div>";
 			
 			if (httpGet["return"] != null) {
@@ -288,12 +286,28 @@ namespace HitProxy.Filters
 			this.ToHost = toHost;
 		}
 
-		public bool Match (RefererPair pair)
+		public bool Match (RefererPair requestPair)
 		{
-			if ((FromHost == "." && pair.FromHost == "") || pair.FromHost.EndsWith (FromHost)) {
-				if (pair.ToHost.EndsWith (ToHost))
+			if (MatchStrings (FromHost, requestPair.FromHost) == false)
+				return false;
+			if (MatchStrings (ToHost, requestPair.ToHost) == false)
+				return false;	
+			return true;
+		}
+		
+		/// <summary>
+		/// Matches match against pattern where pattern
+		/// can start with wildcard *
+		/// </summary>
+		bool MatchStrings (string pattern, string match)
+		{
+			if (pattern == "*")
+				return true;
+			if (pattern == match)
+				return true;
+			if (pattern.StartsWith ("*"))
+				if (("." + match).EndsWith ("." + pattern.Substring (1)))
 					return true;
-			}
 			return false;
 		}
 

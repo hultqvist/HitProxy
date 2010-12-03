@@ -249,7 +249,7 @@ namespace HitProxy.Filters
 				if (pattern.Trim () == "")
 					return new RegexFilter ("", FilterType.Comment, "", "");
 				//Comments
-				if (pattern.StartsWith ("!") || pattern.StartsWith("["))
+				if (pattern.StartsWith ("!") || pattern.StartsWith ("["))
 					return new RegexFilter (pattern, FilterType.Comment, "", "");
 				//Whitelist, not implemented
 				if (pattern.StartsWith ("@@"))
@@ -261,7 +261,7 @@ namespace HitProxy.Filters
 				if (pattern.EndsWith ("$third-party"))
 					return new RegexFilter (pattern, FilterType.NotImplemented, "", "");
 				
-				string regex = pattern.Trim();
+				string regex = pattern.Trim ();
 				
 				//Beginning of
 				if (pattern.StartsWith ("|")) {
@@ -286,11 +286,14 @@ namespace HitProxy.Filters
 				//Wildcard to RegEx
 				regex = Regex.Escape (regex);
 				regex = regex.Replace ("\\*", ".*").Replace ("\\?", ".");
-				if (regex.StartsWith (".*") == false)
+				if (regex.StartsWith (".*"))
+					regex = regex.Substring (2);
+				else
 					regex = "^" + regex;
-				if (regex.EndsWith (".*") == false)
+				if (regex.EndsWith (".*"))
+					regex = regex.Substring (0, regex.Length - 2);
+				else
 					regex = regex + "$";
-				regex = regex.Trim ('*');
 				
 				return new RegexFilter (pattern, FilterType.Block, regex, wildcard);
 			}

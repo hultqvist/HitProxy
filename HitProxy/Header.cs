@@ -106,6 +106,22 @@ namespace HitProxy
 			return null;
 		}
 
+		public List<string> GetHeaderList (string key)
+		{
+			List<string> headers = new List<string> ();
+			
+			key = key.ToLowerInvariant () + ":";
+			
+			foreach (string header in this) {
+				if (header.ToLowerInvariant ().StartsWith (key))
+				{
+					headers.Add (header.Split (new char[] { ':' }, 2)[1].Trim ());
+				}
+			}
+			
+			return headers;
+		}
+
 		/// <summary>
 		/// Replace and/or add a header
 		/// null if key is missing
@@ -113,6 +129,11 @@ namespace HitProxy
 		public void SetHeader (string key, string value)
 		{
 			RemoveHeader (key);
+			Add (key + ": " + value);
+		}
+		
+		public void AddHeader (string key, string value)
+		{
 			Add (key + ": " + value);
 		}
 	}

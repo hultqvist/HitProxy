@@ -26,11 +26,6 @@ namespace HitProxy.Filters
 				return false;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[ProxyHeaders]");
-		}
-
 		public override string Status ()
 		{
 			return "Transform Proxy headers to http headers.";

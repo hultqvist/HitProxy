@@ -266,11 +266,6 @@ namespace HitProxy.Filters
 			
 			return html;
 		}
-
-		public override string ToString ()
-		{
-			return string.Format ("[Referer]");
-		}
 	}
 
 	public enum RefererFiltering

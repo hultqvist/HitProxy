@@ -18,11 +18,6 @@ namespace HitProxy.Filters
 			return false;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[FilterListOr]");
-		}
-
 		public override string Status ()
 		{
 			return "Apply filters in order, stop at first filter triggered";

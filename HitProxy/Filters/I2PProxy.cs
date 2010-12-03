@@ -24,11 +24,6 @@ namespace HitProxy.Filters
 			return @"This filter intercepts all requests to domains ending in .i2p
 and pass them to a local running i2p http proxy.";
 		}
-		
-		public override string ToString ()
-		{
-			return string.Format ("I2P Proxy");
-		}
 	}
 }
 

@@ -38,11 +38,6 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[CustomError]");
-		}
-
 		public override string Status ()
 		{
 			return "Replaces <em>\"404 - file not found\"</em> error pages with a custom one.";

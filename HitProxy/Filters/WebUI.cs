@@ -376,11 +376,6 @@ namespace HitProxy.Filters
 			return "<!DOCTYPE html>" + "<html>" + "<head>" + "<title>" + Response.Html (title) + " - HitProxy</title>" + header + "<style>" + ".menu li {list-style-type: none; display: inline; margin: 1em;} " + "p, h2,h3,h4 {margin: 2pt;}" + "</style>" + "</head>" + "<body>" + "<ul class=\"menu\">" + "<li><a href=\"/\">About</a></li>" + "<li><a href=\"/Session\">Session</a></li>" + "<li><a href=\"/Connection\">Connection</a></li>" + "<li><a href=\"/Filter\">Filters</a></li>" + "<li><a href=\"/status\"></a></li>" + "</ul>" + "<h1>" + Response.Html (title) + "</h1>" + contents + "</body></html>";
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[WebUI]");
-		}
-
 		public override string Status ()
 		{
 			return "Web based user interface, If you can read this, the filter is working.";

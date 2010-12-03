@@ -24,11 +24,6 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[FilterListFirst]");
-		}
-
 		public override string Status ()
 		{
 			return "If the first filter triggers, all remaining will be applied.";

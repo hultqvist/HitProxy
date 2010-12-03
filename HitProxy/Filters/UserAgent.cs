@@ -154,11 +154,6 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[UserAgent]");
-		}
-
 		public override string Status (NameValueCollection httpGet, Request request)
 		{
 			string html = "<p>Replaces the User-Agent and Accept-Language headers with random ones</p>";

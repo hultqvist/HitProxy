@@ -40,9 +40,9 @@ namespace HitProxy.Filters
 		public override string ToString ()
 		{
 			if (name.Length > 0)
-				return string.Format ("[Tamper " + name + "]");
+				return "Tamper: " + name;
 			else
-				return string.Format ("[Tamper]");
+				return "Tamper";
 		}
 
 		public override string Status ()

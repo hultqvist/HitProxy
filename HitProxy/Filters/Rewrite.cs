@@ -18,10 +18,5 @@ namespace HitProxy.Filters
 			return false;
 			//throw new System.NotImplementedException ();
 		}
-		
-		public override string ToString ()
-		{
-			return "[Rewrite]";
-		}
 	}
 }

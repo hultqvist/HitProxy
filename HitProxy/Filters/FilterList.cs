@@ -54,11 +54,6 @@ namespace HitProxy.Filters
 			return filtered;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[FilterList]");
-		}
-
 		public override string Status ()
 		{
 			return "A list of filters that will be applied in order.";

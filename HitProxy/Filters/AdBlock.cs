@@ -139,11 +139,6 @@ namespace HitProxy.Filters
 			return false;
 		}
 
-		public override string ToString ()
-		{
-			return string.Format ("[AdBlock]");
-		}
-
 		public override string Status (NameValueCollection httpGet, Request request)
 		{
 			string html = "";

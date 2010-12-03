@@ -26,10 +26,15 @@ namespace HitProxy.Filters
 		{
 			return "No status for filter";
 		}
-		
+
 		protected static string ConfigPath (string filterName)
 		{
 			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filterName + ".txt");
+		}
+		
+		public override string ToString ()
+		{
+			return GetType().Name;
 		}
 	}
 

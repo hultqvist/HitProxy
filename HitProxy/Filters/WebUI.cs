@@ -15,7 +15,8 @@ namespace HitProxy.Filters
 	public class WebUI : Filter
 	{
 		public static readonly string ConfigHost = "hit";
-
+		public static WebUI webUI;
+		
 		Proxy proxy;
 		ConnectionManager connectionManager;
 
@@ -23,6 +24,10 @@ namespace HitProxy.Filters
 		{
 			this.proxy = proxy;
 			this.connectionManager = connectionManager;
+			
+			if (webUI != null)
+				throw new InvalidOperationException ("There can only be one WebUI");
+			webUI = this;
 		}
 
 		public override bool Apply (Request request)
@@ -56,8 +61,7 @@ namespace HitProxy.Filters
 			}
 			
 			if (httpGet.Count > 0) {
-				if (request.Response.GetHeader ("Location") == null)
-				{
+				if (request.Response.GetHeader ("Location") == null) {
 					request.Response = new Response (HttpStatusCode.Found);
 					request.Response.SetHeader ("Location", "http://" + ConfigHost + request.Uri.AbsolutePath);
 				}
@@ -236,9 +240,20 @@ namespace HitProxy.Filters
 		{
 			return "http://" + ConfigHost + "/Filter/";
 		}
-		static internal string FilterUrl (Filter filter)
+		internal static string FilterUrl(Filter filter)
 		{
-			return FilterUrl () + filter.GetHashCode () + "/";
+			Filter f = filter;
+			string path = "";
+			while(f.Parent != null)
+			{
+				path = f.GetType().Name + "/" + path;
+				f = f.Parent;
+			}
+			if (webUI.proxy.FilterRequest == f)
+				path = "Request/" + path;
+			if (webUI.proxy.FilterResponse == f)
+				path = "Response/" + path;
+			return FilterUrl () + path;
 		}
 
 		private void FiltersPage (string[] path, NameValueCollection httpGet, Request request)
@@ -246,7 +261,7 @@ namespace HitProxy.Filters
 			Response response = request.Response;
 			string data = "";
 			
-			if (path.Length <= 2 || path[2] == "") {
+			if (path.Length <= 3 || path[3] == "") {
 				//Add and remove commands
 				try {
 					AddFilter (httpGet);
@@ -265,11 +280,13 @@ namespace HitProxy.Filters
 				data = Template ("Filters", "", data);
 				
 			} else {
-				int filterCode = 0;
-				int.TryParse (path[2], out filterCode);
-				Filter f = FindFilter (proxy.FilterRequest, filterCode);
-				if (f == null)
-					f = FindFilter (proxy.FilterResponse, filterCode);
+				Filter f;
+				if (path[2].ToLowerInvariant () == "request")
+					f = FindFilter (proxy.FilterRequest, path, 3);
+				else
+					//Response
+					f = FindFilter (proxy.FilterResponse, path, 3);
+				
 				if (f == null) {
 					response.HttpCode = HttpStatusCode.Found;
 					response.SetData ("<p>Filter not found.</p><p><a href=\"" + FilterUrl () + "\">back</a></p>");
@@ -311,18 +328,38 @@ namespace HitProxy.Filters
 			}
 		}
 
-		Filter FindFilter (Filter filter, int needle)
+		Filter FindFilter (Filter filter, string[] path, int index)
 		{
-			if (filter.GetHashCode () == needle)
+			if (index > path.Length)
 				return filter;
 			
 			FilterList list = filter as FilterList;
-			if (list != null) {
-				foreach (Filter f in list.ToArray ()) {
-					Filter test = FindFilter (f, needle);
-					if (test != null)
-						return test;
-				}
+			if (list == null)
+				return null;
+			
+			foreach (Filter f in list.ToArray ()) {
+				if (path[index] == f.GetType ().Name)
+					return f;
+				Filter test = FindFilter (f, path, index + 1);
+				if (test != null)
+					return test;
+			}
+			return null;
+		}
+
+		Filter FindFilter (Filter filter, int id)
+		{
+			if (filter.GetHashCode() == id)
+				return filter;
+			
+			FilterList list = filter as FilterList;
+			if (list == null)
+				return null;
+			
+			foreach (Filter f in list.ToArray ()) {
+				Filter test = FindFilter (f, id);
+				if (test != null)
+					return test;
 			}
 			return null;
 		}

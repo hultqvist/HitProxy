@@ -18,6 +18,7 @@ namespace HitProxy.Filters
 			try {
 				listLock.EnterWriteLock ();
 				List.Add (filter);
+				filter.Parent = this;
 			}
 			finally {
 				listLock.TryExitWriteLock ();
@@ -29,6 +30,7 @@ namespace HitProxy.Filters
 			try {
 				listLock.EnterWriteLock ();
 				List.Remove (filter);
+				filter.Parent = null;
 			} finally {
 				listLock.TryExitWriteLock ();
 			}

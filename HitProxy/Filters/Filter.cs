@@ -10,6 +10,8 @@ namespace HitProxy.Filters
 	/// </summary>
 	public abstract class Filter
 	{
+		public Filter Parent { get; set; }
+
 		/// <summary>
 		/// Can be used to filter both requests and responses
 		/// For response filtering the request.Response is set

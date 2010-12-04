@@ -31,10 +31,10 @@ To learn by experience about the http protocol.
 
 Unless incredible stupid or extremely dangerous, all patches/pull requests are gladly accepted.
 
-# Contact
+# Contact/Feedback/Bugs
 
 You can reach me at phq@endnode.se
 
 # Licence
 
-All code is licensed under GPLv3, see LICENSE for details.
+All code is licensed under GPLv3, see COPYING.Gplv3 for details.

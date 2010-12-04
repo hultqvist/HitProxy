@@ -4,5 +4,3 @@ bin/
 *.pidb
 *.suo
 obj/
-.hg/
-.hgignore

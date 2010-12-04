@@ -1,6 +1,7 @@
 # HitProxy
 
 Http Proxy with programmable filters.
+
 https://github.com/hultqvist/HitProxy
 
 Ideas of a filter can easily be programmed and added within five minutes.
@@ -27,13 +28,13 @@ To build a working platform upon new ideas of handling http requests easily can 
 
 To learn by experience about the http protocol.
 
-# Contributions
+# Contact, FeedBack/Bugs, Contrubutions
 
-Unless incredible stupid or extremely dangerous, all patches/pull requests are gladly accepted.
+You can reach me at phq@endnode.se.
 
-# Contact/Feedback/Bugs
+Public Bugs/Feedback can be sent via https://github.com/hultqvist/HitProxy/issues
 
-You can reach me at phq@endnode.se
+Code contributions are sent via email or pull requests on github.
 
 # Licence
 

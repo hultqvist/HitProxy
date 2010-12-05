@@ -19,6 +19,11 @@ namespace HitProxy.Filters
 			}
 			return filtered;
 		}
+		
+		public override string Status ()
+		{
+			return base.Status () + "<p>Will stop at first filter that block the request.</p>";
+		}
 	}
 }
 

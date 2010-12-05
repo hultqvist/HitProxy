@@ -58,7 +58,7 @@ namespace HitProxy.Filters
 
 		public override string Status ()
 		{
-			return "A list of filters that will be applied in order.";
+			return "<p>A list of filters that will be applied in order.</p>";
 		}
 	}
 }

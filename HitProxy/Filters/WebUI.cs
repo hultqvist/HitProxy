@@ -278,7 +278,7 @@ namespace HitProxy.Filters
 			Response response = request.Response;
 			string data = "";
 			
-			if (path.Length <= 3 || path[3] == "") {
+			if (path.Length < 3 || path[2] == "") {
 				//Add and remove commands
 				try {
 					AddFilter (httpGet);
@@ -295,7 +295,7 @@ namespace HitProxy.Filters
 				data += ListFilters (proxy.FilterResponse);
 				
 				Template (response, "Filters", data);
-			
+				
 			} else {
 				Filter f;
 				if (path[2].ToLowerInvariant () == "request")
@@ -348,7 +348,7 @@ namespace HitProxy.Filters
 
 		Filter FindFilter (Filter filter, string[] path, int index)
 		{
-			if (index > path.Length)
+			if (index > path.Length || path[index] == "")
 				return filter;
 			
 			FilterList list = filter as FilterList;
@@ -405,7 +405,7 @@ namespace HitProxy.Filters
 
 		private string ListFilters (Filter filter)
 		{
-			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter.GetType().Name + "</a>";
+			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter.GetType ().Name + "</a>";
 			
 			//Don't show delete on root filters
 			if (filter != proxy.FilterRequest && filter != proxy.FilterResponse)

@@ -5,6 +5,7 @@ using System.Web;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
+using System.Reflection;
 
 namespace HitProxy.Filters
 {
@@ -57,9 +58,10 @@ namespace HitProxy.Filters
 				request.Response = new Response (HttpStatusCode.OK);
 				string data = "";
 				string configPath = ConfigPath ("style.css");
+				if (File.Exists (configPath) == false)
+					configPath = Path.Combine (Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location), "style.css");
 				if (File.Exists (configPath))
-					data = File.ReadAllText (configPath); else if (File.Exists ("style.css"))
-					data = File.ReadAllText ("style.css");
+					data = File.ReadAllText (configPath);
 				request.Response.SetData (data);
 				request.Response.ReplaceHeader ("Content-Type", "text/css");
 				break;

@@ -11,8 +11,8 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class Cookies : Filter
 	{
-		static List<CookieRequest> cookieJar = new List<CookieRequest> ();
-		static List<CookieRequest> blockedJar = new List<CookieRequest> ();
+		static List<CookieHeader> cookieJar = new List<CookieHeader> ();
+		static List<CookieHeader> blockedJar = new List<CookieHeader> ();
 
 		public Cookies ()
 		{
@@ -25,12 +25,12 @@ namespace HitProxy.Filters
 				head = request.Response;
 			
 			List<string> cookieHeader;
-			List<CookieRequest> cookies;
+			List<CookieHeader> cookies;
 			
 			//Parse set-cookie
 			cookieHeader = head.GetHeaderList ("Set-Cookie");
 			cookies = ParseHeader (request.Uri.Host, cookieHeader);
-			foreach (CookieRequest cr in cookies)
+			foreach (CookieHeader cr in cookies)
 				cookieJar.Add (cr);
 			
 			//Filter set-cookie
@@ -38,13 +38,13 @@ namespace HitProxy.Filters
 			
 			//Replace set-cookie
 			head.RemoveHeader ("Se-Cookie");
-			foreach (CookieRequest cr in cookies)
+			foreach (CookieHeader cr in cookies)
 				head.AddHeader ("Set-Cookie", GenerateHeader (cr));
 			
 			//Parse cookie
 			cookieHeader = head.GetHeaderList ("Cookie");
 			cookies = ParseHeader (request.Uri.Host, cookieHeader);
-			foreach (CookieRequest cr in cookies)
+			foreach (CookieHeader cr in cookies)
 				cookieJar.Add (cr);
 			
 			//Filter cookie
@@ -52,14 +52,14 @@ namespace HitProxy.Filters
 			
 			//Replace cookie
 			head.RemoveHeader ("Cookie");
-			foreach (CookieRequest cr in cookies)
+			foreach (CookieHeader cr in cookies)
 				head.AddHeader ("Cookie", GenerateHeader (cr));
 			return true;
 		}
 
-		void FilterCookie (Request request, List<CookieRequest> list)
+		void FilterCookie (Request request, List<CookieHeader> list)
 		{
-			foreach (CookieRequest cr in list.ToArray ()) {
+			foreach (CookieHeader cr in list.ToArray ()) {
 				//Block third party cookies
 				if (cr.ContainsKey ("domain") && (("." + request.Uri.Host).EndsWith (cr["domain"]) == false)) {
 					list.Remove (cr);
@@ -77,29 +77,42 @@ namespace HitProxy.Filters
 			}
 		}
 
-		static internal List<CookieRequest> ParseHeader (string host, List<string> headerList)
+		static internal List<CookieHeader> ParseHeader (string host, List<string> headerList)
 		{
-			List<CookieRequest> cookies = new List<CookieRequest> ();
+			List<CookieHeader> cookies = new List<CookieHeader> ();
 			
 			foreach (string header in headerList) {
-				CookieRequest request = new CookieRequest (host);
+				CookieHeader request = new CookieHeader (host);
 				
 				string[] parts = header.Trim ().Split (';');
 				
 				foreach (string part in parts) {
 					string p = part.Trim ();
 					string[] keyVal = p.Split (new char[] { '=' }, 2);
-					if (keyVal.Length == 2)
-						request.Add (keyVal[0], keyVal[1]);
-					else
-						request.Add (keyVal[0], "");
+					try {
+						if (keyVal.Length == 2)
+							request.Add (keyVal[0], keyVal[1]);
+						else
+							request.Add (keyVal[0], "");
+					}
+					catch (ArgumentException ae)
+					{
+						//Ignore duplicates if values are the same
+						if (keyVal.Length == 2 && request[keyVal[0]] == keyVal[1])
+							continue;
+						
+						throw new ArgumentException (
+							string.Format ("Duplicate cookie: key={0}, header={1}",
+								keyVal[0], header),
+							keyVal[0], ae);
+					}
 				}
 				cookies.Add (request);
 			}
 			return cookies;
 		}
 
-		string GenerateHeader (CookieRequest request)
+		string GenerateHeader (CookieHeader request)
 		{
 			if (request == null)
 				return null;
@@ -117,20 +130,20 @@ namespace HitProxy.Filters
 		public override string Status ()
 		{
 			string html = "<h1>Blocked</h1>";
-			foreach (CookieRequest request in blockedJar)
+			foreach (CookieHeader request in blockedJar)
 				html += "<p>" + request.ToString () + "</p>";
 			html += "<h1>All</h1>";
-			foreach (CookieRequest request in cookieJar)
+			foreach (CookieHeader request in cookieJar)
 				html += "<p>" + request.ToString () + "</p>";
 			return html;
 		}
 	}
 
-	internal class CookieRequest : Dictionary<string, string>
+	internal class CookieHeader : Dictionary<string, string>
 	{
 		public string Host;
 		
-		public CookieRequest (string host) : base(StringComparer.OrdinalIgnoreCase)
+		public CookieHeader (string host) : base(StringComparer.OrdinalIgnoreCase)
 		{
 			this.Host = host;
 		}

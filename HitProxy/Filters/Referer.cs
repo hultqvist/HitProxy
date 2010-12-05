@@ -103,13 +103,13 @@ namespace HitProxy.Filters
 			try {
 				listLock.EnterReadLock ();
 				foreach (RefererPair pair in watchlist) {
-				
+					
 					if (pair.Match (requestPair)) {
 						if (pair.Filter == RefererFiltering.Block) {
 							httpRequest.Block ("Blocked thirdparty", @"
 <h1 style=""text-align:center""><a href=""" + httpRequest.Uri + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
 <p>Blocked by: " + pair + @"
-<a href=""" + WebUI.FilterUrl (this) + "?delete=" + pair.GetHashCode () + "&amp;return=" + Uri.EscapeUriString(httpRequest.Uri.ToString())+"\">delete</a></p>");
+<a href=""" + WebUI.FilterUrl (this) + "?delete=" + pair.GetHashCode () + "&amp;return=" + Uri.EscapeUriString (httpRequest.Uri.ToString ()) + "\">delete</a></p>");
 							httpRequest.Response.ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
 							httpRequest.Response.ReplaceHeader ("Pragma", "no-cache");
 							httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: " + pair);
@@ -144,11 +144,11 @@ namespace HitProxy.Filters
 			if (requestPair.FromHost == "")
 				return false;
 			
-			httpRequest.Block ("Referer mismatch", @"<h1 style=""text-align:center""><a href=""" + Response.Html(httpRequest.Uri.ToString()) + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
+			httpRequest.Block ("Referer mismatch", @"<h1 style=""text-align:center""><a href=""" + Response.Html (httpRequest.Uri.ToString ()) + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
 <form action=""" + WebUI.FilterUrl (this) + @""" method=""get"">
-	<input type=""hidden"" name=""return"" value=""" + Response.Html( httpRequest.Uri.ToString()) + @""" />
-	<input type=""text"" name=""from"" value=""" + Response.Html(requestPair.FromHost.ToString()) + @""" />
-	<input type=""text"" name=""to"" value=""" + Response.Html(requestPair.ToHost.ToString()) + @""" />
+	<input type=""hidden"" name=""return"" value=""" + Response.Html (httpRequest.Uri.ToString ()) + @""" />
+	<input type=""text"" name=""from"" value=""" + Response.Html (requestPair.FromHost.ToString ()) + @""" />
+	<input type=""text"" name=""to"" value=""" + Response.Html (requestPair.ToHost.ToString ()) + @""" />
 	<input type=""submit"" name=""action"" value=""Pass"" />
 	<input type=""submit"" name=""action"" value=""Fake"" />
 	<input type=""submit"" name=""action"" value=""Remove"" />
@@ -215,7 +215,7 @@ namespace HitProxy.Filters
 					p.Filter = RefererFiltering.Remove;
 				if (httpGet["action"] == "Block")
 					p.Filter = RefererFiltering.Block;
-								
+				
 				try {
 					listLock.EnterWriteLock ();
 					watchlist.Add (p);
@@ -291,10 +291,10 @@ namespace HitProxy.Filters
 			if (MatchStrings (FromHost, requestPair.FromHost) == false)
 				return false;
 			if (MatchStrings (ToHost, requestPair.ToHost) == false)
-				return false;	
+				return false;
 			return true;
 		}
-		
+
 		/// <summary>
 		/// Matches match against pattern where pattern
 		/// can start with wildcard *
@@ -305,9 +305,13 @@ namespace HitProxy.Filters
 				return true;
 			if (pattern == match)
 				return true;
-			if (pattern.StartsWith ("*"))
-				if (("." + match).EndsWith ("." + pattern.Substring (1)))
+			if (pattern.StartsWith ("*")) {
+				if (pattern.StartsWith ("*.")) {
+					if ((match).EndsWith (pattern.Substring (1)))
+						return true;
+				} else if (("." + match).EndsWith ("." + pattern.Substring (1)))
 					return true;
+			}
 			return false;
 		}
 

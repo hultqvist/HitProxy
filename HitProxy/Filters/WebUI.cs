@@ -297,14 +297,22 @@ namespace HitProxy.Filters
 				data += ListFilters (proxy.FilterResponse);
 				
 				Template (response, "Filters", data);
-				
+			
 			} else {
 				Filter f;
 				if (path[2].ToLowerInvariant () == "request")
+				{
 					f = FindFilter (proxy.FilterRequest, path, 3);
+					if (f == null)
+						f = proxy.FilterRequest;
+				}
 				else
+				{
 					//Response
 					f = FindFilter (proxy.FilterResponse, path, 3);
+					if (f == null)
+						f = proxy.FilterResponse;
+				}
 				
 				if (f == null) {
 					response.HttpCode = HttpStatusCode.Found;
@@ -351,18 +359,21 @@ namespace HitProxy.Filters
 		Filter FindFilter (Filter filter, string[] path, int index)
 		{
 			if (index > path.Length || path[index] == "")
-				return filter;
+				return null;
 			
 			FilterList list = filter as FilterList;
 			if (list == null)
 				return null;
 			
+			Filter match = null;
 			foreach (Filter f in list.ToArray ()) {
 				if (path[index] == f.GetType ().Name)
-					return f;
+					match = f;
 				Filter test = FindFilter (f, path, index + 1);
 				if (test != null)
 					return test;
+				if (match != null)
+					return match;
 			}
 			return null;
 		}

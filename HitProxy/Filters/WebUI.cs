@@ -295,7 +295,7 @@ namespace HitProxy.Filters
 				data += ListFilters (proxy.FilterResponse);
 				
 				Template (response, "Filters", data);
-				
+			
 			} else {
 				Filter f;
 				if (path[2].ToLowerInvariant () == "request")
@@ -405,7 +405,7 @@ namespace HitProxy.Filters
 
 		private string ListFilters (Filter filter)
 		{
-			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter + "</a>";
+			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter.GetType().Name + "</a>";
 			
 			//Don't show delete on root filters
 			if (filter != proxy.FilterRequest && filter != proxy.FilterResponse)

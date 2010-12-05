@@ -84,8 +84,7 @@ namespace HitProxy
 				return true;
 			}
 			
-			if (active == false && watchdogTimeout.Ticks == 0 && clientSocket.IsConnected () == false)
-			{
+			if (active == false && watchdogTimeout.Ticks == 0 && clientSocket.IsConnected () == false) {
 				Console.Error.WriteLine ("Watchdog: Countdown " + this);
 				watchdogTimeout = DateTime.Now.AddSeconds (10);
 			}
@@ -149,7 +148,11 @@ namespace HitProxy
 			Status = "Got request, filtering";
 			
 			//Filter Request
-			proxy.FilterRequest.Apply (request);
+			try {
+				proxy.FilterRequest.Apply (request);
+			} catch (Exception e) {
+				request.Response = FilterException (e);
+			}
 			
 			//Send filter generated responses
 			if (request.Response != null) {
@@ -204,7 +207,11 @@ namespace HitProxy
 					
 					//Filter Response
 					Status = "Filtering response";
-					proxy.FilterResponse.Apply (request);
+					try {
+						proxy.FilterResponse.Apply (request);
+					} catch (Exception e) {
+						request.Response = FilterException (e);
+					}
 					
 					//Send response
 					sentResponse = true;
@@ -269,6 +276,17 @@ namespace HitProxy
 				return false;
 			}
 			return true;
+		}
+
+		private Response FilterException (Exception e)
+		{
+			Response response = new Response (HttpStatusCode.InternalServerError);
+			response.Template ("Filter Error", string.Format (@"
+<h2>{0}, {2}</h2>
+<p>{1}</p>
+<pre>{3}</pre>
+<p><a href=""{4}"">Manage filters</a></p>", e.GetType ().Name, e.Message, e.Source, e.StackTrace, Filters.WebUI.FilterUrl ()));			
+			return response;
 		}
 
 		private bool GotNewRequest (Socket client)

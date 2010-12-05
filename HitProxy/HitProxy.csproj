@@ -82,6 +82,7 @@
     <Compile Include="Filters\UserAgent.cs" />
     <Compile Include="Filters\DelaySlow.cs" />
     <Compile Include="Filters\I2PProxy.cs" />
+    <Compile Include="Filters\Broken.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

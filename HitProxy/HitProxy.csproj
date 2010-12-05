@@ -46,7 +46,6 @@
     <Compile Include="Header.cs" />
     <Compile Include="Request.cs" />
     <Compile Include="Response.cs" />
-    <Compile Include="ErrorResponse.cs" />
     <Compile Include="Filters\Filter.cs" />
     <Compile Include="Filters\Password.cs" />
     <Compile Include="Filters\ProxyHeaders.cs" />
@@ -97,5 +96,10 @@
   </ProjectExtensions>
   <ItemGroup>
     <Folder Include="Filters\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="style.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

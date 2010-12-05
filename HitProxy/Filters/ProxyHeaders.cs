@@ -16,9 +16,9 @@ namespace HitProxy.Filters
 			string connection = request.GetHeader ("Proxy-Connection");
 			request.RemoveHeader ("Proxy-Connection");
 			if (connection == null)
-				request.SetHeader ("Connection", "close");
+				request.ReplaceHeader ("Connection", "close");
 			else
-				request.SetHeader ("Connection", connection);
+				request.ReplaceHeader ("Connection", connection);
 			
 			if (headers != request.Count)
 				return true;

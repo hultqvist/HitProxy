@@ -24,17 +24,9 @@ namespace HitProxy.Filters
 				return false;
 			
 			request.Response = new Response (HttpStatusCode.NotFound);
-			request.Response.SetData (@"<!DOCTYPE html>
-<html>
-<head>
-	<title>NotFound</title>
-</header>
-<body>
-	<h1>Hmm, that page wasn't really there was it?</h1>
-	<p>This is a custom error page from HitProxy.</p>
-</body>
-</html>");
-			
+			request.Response.Template("Not Found", @"
+<h1>Hmm, that page wasn't really there was it?</h1>
+<p>This is a custom error page from HitProxy.</p>");
 			return true;
 		}
 

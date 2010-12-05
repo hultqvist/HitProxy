@@ -81,6 +81,14 @@ namespace HitProxy
 		{
 			DataSocket = new SocketData (connection);
 		}
+		
+		/// <summary>
+		/// Generated response with message from the proxy
+		/// </summary>
+		public Response (HttpStatusCode code, string title, string message) : this(code)
+		{
+			Template(title, "<p>" + Html (message) + @"</p>");
+		}
 
 		public void Parse (string header, Request request)
 		{
@@ -205,8 +213,8 @@ namespace HitProxy
 			
 			GeneratedResponse = Encoding.UTF8.GetBytes (data);
 			
-			Add ("Content-Length: " + GeneratedResponse.Length.ToString());
-			Add ("Content-Type: text/html; charset=UTF-8");
+			ReplaceHeader ("Content-Length", GeneratedResponse.Length.ToString());
+			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
 			ContentLength = GeneratedResponse.Length;
 		}
 
@@ -214,5 +222,27 @@ namespace HitProxy
 		{
 			return HttpUtility.HtmlEncode (text);
 		}
+		
+		public void Template (string title, string htmlContents)
+		{
+			SetData(string.Format(@"<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv=""Content-Type"" content=""text/html; charset=UTF-8"" />
+	<link rel=""stylesheet"" type=""text/css"" href=""http://{0}/style.css"" />
+	<title>{2} - HitProxy</title>
+</head>
+<body class=""{1}"">
+	<h1>{2}</h1>
+	{3}
+</body>
+</html>",
+					Filters.WebUI.ConfigHost,
+					HttpCode.ToString(),
+					Html (title),
+					htmlContents)
+				);
+		}
+
 	}
 }

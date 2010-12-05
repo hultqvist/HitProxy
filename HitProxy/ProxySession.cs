@@ -172,9 +172,9 @@ namespace HitProxy
 			try {
 				remoteConnection = ConnectRequest (request, connectionManager);
 			} catch (TimeoutException e) {
-				request.Response = new ErrorResponse (HttpStatusCode.GatewayTimeout, "Timeout: " + e.Message);
+				request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Timeout", e.Message);
 			} catch (HeaderException e) {
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, "Remote connect failed, " + request + ", " + e.Message);
+				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", request + ", " + e.Message);
 			}
 			
 			//So far all responses are generated from errors
@@ -220,7 +220,7 @@ namespace HitProxy
 				if (sentResponse == true)
 					return false;
 				
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, e.Message);
+				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", e.Message);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (SocketException e) {
@@ -228,7 +228,7 @@ namespace HitProxy
 				if (sentResponse == true)
 					return false;
 				
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, e.Message);
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Error", e.Message);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (IOException e) {
@@ -236,7 +236,7 @@ namespace HitProxy
 				if (sentResponse == true)
 					return false;
 				
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, e.Message);
+				request.Response = new Response (HttpStatusCode.BadGateway, "IO Error", e.Message);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (ObjectDisposedException e) {
@@ -244,7 +244,7 @@ namespace HitProxy
 				if (sentResponse == true)
 					return false;
 				
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, e.Message);
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Abruptly Closed", e.Message);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			}

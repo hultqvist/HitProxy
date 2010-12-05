@@ -1,0 +1,58 @@
+html
+{
+	padding: 0;
+}
+body
+{
+	padding: 1em;
+}
+
+/* HTTP Error codes */
+.Gone
+{
+	border: 2px solid red;
+	opacity: 0.5;
+}
+.Gone
+{
+	border: 2px solid red;
+	opacity: 0.5;
+}
+
+/* WebUI Menu */
+
+.menu
+{
+	position: absolute;
+	right: 0;
+	top: 0;
+	border: 1px solid black;
+	background-color: lightgreen;
+	margin: 0;
+}
+.menu li
+{
+	list-style-type: none;
+	display: inline;
+	margin: 1em;
+}
+.menu a
+{
+	display: block;
+	float:left;
+	padding: 1em;
+	font-weight: bold;
+	font-size: 120%;
+}
+.menu a:hover
+{
+	background-color: blue;
+	color: #fff;
+}
+
+/* Other elements */
+
+p,h2,h3,h4
+{
+	margin: 2pt;
+}

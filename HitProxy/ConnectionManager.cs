@@ -50,7 +50,7 @@ namespace HitProxy
 				dns = GetCachedDns (request.Proxy.Host);
 			
 			if (dns == null) {
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, "Lookup of " + request.Uri.Host + " failed");
+				request.Response = new Response (HttpStatusCode.BadGateway, "NonExisting Domain Name", "Lookup of " + request.Uri.Host + " failed");
 				return null;
 			}
 			
@@ -71,7 +71,7 @@ namespace HitProxy
 			//DNS lookup caching
 			IPAddress[] dns = GetCachedDns (request.Uri.Host);
 			if (dns == null) {
-				request.Response = new ErrorResponse (HttpStatusCode.BadGateway, "Lookup of " + request.Uri.Host + " failed");
+				request.Response = new Response (HttpStatusCode.BadGateway, "NonExisting Domain Name", "Lookup of " + request.Uri.Host + " failed");
 				return null;
 			}
 			

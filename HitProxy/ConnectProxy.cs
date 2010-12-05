@@ -39,12 +39,12 @@ namespace HitProxy
 				Status = "Connecting to " + request.Uri.Host;
 				remote = connectionManager.ConnectNew (request, false);
 				if (remote == null) {
-					request.Response = new ErrorResponse (HttpStatusCode.ServiceUnavailable, "Maximum number of simultaneous connections reached");
+					request.Response = new Response (HttpStatusCode.ServiceUnavailable, "Maximum Connections Reached", "Maximum number of simultaneous connections reached");
 					return;
 				}
 				Status = "Connected";
 			} catch (SocketException e) {
-				request.Response = new ErrorResponse (HttpStatusCode.ServiceUnavailable, e.Message);
+				request.Response = new Response (HttpStatusCode.ServiceUnavailable, "Connection Error", e.Message);
 				return;
 			}
 			

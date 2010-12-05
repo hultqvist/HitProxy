@@ -35,7 +35,8 @@ namespace HitProxy
 					request.Uri = new Uri ("connect://" + request.Uri.OriginalString);
 			} catch (HeaderException e) {
 				Console.Error.WriteLine ("RequestHeader" + e.Message);
-				request.Response = new RequestErrorResponse (HttpStatusCode.BadRequest, "RemoteSocket: " + e.Message + "\n" + e.StackTrace);
+				request.Response = new Response (HttpStatusCode.BadRequest, "Bad Request", e.Message + "\n" + e.StackTrace);
+				request.Response.KeepAlive = false;
 			}
 			return request;
 		}
@@ -52,11 +53,11 @@ namespace HitProxy
 			}
 			
 			if (request.Uri.HostNameType == UriHostNameType.Unknown) {
-				request.Response = new ErrorResponse (HttpStatusCode.BadRequest, "Invalid request: " + request);
+				request.Response = new Response (HttpStatusCode.BadRequest, "Invalid URL", "Invalid request: " + request);
 				return null;
 			}
 			if (request.Uri.Scheme != "http") {
-				request.Response = new ErrorResponse (HttpStatusCode.NotImplemented, "Scheme Not implemented: " + request.Uri.Scheme);
+				request.Response = new Response (HttpStatusCode.NotImplemented, "Unsupported Scheme", "Scheme Not implemented: " + request.Uri.Scheme);
 				return null;
 			}
 			
@@ -65,7 +66,7 @@ namespace HitProxy
 				
 				CachedConnection remote = connectionManager.Connect (request);
 				if (remote == null) {
-					request.Response = new ErrorResponse (HttpStatusCode.GatewayTimeout, "Failed to get connection to " + request);
+					request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Failed", "Failed to get connection to " + request);
 					return null;
 				}
 				

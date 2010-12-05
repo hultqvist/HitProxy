@@ -22,14 +22,8 @@ namespace HitProxy
 		{
 			//Console.WriteLine ("Blocked: " + message);
 			KeepAlive = true;
-			
-			SetData (@"<!DOCTYPE htm>
-		<html><head><title>Blocked</title></head>
-		<body style=""border: 2px solid red; opacity: 0.5;"">
-		<h1>"+Html(title)+@"</h1>
-		" + htmlMessage + @"
-		</body></html>
-");
+		
+			Template(title, htmlMessage);
 		}
 	}
 }

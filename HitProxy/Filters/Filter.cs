@@ -31,12 +31,15 @@ namespace HitProxy.Filters
 
 		protected static string ConfigPath (string filterName)
 		{
-			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filterName + ".txt");
+			string suffix = ".txt";
+			if (filterName.Contains ("."))
+					suffix = "";				
+			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filterName + suffix);
 		}
-		
+
 		public override string ToString ()
 		{
-			return GetType().Name;
+			return GetType ().Name;
 		}
 	}
 

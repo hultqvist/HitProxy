@@ -9,7 +9,7 @@ At runtime filters can be added, removed and configured via the WebUI.
 
 Available filters:
 
-  * WebUI - Yes all runtime configuration of filters is done via this filter.
+  * WebUI - Yes all runtime configuration of filters is done via this filter. Change style by copying style.css to $HOME/.config/HitProxy/style.css
   * AdBlock - implementation of the popular filtering plugin for Firefox but here usable on all browsers such as Chrome
   * Custom 404 messages for all sites
   * Pass to another proxy: Now implemented to I2P proxy

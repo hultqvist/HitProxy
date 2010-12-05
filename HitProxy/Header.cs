@@ -76,6 +76,7 @@ namespace HitProxy
 		}
 
 		/// <summary>
+		/// Replace header in the same location
 		/// </summary>
 		public void ReplaceHeader (string key, string value)
 		{
@@ -85,10 +86,11 @@ namespace HitProxy
 				if (this[index].ToLowerInvariant ().StartsWith (needle)) {
 					this.RemoveAt (index);
 					this.Insert (index, key + ": " + value);
-					
 					return;
 				}
 			}
+			//Add new if no previous existed
+			this.Add (key + ": " + value);
 		}
 
 		/// <summary>
@@ -122,16 +124,6 @@ namespace HitProxy
 			return headers;
 		}
 
-		/// <summary>
-		/// Replace and/or add a header
-		/// null if key is missing
-		/// </summary>
-		public void SetHeader (string key, string value)
-		{
-			RemoveHeader (key);
-			Add (key + ": " + value);
-		}
-		
 		public void AddHeader (string key, string value)
 		{
 			Add (key + ": " + value);

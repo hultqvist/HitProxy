@@ -4,6 +4,7 @@ using System.Net;
 using System.Web;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 
 namespace HitProxy.Filters
 {
@@ -16,7 +17,7 @@ namespace HitProxy.Filters
 	{
 		public static readonly string ConfigHost = "hit";
 		public static WebUI webUI;
-		
+
 		Proxy proxy;
 		ConnectionManager connectionManager;
 
@@ -52,6 +53,16 @@ namespace HitProxy.Filters
 				request.Response = new Response (HttpStatusCode.OK);
 				FiltersPage (path, httpGet, request);
 				break;
+			case "style.css":
+				request.Response = new Response (HttpStatusCode.OK);
+				string data = "";
+				string configPath = ConfigPath ("style.css");
+				if (File.Exists (configPath))
+					data = File.ReadAllText (configPath); else if (File.Exists ("style.css"))
+					data = File.ReadAllText ("style.css");
+				request.Response.SetData (data);
+				request.Response.ReplaceHeader ("Content-Type", "text/css");
+				break;
 			case "favicon.ico":
 				request.Response = new BlockedResponse ("No favicon");
 				break;
@@ -63,12 +74,23 @@ namespace HitProxy.Filters
 			if (httpGet.Count > 0) {
 				if (request.Response.GetHeader ("Location") == null) {
 					request.Response = new Response (HttpStatusCode.Found);
-					request.Response.SetHeader ("Location", "http://" + ConfigHost + request.Uri.AbsolutePath);
+					request.Response.ReplaceHeader ("Location", "http://" + ConfigHost + request.Uri.AbsolutePath);
 				}
 			}
 			request.Response.KeepAlive = true;
 			
 			return true;
+		}
+
+		private void Template (Response response, string title, string html)
+		{
+			string menu = @"<ul class=""menu"">
+	<li><a href=""/"">About</a></li>
+	<li><a href=""/Session"">Session</a></li>
+	<li><a href=""/Connection"">Connection</a></li>
+	<li><a href=""/Filter"">Filters</a></li>
+</ul>";
+			response.Template (title, menu + html);
 		}
 
 		private Response MainPage (Request request)
@@ -79,8 +101,7 @@ namespace HitProxy.Filters
 			if (request.Uri.Host == "localhost")
 				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://" + ConfigHost + "/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
 			
-			data = Template ("HitProxy", "", data);
-			response.SetData (data);
+			Template (response, "HitProxy", data);
 			return response;
 		}
 
@@ -116,9 +137,8 @@ namespace HitProxy.Filters
 			else
 				data = SessionStatus (showSession);
 			
-			//data = Template ("Session", "<meta http-equiv=\"refresh\" content=\"1\">", data);
-			data = Template ("Session", "", data);
-			response.SetData (data);
+			Template (response, "Session", data);
+			
 			return response;
 		}
 
@@ -218,9 +238,7 @@ namespace HitProxy.Filters
 				data += PrintCachedServer (s);
 			}
 			
-			//data = Template ("Connections", "<meta http-equiv=\"refresh\" content=\"1\">", data);
-			data = Template ("Connections", "", data);
-			response.SetData (data);
+			Template (response, "Connections", data);
 			return response;
 		}
 
@@ -240,13 +258,12 @@ namespace HitProxy.Filters
 		{
 			return "http://" + ConfigHost + "/Filter/";
 		}
-		internal static string FilterUrl(Filter filter)
+		static internal string FilterUrl (Filter filter)
 		{
 			Filter f = filter;
 			string path = "";
-			while(f.Parent != null)
-			{
-				path = f.GetType().Name + "/" + path;
+			while (f.Parent != null) {
+				path = f.GetType ().Name + "/" + path;
 				f = f.Parent;
 			}
 			if (webUI.proxy.FilterRequest == f)
@@ -277,7 +294,7 @@ namespace HitProxy.Filters
 				data += "<h2>Response Filters</h2>";
 				data += ListFilters (proxy.FilterResponse);
 				
-				data = Template ("Filters", "", data);
+				Template (response, "Filters", data);
 				
 			} else {
 				Filter f;
@@ -289,16 +306,17 @@ namespace HitProxy.Filters
 				
 				if (f == null) {
 					response.HttpCode = HttpStatusCode.Found;
-					response.SetData ("<p>Filter not found.</p><p><a href=\"" + FilterUrl () + "\">back</a></p>");
-					response.SetHeader ("Location", FilterUrl ());
+					Template (response, "Filter not found", "<p><a href=\"" + FilterUrl () + "\">back</a></p>");
+					response.ReplaceHeader ("Location", FilterUrl ());
 					return;
 				}
-				data = Template ("" + f, "", f.Status (httpGet, request));
+				Template (response, f.ToString (), f.Status (httpGet, request));
 			}
 			
-			response.SetData (data);
 			return;
 		}
+
+		#region Filter Management
 
 		private void DeleteFilter (NameValueCollection keys)
 		{
@@ -349,7 +367,7 @@ namespace HitProxy.Filters
 
 		Filter FindFilter (Filter filter, int id)
 		{
-			if (filter.GetHashCode() == id)
+			if (filter.GetHashCode () == id)
 				return filter;
 			
 			FilterList list = filter as FilterList;
@@ -408,10 +426,7 @@ namespace HitProxy.Filters
 			return data;
 		}
 
-		private string Template (string title, string header, string contents)
-		{
-			return "<!DOCTYPE html>" + "<html>" + "<head>" + "<title>" + Response.Html (title) + " - HitProxy</title>" + header + "<style>" + ".menu li {list-style-type: none; display: inline; margin: 1em;} " + "p, h2,h3,h4 {margin: 2pt;}" + "</style>" + "</head>" + "<body>" + "<ul class=\"menu\">" + "<li><a href=\"/\">About</a></li>" + "<li><a href=\"/Session\">Session</a></li>" + "<li><a href=\"/Connection\">Connection</a></li>" + "<li><a href=\"/Filter\">Filters</a></li>" + "<li><a href=\"/status\"></a></li>" + "</ul>" + "<h1>" + Response.Html (title) + "</h1>" + contents + "</body></html>";
-		}
+		#endregion
 
 		public override string Status ()
 		{

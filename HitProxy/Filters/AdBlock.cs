@@ -144,7 +144,7 @@ namespace HitProxy.Filters
 			string html = "";
 						
 			if (httpGet["return"] != null) {
-				request.Response.SetHeader ("Location", httpGet["return"]);
+				request.Response.ReplaceHeader ("Location", httpGet["return"]);
 				request.Response.HttpCode = HttpStatusCode.Redirect;
 			}
 			

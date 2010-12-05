@@ -110,8 +110,8 @@ namespace HitProxy.Filters
 <h1 style=""text-align:center""><a href=""" + httpRequest.Uri + @""" style=""font-size: 3em;"">" + Response.Html (httpRequest.Uri.Host) + @"</a></h1>
 <p>Blocked by: " + pair + @"
 <a href=""" + WebUI.FilterUrl (this) + "?delete=" + pair.GetHashCode () + "&amp;return=" + Uri.EscapeUriString(httpRequest.Uri.ToString())+"\">delete</a></p>");
-							httpRequest.Response.SetHeader ("Cache-Control", "no-cache, must-revalidate");
-							httpRequest.Response.SetHeader ("Pragma", "no-cache");
+							httpRequest.Response.ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
+							httpRequest.Response.ReplaceHeader ("Pragma", "no-cache");
 							httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: " + pair);
 							return true;
 						}
@@ -154,8 +154,8 @@ namespace HitProxy.Filters
 	<input type=""submit"" name=""action"" value=""Remove"" />
 	<input type=""submit"" name=""action"" value=""Block"" />
 </form>");
-			httpRequest.Response.SetHeader ("Cache-Control", "no-cache, must-revalidate");
-			httpRequest.Response.SetHeader ("Pragma", "no-cache");
+			httpRequest.Response.ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
+			httpRequest.Response.ReplaceHeader ("Pragma", "no-cache");
 			httpRequest.Response.HttpCode = HttpStatusCode.ServiceUnavailable;
 			httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: Unmatched");
 			
@@ -177,7 +177,7 @@ namespace HitProxy.Filters
 			</div>";
 			
 			if (httpGet["return"] != null) {
-				request.Response.SetHeader ("Location", httpGet["return"]);
+				request.Response.ReplaceHeader ("Location", httpGet["return"]);
 				request.Response.HttpCode = HttpStatusCode.Redirect;
 			}
 			

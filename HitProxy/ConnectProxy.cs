@@ -10,21 +10,8 @@ namespace HitProxy
 	/// <summary>
 	/// Proxy implementation for HTTP CONNECT
 	/// </summary>
-	public class ConnectProxy
+	public partial class ProxySession
 	{
-		ProxySession proxysession;
-		ConnectionManager connectionManager;
-
-		public ConnectProxy (ProxySession session, ConnectionManager connectionManager)
-		{
-			this.proxysession = session;
-			this.connectionManager = connectionManager;
-		}
-
-		string Status {
-			set { proxysession.Status = value; }
-		}
-
 		/// <summary>
 		/// Read and execute request.
 		/// Return when connection is closed
@@ -32,31 +19,17 @@ namespace HitProxy
 		/// <param name="request">
 		/// A <see cref="Request"/>
 		/// </param>
-		public void ProcessRequest (Request request)
-		{
-			CachedConnection remote = null;
-			try {
-				Status = "Connecting to " + request.Uri.Host;
-				remote = connectionManager.ConnectNew (request, false);
-				if (remote == null) {
-					request.Response = new Response (HttpStatusCode.ServiceUnavailable, "Maximum Connections Reached", "Maximum number of simultaneous connections reached");
-					return;
-				}
-				Status = "Connected";
-			} catch (SocketException e) {
-				request.Response = new Response (HttpStatusCode.ServiceUnavailable, "Connection Error", e.Message);
-				return;
-			}
-			
+		public void ProcessHttpConnect (CachedConnection remote)
+		{			
 			request.Response = new Response (HttpStatusCode.OK);
 			request.Response.KeepAlive = false;
 			request.Response.Add ("Proxy-Agent: HitProxy");
-			request.Response.SendHeaders (proxysession.clientSocket);
+			request.Response.SendHeaders (clientSocket);
 			request.Response.DataSocket = new SocketData (remote);
 			
 			//Pass data in both directions
 			ManualResetEvent doneReq = request.DataSocket.PipeSocketAsync (remote.remoteSocket);
-			ManualResetEvent doneRes = request.Response.DataSocket.PipeSocketAsync (proxysession.clientSocket);
+			ManualResetEvent doneRes = request.Response.DataSocket.PipeSocketAsync (clientSocket);
 			
 			//Wait until any side disconnects
 			doneReq.WaitOne ();
@@ -65,10 +38,6 @@ namespace HitProxy
 			
 			request.Response.Dispose ();
 			request.Response = null;
-		}
-
-		public ConnectProxy ()
-		{
 		}
 	}
 }

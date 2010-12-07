@@ -41,10 +41,10 @@ namespace HitProxy
 			response.Add (new Cookies ());
 			
 			proxy.Start ();
-#if !DEBUG			
-			System.Threading.Thread.Sleep(3000);
-			System.Diagnostics.Process.Start("http://localhost:"+proxy.Port+"/");
-#endif	
+			#if !DEBUG
+			System.Threading.Thread.Sleep (3000);
+			System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
+			#endif
 			proxy.Wait ();
 			proxy.Stop ();
 		}

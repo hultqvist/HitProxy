@@ -16,7 +16,7 @@ namespace HitProxy
 		/// <returns>
 		/// A <see cref="Request"/>
 		/// </returns>
-		public Request ParseRequest (string header)
+		private Request ParseRequest (string header)
 		{
 			Request request = new Request (clientSocket);
 			
@@ -45,7 +45,7 @@ namespace HitProxy
 		/// From the data in the request,
 		/// Connect, return connection if successful.
 		/// </summary>
-		public CachedConnection ConnectRequest (Request request, ConnectionManager connectionManager)
+		private CachedConnection ConnectRequest (Request request, ConnectionManager connectionManager)
 		{
 			if (request.Uri.Host == "localhost" && request.Uri.Port == MainClass.ProxyPort) {
 				request.Block ("Loopback protection");
@@ -56,27 +56,113 @@ namespace HitProxy
 				request.Response = new Response (HttpStatusCode.BadRequest, "Invalid URL", "Invalid request: " + request);
 				return null;
 			}
+			
 			if (request.Uri.Scheme != "http") {
 				request.Response = new Response (HttpStatusCode.NotImplemented, "Unsupported Scheme", "Scheme Not implemented: " + request.Uri.Scheme);
 				return null;
 			}
 			
 			try {
+				CachedConnection remote;
 				Status = "Connecting to " + request.Uri.Host;
 				
-				CachedConnection remote = connectionManager.Connect (request);
+				if (request.Method == "CONNECT")
+					remote = connectionManager.ConnectNew (request, false);
+				else
+					remote = connectionManager.Connect (request);
+				
 				if (remote == null) {
 					request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Failed", "Failed to get connection to " + request);
 					return null;
 				}
 				
+				Status = "Connected";
 				return remote;
+			
 			} catch (SocketException e) {
 				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
 			} catch (IOException e) {
 				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
 			}
 		}
-		
+
+		/// <summary>
+		/// 
+		/// </summary>
+		private bool ProcessHttp (CachedConnection remoteConnection)
+		{
+			//Sent response back to client
+			bool sentResponse = false;
+			//link connection to response so that it will get closed on error
+			request.Response = new Response (remoteConnection);
+			try {
+				Status = "Sending request";
+				try {
+					request.SendHeaders (remoteConnection.remoteSocket);
+				} catch (IOException e) {
+					throw new HeaderException ("While sending request to remote: " + e.Message, HttpStatusCode.BadGateway);
+				}
+				//Read response header
+				while (true) {
+					Status = "Waiting for response";
+					
+					string respHeader = remoteConnection.remoteSocket.ReadHeader ();
+					
+					request.Response.Parse (respHeader, request);
+					
+					//Filter Response
+					Status = "Filtering response";
+					try {
+						proxy.FilterResponse.Apply (request);
+					} catch (Exception e) {
+						request.Response = FilterException (e);
+					}
+					
+					//Send response
+					sentResponse = true;
+					Status = "Sending response";
+					request.Response.SendResponse (clientSocket);
+					
+					int code = (int)request.Response.HttpCode;
+					if (code < 100 || code > 199)
+						break;
+				}
+				return true;
+				
+			} catch (HeaderException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message);
+				if (sentResponse == true)
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (SocketException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (sentResponse == true)
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (IOException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (sentResponse == true)
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "IO Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (ObjectDisposedException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (sentResponse == true)
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Abruptly Closed", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			}
+			return true;
+		}
 	}
 }

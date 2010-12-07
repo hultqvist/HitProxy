@@ -85,6 +85,7 @@
     <Compile Include="Filters\Broken.cs" />
     <Compile Include="Filters\Onion.cs" />
     <Compile Include="Filters\ProxyTld.cs" />
+    <Compile Include="SocksProxy.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

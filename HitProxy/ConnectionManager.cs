@@ -40,24 +40,15 @@ namespace HitProxy
 		/// This call will hold until there is a connection available
 		/// or return null on error, error message will be in request.Response
 		/// </summary>
-		public CachedConnection Connect (Request request)
+		public CachedConnection Connect (Uri uri)
 		{
 			//DNS lookup caching
-			IPAddress[] dns;
-			if (request.Proxy == null)
-				dns = GetCachedDns (request.Uri.Host);
-			else
-				dns = GetCachedDns (request.Proxy.Host);
+			IPAddress[] 	dns = GetCachedDns (uri.Host);
 			
-			if (dns == null) {
-				request.Response = new Response (HttpStatusCode.BadGateway, "NonExisting Domain Name", "Lookup of " + request.Uri.Host + " failed");
-				return null;
-			}
+			if (dns == null)
+				throw new HeaderException("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
 			
-			if (request.Proxy == null)
-				return GetCachedConnection (dns, request.Uri.Port, true, true);
-			else
-				return GetCachedConnection (dns, request.Proxy.Port, true, true);
+			return GetCachedConnection (dns, uri.Port, true, true);
 		}
 
 		/// <summary>
@@ -66,16 +57,14 @@ namespace HitProxy
 		/// this call will hold until one is available.
 		/// or return null on error, error message will be in request.Response
 		/// </summary>
-		public CachedConnection ConnectNew (Request request, bool hold)
+		public CachedConnection ConnectNew (Uri uri, bool hold)
 		{
 			//DNS lookup caching
-			IPAddress[] dns = GetCachedDns (request.Uri.Host);
-			if (dns == null) {
-				request.Response = new Response (HttpStatusCode.BadGateway, "NonExisting Domain Name", "Lookup of " + request.Uri.Host + " failed");
-				return null;
-			}
+			IPAddress[] dns = GetCachedDns (uri.Host);
+			if (dns == null)
+				throw new HeaderException("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
 			
-			CachedConnection connection = GetCachedConnection (dns, request.Uri.Port, false, hold);
+			CachedConnection connection = GetCachedConnection (dns, uri.Port, false, hold);
 			
 			return connection;
 		}

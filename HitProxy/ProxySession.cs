@@ -169,7 +169,7 @@ namespace HitProxy
 			//Make connection
 			CachedConnection remoteConnection = null;
 			try {
-				remoteConnection = ConnectRequest (request, connectionManager);
+				remoteConnection = ConnectRequest ();
 			} catch (TimeoutException e) {
 				request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Timeout", e.Message);
 			} catch (HeaderException e) {
@@ -215,6 +215,56 @@ namespace HitProxy
 			return true;
 		}
 
+		/// <summary>
+		/// From the data in the request,
+		/// Connect, return connection if successful.
+		/// </summary>
+		private CachedConnection ConnectRequest ()
+		{
+			if (request.Uri.Host == "localhost" && request.Uri.Port == MainClass.ProxyPort) {
+				request.Block ("Loopback protection");
+				return null;
+			}
+			
+			if (request.Uri.HostNameType == UriHostNameType.Unknown) {
+				request.Response = new Response (HttpStatusCode.BadRequest, "Invalid URL", "Invalid request: " + request);
+				return null;
+			}
+			
+			if (request.Uri.Scheme != "http") {
+				request.Response = new Response (HttpStatusCode.NotImplemented, "Unsupported Scheme", "Scheme Not implemented: " + request.Uri.Scheme);
+				return null;
+			}
+			
+			try {
+				CachedConnection remote;
+				Status = "Connecting to " + request.Uri.Host;
+
+				Uri remoteUri = request.Uri;
+				if (request.Proxy != null)
+					request.Uri = request.Proxy;
+				
+				if (request.Method == "CONNECT" ||
+					request.Proxy != null && request.Proxy.Scheme == "socks")
+					remote = connectionManager.ConnectNew (remoteUri, false);
+				else
+					remote = connectionManager.Connect (remoteUri);
+				
+				if (remote == null) {
+					request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Failed", "Failed to get connection to " + request);
+					return null;
+				}
+				
+				Status = "Connected";
+				return remote;
+			
+			} catch (SocketException e) {
+				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
+			} catch (IOException e) {
+				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
+			}
+		}
+			
 		private Response FilterException (Exception e)
 		{
 			Response response = new Response (HttpStatusCode.InternalServerError);

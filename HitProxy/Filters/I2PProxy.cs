@@ -1,28 +1,10 @@
 using System;
 namespace HitProxy.Filters
 {
-	public class I2PProxy : Filter
+	public class I2PProxy : ProxyTld
 	{
-		public I2PProxy ()
+		public I2PProxy () : base("i2p", 4444)
 		{
-		}
-		
-		/// <summary>
-		/// Catch .i2p urls and pass them through a proxy
-		/// </summary>
-		public override bool Apply (Request request)
-		{
-			if (!request.Uri.Host.EndsWith (".i2p"))
-				return false;
-			
-			request.Proxy = new Uri ("http://localhost:4444");
-			return true;
-		}
-		
-		public override string Status ()
-		{
-			return @"This filter intercepts all requests to domains ending in .i2p
-and pass them to a local running i2p http proxy.";
 		}
 	}
 }

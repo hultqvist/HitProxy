@@ -31,6 +31,7 @@ namespace HitProxy
 			list.Add (new Cookies ());
 			list.Add (new ProxyHeaders ());
 			list.Add (new I2PProxy ());
+			list.Add (new Onion ());
 			//list.Add (new Tamper ("After filtering"));
 			
 			FilterList response = new FilterList ();

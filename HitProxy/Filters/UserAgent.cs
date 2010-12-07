@@ -109,7 +109,7 @@ namespace HitProxy.Filters
 					if (rule.Permanent == false)
 						continue;
 					if (rule.Random)
-						writer.WriteLine (rule.Domain + " Random");
+						writer.WriteLine (rule.Domain + " " + rule.Lang + " Random");
 					else
 						writer.WriteLine (rule.Domain + " " + rule.Lang + " " + rule.UserAgent);
 				}

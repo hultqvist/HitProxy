@@ -81,11 +81,11 @@ namespace HitProxy
 			byte b;
 			
 			while (true) {
-				if (socket.Poll (120000000, SelectMode.SelectRead)) {
+				if (socket.Poll (1200*1000000, SelectMode.SelectRead)) {
 					if (socket.Available == 0)
 						throw new HeaderException ("Connection closed", HttpStatusCode.BadGateway);
 				} else {
-					throw new HeaderException ("Timeout, 120 s, without receiving any headers", HttpStatusCode.RequestTimeout);
+					throw new HeaderException ("Timeout while waiting for headers", HttpStatusCode.RequestTimeout);
 				}
 				int received = socket.Receive (header, index, 1, SocketFlags.None);
 				if (received != 1)

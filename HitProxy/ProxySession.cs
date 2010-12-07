@@ -161,11 +161,6 @@ namespace HitProxy
 				return true;
 			}
 			
-			//Begin connection
-			if (request.Proxy != null && request.Proxy.Scheme == "socks")
-			{
-			}
-
 			//Make connection
 			CachedConnection remoteConnection = null;
 			try {
@@ -182,18 +177,60 @@ namespace HitProxy
 				request.Response.SendResponse (clientSocket);
 				return true;
 			}
-
-			if (request.Method == "CONNECT") {
-				Status = "Connecting Socket";
-				ProcessHttpConnect (remoteConnection);
-				return false;
-			}
-
-			//All done, send the traffic to the remote server
-			if (ProcessHttp (remoteConnection) == false)
-				return false;
 			
-			Status = "Request done";
+			try {
+				//Begin connection
+				request.Response = new Response (remoteConnection);
+				
+				//Prepare socks connection
+				if (request.Proxy != null && request.Proxy.Scheme == "socks")
+					PrepareSocks (remoteConnection);
+				
+				//initiate HTTP CONNECT request
+				if (request.Method == "CONNECT") {
+					Status = "Connecting Socket";
+					ProcessHttpConnect (remoteConnection);
+					return false;
+				}
+				
+				//All done, send the traffic to the remote server
+				ProcessHttp (remoteConnection);
+				
+				Status = "Request done";
+				
+			} catch (HeaderException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message);
+				if (Status == "Sending response")
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (SocketException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (Status == "Sending response")
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (IOException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (Status == "Sending response")
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "IO Error", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			} catch (ObjectDisposedException e) {
+				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
+				if (Status == "Sending response")
+					return false;
+				
+				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Abruptly Closed", e.Message);
+				if (request.Response.SendResponse (clientSocket) == false)
+					return false;
+			}
 			
 			//Close connection
 			if (request.Response.Chunked == false && request.Response.HasBody == false)
@@ -239,13 +276,12 @@ namespace HitProxy
 			try {
 				CachedConnection remote;
 				Status = "Connecting to " + request.Uri.Host;
-
+				
 				Uri remoteUri = request.Uri;
 				if (request.Proxy != null)
-					request.Uri = request.Proxy;
+					remoteUri = request.Proxy;
 				
-				if (request.Method == "CONNECT" ||
-					request.Proxy != null && request.Proxy.Scheme == "socks")
+				if (request.Method == "CONNECT" || request.Proxy != null && request.Proxy.Scheme == "socks")
 					remote = connectionManager.ConnectNew (remoteUri, false);
 				else
 					remote = connectionManager.Connect (remoteUri);
@@ -257,14 +293,14 @@ namespace HitProxy
 				
 				Status = "Connected";
 				return remote;
-			
+				
 			} catch (SocketException e) {
 				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
 			} catch (IOException e) {
 				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
 			}
 		}
-			
+
 		private Response FilterException (Exception e)
 		{
 			Response response = new Response (HttpStatusCode.InternalServerError);
@@ -272,7 +308,7 @@ namespace HitProxy
 <h2>{0}, {2}</h2>
 <p>{1}</p>
 <pre>{3}</pre>
-<p><a href=""{4}"">Manage filters</a></p>", e.GetType ().Name, e.Message, e.Source, e.StackTrace, Filters.WebUI.FilterUrl ()));			
+<p><a href=""{4}"">Manage filters</a></p>", e.GetType ().Name, e.Message, e.Source, e.StackTrace, Filters.WebUI.FilterUrl ()));
 			return response;
 		}
 

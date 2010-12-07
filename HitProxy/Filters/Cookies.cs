@@ -98,6 +98,8 @@ namespace HitProxy.Filters
 					catch (ArgumentException ae)
 					{
 						//Ignore duplicates if values are the same
+						if (keyVal.Length == 1 && request[keyVal[0]] == "")
+							continue;
 						if (keyVal.Length == 2 && request[keyVal[0]] == keyVal[1])
 							continue;
 						

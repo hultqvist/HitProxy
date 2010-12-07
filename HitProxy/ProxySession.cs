@@ -293,9 +293,12 @@ namespace HitProxy
 				
 				Status = "Connected";
 				return remote;
-				
+			
 			} catch (SocketException e) {
-				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
+				string extra = "";
+				if (request.Proxy != null)
+					extra = ": " + request.Proxy;
+				throw new HeaderException (e.Message + extra, HttpStatusCode.BadGateway);
 			} catch (IOException e) {
 				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
 			}

@@ -180,7 +180,6 @@ namespace HitProxy
 			
 			try {
 				//Begin connection
-				request.Response = new Response (remoteConnection);
 				
 				//Prepare socks connection
 				if (request.Proxy != null && request.Proxy.Scheme == "socks")
@@ -268,7 +267,7 @@ namespace HitProxy
 				return null;
 			}
 			
-			if (request.Uri.Scheme != "http") {
+			if (request.Uri.Scheme != "http" && request.Uri.Scheme != "connect") {
 				request.Response = new Response (HttpStatusCode.NotImplemented, "Unsupported Scheme", "Scheme Not implemented: " + request.Uri.Scheme);
 				return null;
 			}

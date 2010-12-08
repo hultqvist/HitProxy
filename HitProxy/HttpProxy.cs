@@ -47,6 +47,7 @@ namespace HitProxy
 		private void ProcessHttp (CachedConnection remoteConnection)
 		{
 			//link connection to response so that it will get closed on error
+			request.Response = new Response (remoteConnection);
 			
 			Status = "Sending request";
 			try {

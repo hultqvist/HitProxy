@@ -16,6 +16,8 @@ namespace HitProxy
 		}
 		Thread thread;
 
+		public readonly BrowserProxy Browser;
+		
 		/// <summary>
 		/// List of active ProxySessions.
 		/// </summary>
@@ -27,6 +29,7 @@ namespace HitProxy
 		public Proxy (int port, ConnectionManager connectionManager)
 		{
 			this.port = port;
+			this.Browser = new BrowserProxy (this);
 			this.connectionManager = connectionManager;
 		}
 

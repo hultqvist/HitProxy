@@ -69,14 +69,17 @@ namespace HitProxy.Filters
 				request.Response = new BlockedResponse ("No favicon");
 				break;
 			default:
-				request.Response = MainPage (request);
+				request.Response = MainPage (request, httpGet);
 				break;
 			}
 			
 			if (httpGet.Count > 0) {
 				if (request.Response.GetHeader ("Location") == null) {
 					request.Response = new Response (HttpStatusCode.Found);
-					request.Response.ReplaceHeader ("Location", "http://" + ConfigHost + request.Uri.AbsolutePath);
+					string location = "http://" + request.Uri.Host;
+					if (request.Uri.IsDefaultPort == false)
+						location += ":" + request.Uri.Port;
+					request.Response.ReplaceHeader ("Location", location + request.Uri.AbsolutePath);
 				}
 			}
 			request.Response.KeepAlive = true;
@@ -95,13 +98,27 @@ namespace HitProxy.Filters
 			response.Template (title, menu + html);
 		}
 
-		private Response MainPage (Request request)
+		private Response MainPage (Request request, NameValueCollection httpGet)
 		{
 			Response response = new Response (HttpStatusCode.OK);
 			
 			string data = "";
-			if (request.Uri.Host == "localhost")
+			if (request.Uri.Host == "localhost") {
 				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://" + ConfigHost + "/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
+			}
+			
+			if (proxy.Browser.CanSetProxy) {
+				if (httpGet["active"] == "true")
+					proxy.Browser.Enabled = true;
+				if (httpGet["active"] == "false")
+					proxy.Browser.Enabled = false;
+				
+				data += "<h1>Browser Proxy Status</h1>";
+				if (proxy.Browser.Enabled)
+					data += @"<p><strong>Enabled</strong> <a href=""?active=false"">Disable proxy settings</a></p>";
+				else
+					data += @"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>";
+			}
 			
 			Template (response, "HitProxy", data);
 			return response;
@@ -297,17 +314,14 @@ namespace HitProxy.Filters
 				data += ListFilters (proxy.FilterResponse);
 				
 				Template (response, "Filters", data);
-			
+				
 			} else {
 				Filter f;
-				if (path[2].ToLowerInvariant () == "request")
-				{
+				if (path[2].ToLowerInvariant () == "request") {
 					f = FindFilter (proxy.FilterRequest, path, 3);
 					if (f == null)
 						f = proxy.FilterRequest;
-				}
-				else
-				{
+				} else {
 					//Response
 					f = FindFilter (proxy.FilterResponse, path, 3);
 					if (f == null)

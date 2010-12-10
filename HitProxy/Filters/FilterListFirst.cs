@@ -26,7 +26,7 @@ namespace HitProxy.Filters
 
 		public override string Status ()
 		{
-			return "If the first filter triggers, all remaining will be applied.";
+			return "<p>If the first filter triggers, all remaining will be applied.</p>";
 		}
 	}
 }

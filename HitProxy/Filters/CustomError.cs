@@ -32,7 +32,7 @@ namespace HitProxy.Filters
 
 		public override string Status ()
 		{
-			return "Replaces <em>\"404 - file not found\"</em> error pages with a custom one.";
+			return "<p>Replaces <em>\"404 - file not found\"</em> error pages with a custom one.</p>";
 		}
 	}
 }

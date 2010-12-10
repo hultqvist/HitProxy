@@ -26,8 +26,8 @@ namespace HitProxy.Filters
 		
 		public override string Status ()
 		{
-			return "This filter intercepts all requests to domains ending in " + tld
-				+ " and pass them to a local running http proxy.";
+			return "<p>This filter intercepts all requests to domains ending in <strong>" + tld
+				+ "</strong> and pass them to a local running http proxy.</p>";
 		}
 	}
 }

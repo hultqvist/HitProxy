@@ -28,7 +28,7 @@ namespace HitProxy.Filters
 
 		public override string Status ()
 		{
-			return "Transform Proxy headers to http headers.";
+			return "<p>Transform Proxy headers to http headers.</p>";
 		}
 	}
 }

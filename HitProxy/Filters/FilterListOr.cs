@@ -20,7 +20,7 @@ namespace HitProxy.Filters
 
 		public override string Status ()
 		{
-			return "Apply filters in order, stop at first filter triggered";
+			return "<p>Apply filters in order, stop at first filter triggered</p>";
 		}
 	}
 }

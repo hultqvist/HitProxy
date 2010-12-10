@@ -26,7 +26,7 @@ namespace HitProxy.Filters
 
 		public virtual string Status ()
 		{
-			return "No status for filter";
+			return "<p>(no description)</p>";
 		}
 
 		protected static string ConfigPath (string filterName)

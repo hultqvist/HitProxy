@@ -60,7 +60,7 @@ namespace HitProxy
 
 		public void Run ()
 		{
-			TcpListener listener = new TcpListener (new IPEndPoint (IPAddress.Loopback, Port));
+			TcpListener listener = new TcpListener (new IPEndPoint (IPAddress.Any, Port));
 			
 			bool retrying = false;
 			

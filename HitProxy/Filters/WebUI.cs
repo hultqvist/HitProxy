@@ -16,7 +16,7 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class WebUI : Filter
 	{
-		public static readonly string ConfigHost = "hit";
+		public static readonly string ConfigHost = "hit.endnode.se";
 		public static WebUI webUI;
 
 		Proxy proxy;
@@ -34,7 +34,9 @@ namespace HitProxy.Filters
 
 		public override bool Apply (Request request)
 		{
-			if (request.Uri.IsAbsoluteUri == true && request.Uri.Host != ConfigHost && (request.Uri.Host == "localhost" && request.Uri.Port == proxy.Port) == false)
+			bool direct = request.Uri.Host == "localhost" && request.Uri.Port == proxy.Port;
+			bool webUI = request.Uri.Host == ConfigHost;
+			if ((request.Uri.IsAbsoluteUri == true) && (webUI == false) && (direct == false))
 				return false;
 			
 			string[] path = request.Uri.AbsolutePath.Split ('/');
@@ -119,7 +121,7 @@ namespace HitProxy.Filters
 				else
 					data += @"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>";
 			}
-			
+						
 			Template (response, "HitProxy", data);
 			return response;
 		}

@@ -78,8 +78,9 @@ namespace HitProxy
 			Response.NullSafeDispose ();
 		}
 
-		protected override void ParseFirstLine(string firstLine)
+		protected override void ParseFirstLine (string firstLine)
 		{
+			//Console.Error.WriteLine ("First: " + firstLine);
 			string[] parts = firstLine.Split (' ');
 			if (parts.Length != 3)
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
@@ -110,10 +111,10 @@ namespace HitProxy
 			}
 			
 			//Intercepting proxy get host from host header
-			if (Uri.IsAbsoluteUri == false)
+			if (Uri.IsAbsoluteUri == false || Uri.IsFile == true)
 			{
-				Uri baseUri = new Uri("http://" + Host);
-				Uri = new Uri(baseUri, this.Uri);
+				Uri baseUri = new Uri ("http://" + Host);
+				Uri = new Uri (baseUri, this.Uri);
 			}
 		}
 

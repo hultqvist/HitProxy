@@ -43,22 +43,6 @@ namespace HitProxy
 
 		public override string FirstLine {
 			get { return HttpVersion + " " + ((int)HttpCode) + " " + Message; }
-			set {
-				string[] parts = value.Split (new char[] { ' ' }, 3);
-				if (parts.Length == 3)
-					Message = parts[2];
-				else if (parts.Length == 2)
-					Message = "";
-				else
-					throw new HeaderException ("Invalid header: " + value, HttpStatusCode.BadGateway);
-				
-				HttpVersion = parts[0];
-				try {
-					HttpCode = (HttpStatusCode)int.Parse (parts[1]);
-				} catch (FormatException e) {
-					throw new HeaderException ("StatusCode format " + e.Message + "\n" + value, HttpStatusCode.BadRequest);
-				}
-			}
 		}
 
 		/// <summary>
@@ -81,13 +65,31 @@ namespace HitProxy
 		{
 			DataSocket = new SocketData (connection);
 		}
-		
+
 		/// <summary>
 		/// Generated response with message from the proxy
 		/// </summary>
 		public Response (HttpStatusCode code, string title, string message) : this(code)
 		{
-			Template(title, "<p>" + Html (message) + @"</p>");
+			Template (title, "<p>" + Html (message) + @"</p>");
+		}
+
+		protected override void ParseFirstLine (string firstLine)
+		{
+			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
+			if (parts.Length == 3)
+				Message = parts[2];
+			else if (parts.Length == 2)
+				Message = "";
+			else
+				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadGateway);
+			
+			HttpVersion = parts[0];
+			try {
+				HttpCode = (HttpStatusCode)int.Parse (parts[1]);
+			} catch (FormatException e) {
+				throw new HeaderException ("StatusCode format " + e.Message + "\n" + firstLine, HttpStatusCode.BadRequest);
+			}
 		}
 
 		public void Parse (string header, Request request)
@@ -213,7 +215,7 @@ namespace HitProxy
 			
 			GeneratedResponse = Encoding.UTF8.GetBytes (data);
 			
-			ReplaceHeader ("Content-Length", GeneratedResponse.Length.ToString());
+			ReplaceHeader ("Content-Length", GeneratedResponse.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
 			ContentLength = GeneratedResponse.Length;
 		}
@@ -222,10 +224,10 @@ namespace HitProxy
 		{
 			return HttpUtility.HtmlEncode (text);
 		}
-		
+
 		public void Template (string title, string htmlContents)
 		{
-			SetData(string.Format(@"<!DOCTYPE html>
+			SetData (string.Format (@"<!DOCTYPE html>
 <html>
 <head>
 	<meta http-equiv=""Content-Type"" content=""text/html; charset=UTF-8"" />
@@ -236,13 +238,8 @@ namespace HitProxy
 	<h1>{2}</h1>
 	{3}
 </body>
-</html>",
-					Filters.WebUI.ConfigHost,
-					HttpCode.ToString(),
-					Html (title),
-					htmlContents)
-				);
+</html>", Filters.WebUI.ConfigHost, HttpCode.ToString (), Html (title), htmlContents));
 		}
-
+		
 	}
 }

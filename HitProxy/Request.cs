@@ -39,7 +39,7 @@ namespace HitProxy
 		/// Used to pipe to http proxies
 		/// </summary>
 		public Uri Proxy;
-		
+
 		/// <summary>
 		/// Start time of request
 		/// </summary>
@@ -54,25 +54,15 @@ namespace HitProxy
 			}
 		}
 
+		/// <summary>
+		/// Parse first line in a header
+		/// </summary>
 		public override string FirstLine {
 			get {
 				if (Proxy == null)
 					return Method + " " + Uri.PathAndQuery + " " + HttpVersion;
 				else
 					return Method + " " + Uri.AbsoluteUri + " " + HttpVersion;
-			}
-			set {
-				string[] parts = value.Split (' ');
-				if (parts.Length != 3)
-					throw new HeaderException ("Invalid header: " + value, HttpStatusCode.BadRequest);
-				
-				try {
-					Method = parts[0].ToUpperInvariant ();
-					HttpVersion = parts[2];
-					System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri);
-				} catch (UriFormatException e) {
-					throw new HeaderException ("Uri problem " + e.Message, HttpStatusCode.BadRequest);
-				}
 			}
 		}
 
@@ -86,6 +76,20 @@ namespace HitProxy
 		{
 			base.Dispose ();
 			Response.NullSafeDispose ();
+		}
+
+		protected override void ParseFirstLine(string firstLine)
+		{
+			string[] parts = firstLine.Split (' ');
+			if (parts.Length != 3)
+				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
+				
+			Method = parts[0].ToUpperInvariant ();
+			HttpVersion = parts[2];
+			if (System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri))
+				return;
+			if (System.Uri.TryCreate (parts[1], UriKind.Relative, out this.Uri))
+				return;
 		}
 
 		public new void Parse (string header)
@@ -102,68 +106,80 @@ namespace HitProxy
 				
 				string key = line.Substring (0, keysep).ToLowerInvariant ();
 				string s = line.Substring (keysep + 1).Trim ();
-				switch (key) {
-				case "accept":
-					Accept = s;
-					break;
-				case "accept-charset":
-					AcceptCharset = s;
-					break;
-				case "accept-encoding":
-					AcceptEncoding = s;
-					break;
-				case "accept-language":
-					AcceptLanguage = s;
-					break;
-				case "authorization":
-					Authorization = s;
-					break;
-				case "content-length":
-					long.TryParse (s, out ContentLength);
-					break;
-				case "expect":
-					Expect = s;
-					break;
-				case "from":
-					From = s;
-					break;
-				case "host":
-					Host = s;
-					break;
-				case "if-match":
-					IfMatch = s;
-					break;
-				case "if-modified-since":
-					IfModifiedSince = s;
-					break;
-				case "if-none-match":
-					IfNoneMatch = s;
-					break;
-				case "if-range":
-					IfRange = s;
-					break;
-				case "if-unmodified-since":
-					IfUnmodifiedSince = s;
-					break;
-				case "max-forwards":
-					MaxForwards = s;
-					break;
-				case "proxy-authorization":
-					ProxyAuthorization = s;
-					break;
-				case "range":
-					Range = s;
-					break;
-				case "referer":
-					Referer = s;
-					break;
-				case "te":
-					TE = s;
-					break;
-				case "user-agent":
-					UserAgent = s;
-					break;
-				}
+				ParseHeader (key, s);
+			}
+			
+			//Intercepting proxy get host from host header
+			if (Uri.IsAbsoluteUri == false)
+			{
+				Uri baseUri = new Uri("http://" + Host);
+				Uri = new Uri(baseUri, this.Uri);
+			}
+		}
+
+		private void ParseHeader (string key, string value)
+		{
+			switch (key) {
+			case "accept":
+				Accept = value;
+				break;
+			case "accept-charset":
+				AcceptCharset = value;
+				break;
+			case "accept-encoding":
+				AcceptEncoding = value;
+				break;
+			case "accept-language":
+				AcceptLanguage = value;
+				break;
+			case "authorization":
+				Authorization = value;
+				break;
+			case "content-length":
+				long.TryParse (value, out ContentLength);
+				break;
+			case "expect":
+				Expect = value;
+				break;
+			case "from":
+				From = value;
+				break;
+			case "host":
+				Host = value;
+				break;
+			case "if-match":
+				IfMatch = value;
+				break;
+			case "if-modified-since":
+				IfModifiedSince = value;
+				break;
+			case "if-none-match":
+				IfNoneMatch = value;
+				break;
+			case "if-range":
+				IfRange = value;
+				break;
+			case "if-unmodified-since":
+				IfUnmodifiedSince = value;
+				break;
+			case "max-forwards":
+				MaxForwards = value;
+				break;
+			case "proxy-authorization":
+				ProxyAuthorization = value;
+				break;
+			case "range":
+				Range = value;
+				break;
+			case "referer":
+				Referer = value;
+				break;
+			case "te":
+				TE = value;
+				break;
+			case "user-agent":
+				UserAgent = value;
+				break;
 			}
 		}
 
@@ -191,7 +207,7 @@ namespace HitProxy
 		{
 			Response = new BlockedResponse (message);
 		}
-		
+
 		public void Block (string title, string htmlMessage)
 		{
 			//Determine content type requested

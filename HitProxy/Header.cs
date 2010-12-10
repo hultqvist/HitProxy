@@ -16,7 +16,7 @@ namespace HitProxy
 		/// <summary>
 		/// Return and parse the First line in a http header.
 		/// </summary>
-		public abstract string FirstLine { get; set; }
+		public abstract string FirstLine { get; }
 
 		public SocketData DataSocket {
 			get { return socketdata; }
@@ -36,10 +36,18 @@ namespace HitProxy
 			DataSocket.NullSafeDispose ();
 		}
 
+		protected abstract void ParseFirstLine (string firstLine);
+
+		/// <summary>
+		/// Parse complete headers
+		/// </summary>
+		/// <param name="header">
+		/// All lines in a header
+		/// </param>
 		protected void Parse (string header)
 		{
 			TextReader reader = new StringReader (header);
-			FirstLine = reader.ReadLine ();
+			ParseFirstLine (reader.ReadLine ());
 			while (true) {
 				string line = reader.ReadLine ();
 				
@@ -115,8 +123,7 @@ namespace HitProxy
 			key = key.ToLowerInvariant () + ":";
 			
 			foreach (string header in this) {
-				if (header.ToLowerInvariant ().StartsWith (key))
-				{
+				if (header.ToLowerInvariant ().StartsWith (key)) {
 					headers.Add (header.Split (new char[] { ':' }, 2)[1].Trim ());
 				}
 			}

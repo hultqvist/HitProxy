@@ -18,6 +18,9 @@ namespace HitProxy
 			Proxy proxy = new Proxy (ProxyPort, connectionManager);
 			System.Threading.Thread.CurrentThread.Name = "Main";
 			
+			//TODO: Read filter configuration from Filters.conf
+			//TODO: Separate List, Trigger, Modify and Block-Filters.
+			
 			//Setup default filters
 			FilterList list = new FilterListBlock ();
 			proxy.FilterRequest = list;

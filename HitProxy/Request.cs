@@ -196,7 +196,8 @@ namespace HitProxy
 				if (ContentLength > 0) {
 					DataSocket.PipeTo (socket, ContentLength);
 				} else {
-					throw new HeaderException ("Missing Content-Length in POST request", HttpStatusCode.BadRequest);
+					//Ignore, assume content-length of 0 is ok.
+					//throw new HeaderException ("Missing Content-Length in POST request", HttpStatusCode.BadRequest);
 				}
 			}
 		}

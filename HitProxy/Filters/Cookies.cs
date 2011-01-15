@@ -95,7 +95,7 @@ namespace HitProxy.Filters
 						else
 							request.Add (keyVal[0], "");
 					}
-					catch (ArgumentException ae)
+					catch (ArgumentException)
 					{
 						//Ignore duplicates if values are the same
 						if (keyVal.Length == 1 && request[keyVal[0]] == "")

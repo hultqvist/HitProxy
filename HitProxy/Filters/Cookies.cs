@@ -103,10 +103,8 @@ namespace HitProxy.Filters
 						if (keyVal.Length == 2 && request[keyVal[0]] == keyVal[1])
 							continue;
 						
-						throw new ArgumentException (
-							string.Format ("Duplicate cookie: key={0}, header={1}",
-								keyVal[0], header),
-							keyVal[0], ae);
+						Console.Error.WriteLine("Duplicate cookie: key={0}, header={1}",
+								keyVal[0], header);
 					}
 				}
 				cookies.Add (request);

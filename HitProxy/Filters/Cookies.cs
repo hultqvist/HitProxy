@@ -37,7 +37,7 @@ namespace HitProxy.Filters
 			FilterCookie (request, cookies);
 			
 			//Replace set-cookie
-			head.RemoveHeader ("Se-Cookie");
+			head.RemoveHeader ("Set-Cookie");
 			foreach (CookieHeader cr in cookies)
 				head.AddHeader ("Set-Cookie", GenerateHeader (cr));
 			
@@ -89,23 +89,17 @@ namespace HitProxy.Filters
 				foreach (string part in parts) {
 					string p = part.Trim ();
 					string[] keyVal = p.Split (new char[] { '=' }, 2);
-					try {
-						if (keyVal.Length == 2)
-							request.Add (keyVal[0], keyVal[1]);
-						else
-							request.Add (keyVal[0], "");
-					}
-					catch (ArgumentException)
+					
+					if (request.ContainsKey (keyVal[0]))
 					{
-						//Ignore duplicates if values are the same
-						if (keyVal.Length == 1 && request[keyVal[0]] == "")
-							continue;
-						if (keyVal.Length == 2 && request[keyVal[0]] == keyVal[1])
-							continue;
-						
-						Console.Error.WriteLine("Duplicate cookie: key={0}, header={1}",
-								keyVal[0], header);
+						Console.Error.WriteLine ("Duplicate cookie: key={0}:\nFirst: {1}\nSecond: {2}", keyVal[0], keyVal[1], request[keyVal[0]]);
+						request.Remove (keyVal[0]);
 					}
+					
+					if (keyVal.Length == 2)
+						request.Add (keyVal[0], keyVal[1]);
+					else
+						request.Add (keyVal[0], "");
 				}
 				cookies.Add (request);
 			}
@@ -142,7 +136,7 @@ namespace HitProxy.Filters
 	internal class CookieHeader : Dictionary<string, string>
 	{
 		public string Host;
-		
+
 		public CookieHeader (string host) : base(StringComparer.OrdinalIgnoreCase)
 		{
 			this.Host = host;

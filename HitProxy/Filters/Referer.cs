@@ -57,6 +57,8 @@ namespace HitProxy.Filters
 							p.Filter = RefererFiltering.Pass;
 						if (parts[0] == "Fake")
 							p.Filter = RefererFiltering.Fake;
+						if (parts[0] == "Clean")
+							p.Filter = RefererFiltering.Clean;
 						if (parts[0] == "Remove")
 							p.Filter = RefererFiltering.Remove;
 						if (parts[0] == "Block")
@@ -119,6 +121,9 @@ namespace HitProxy.Filters
 							httpRequest.RemoveHeader ("Referer");
 							httpRequest.Add ("Referer: http://" + httpRequest.Uri.Host + "/");
 						}
+						if (pair.Filter == RefererFiltering.Clean) {
+							httpRequest.ReplaceHeader ("Referer", "http://" + referer + "/");
+						}
 						if (pair.Filter == RefererFiltering.Remove)
 							httpRequest.RemoveHeader ("Referer");
 						//else, pass unmodified
@@ -151,6 +156,7 @@ namespace HitProxy.Filters
 	<input type=""text"" name=""to"" value=""" + Response.Html (requestPair.ToHost.ToString ()) + @""" />
 	<input type=""submit"" name=""action"" value=""Pass"" />
 	<input type=""submit"" name=""action"" value=""Fake"" />
+	<input type=""submit"" name=""action"" value=""Clean"" />
 	<input type=""submit"" name=""action"" value=""Remove"" />
 	<input type=""submit"" name=""action"" value=""Block"" />
 </form>");
@@ -169,6 +175,7 @@ namespace HitProxy.Filters
 				<ul>
 					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
 					<li><strong>Fake</strong> Change referer to the root of the target host</li>
+					<li><strong>Clean</strong> Change referer to the root of the source host</li>
 					<li><strong>Remove</strong> Remove the referer header</li>
 					<li><strong>Block</strong> Block the entire request</li>
 				</ul>
@@ -211,6 +218,8 @@ namespace HitProxy.Filters
 					p.Filter = RefererFiltering.Pass;
 				if (httpGet["action"] == "Fake")
 					p.Filter = RefererFiltering.Fake;
+				if (httpGet["action"] == "Clean")
+					p.Filter = RefererFiltering.Clean;
 				if (httpGet["action"] == "Remove")
 					p.Filter = RefererFiltering.Remove;
 				if (httpGet["action"] == "Block")
@@ -236,6 +245,7 @@ namespace HitProxy.Filters
 								<input type=""text"" name=""to"" value="""" />
 								<input type=""submit"" name=""action"" value=""Pass"" />
 								<input type=""submit"" name=""action"" value=""Fake"" />
+								<input type=""submit"" name=""action"" value=""Clean"" />
 								<input type=""submit"" name=""action"" value=""Remove"" />
 								<input type=""submit"" name=""action"" value=""Block"" />
 							</form>";
@@ -249,6 +259,7 @@ namespace HitProxy.Filters
 									<input type=""text"" name=""to"" value=""" + pair.ToHost + @""" />
 									<input type=""submit"" name=""action"" value=""Pass"" />
 									<input type=""submit"" name=""action"" value=""Fake"" />
+									<input type=""submit"" name=""action"" value=""Clean"" />
 									<input type=""submit"" name=""action"" value=""Remove"" />
 									<input type=""submit"" name=""action"" value=""Block"" />
 								</form>";
@@ -268,9 +279,25 @@ namespace HitProxy.Filters
 
 	public enum RefererFiltering
 	{
+		/// <summary>
+		/// Pass the referer unmodified.
+		/// </summary>
 		Pass,
+		/// <summary>
+		/// Remove the Referer header completely.
+		/// </summary>
 		Remove,
+		/// <summary>
+		/// Set the referer to the root of the target page.
+		/// </summary>
 		Fake,
+		/// <summary>
+		/// Set the referer to the root of the source page
+		/// </summary>
+		Clean,
+		/// <summary>
+		/// Block the entire request.
+		/// </summary>
 		Block
 	}
 

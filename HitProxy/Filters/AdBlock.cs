@@ -215,12 +215,12 @@ namespace HitProxy.Filters
 
 		class RegexFilter : Regex
 		{
-			private readonly string pattern;
+			private readonly string fpattern;
 			private readonly FilterType type;
 			private readonly string wildcard;
 
 			public string Pattern {
-				get { return pattern; }
+				get { return fpattern; }
 			}
 
 			public FilterType Type {
@@ -233,7 +233,7 @@ namespace HitProxy.Filters
 
 			private RegexFilter (string pattern, FilterType type, string regex, string wildcard) : base(regex)
 			{
-				this.pattern = pattern;
+				this.fpattern = pattern;
 				this.type = type;
 				this.wildcard = wildcard;
 			}

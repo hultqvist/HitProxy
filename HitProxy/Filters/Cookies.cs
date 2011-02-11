@@ -92,7 +92,7 @@ namespace HitProxy.Filters
 					
 					if (request.ContainsKey (keyVal[0]))
 					{
-						Console.Error.WriteLine ("Duplicate cookie: key={0}:\nFirst: {1}\nSecond: {2}", keyVal[0], keyVal[1], request[keyVal[0]]);
+						Console.Error.WriteLine ("Duplicate cookie: key={0}", keyVal[0]);
 						request.Remove (keyVal[0]);
 					}
 					

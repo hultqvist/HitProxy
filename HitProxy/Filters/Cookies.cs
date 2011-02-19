@@ -61,11 +61,12 @@ namespace HitProxy.Filters
 		{
 			foreach (CookieHeader cr in list.ToArray ()) {
 				//Block third party cookies
+								/* //Too aggressive, need finer UI control before activating this
 				if (cr.ContainsKey ("domain") && (("." + request.Uri.Host).EndsWith (cr["domain"]) == false)) {
 					list.Remove (cr);
 					blockedJar.Add (cr);
-				}
-				
+				}*/
+
 				//Block cookies in cross domain requests
 				if (request.Referer != null) {
 					string referer = new Uri (request.Referer).Host;
@@ -90,8 +91,7 @@ namespace HitProxy.Filters
 					string p = part.Trim ();
 					string[] keyVal = p.Split (new char[] { '=' }, 2);
 					
-					if (request.ContainsKey (keyVal[0]))
-					{
+					if (request.ContainsKey (keyVal[0])) {
 						Console.Error.WriteLine ("Duplicate cookie: key={0}", keyVal[0]);
 						request.Remove (keyVal[0]);
 					}

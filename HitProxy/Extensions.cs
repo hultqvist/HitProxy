@@ -31,6 +31,23 @@ namespace HitProxy
 		}
 
 		/// <summary>
+		/// Send all bytes in buffer even when Socket.Send would return, this retries untill all bytes are sent.
+		/// </summary>
+		/// <param name="buffer"></param>
+		/// <param name="length"></param>
+		public static void SendAll (this Socket socket, byte[] buffer, int length)
+		{
+			int sent = 0;
+			while (sent < length) {
+				int delta = socket.Send (buffer, sent, length - sent, SocketFlags.None);
+				if (delta < 0)
+					throw new InvalidOperationException ("Send less than zero bytes");
+				sent += delta;
+			}
+			if (sent > length)
+				throw new InvalidOperationException ("Sent more data than received");
+		}
+		/// <summary>
 		/// Read headers in a chunked encoding
 		/// Return a string with the chunk header
 		/// </summary>
@@ -81,12 +98,10 @@ namespace HitProxy
 			byte b;
 			
 			while (true) {
-				if (socket.Poll (1200*1000000, SelectMode.SelectRead)) {
-					if (socket.Available == 0)
-						throw new HeaderException ("Connection closed", HttpStatusCode.BadGateway);
-				} else {
-					throw new HeaderException ("Timeout while waiting for headers", HttpStatusCode.RequestTimeout);
+				while (false == socket.Poll (5 * 1000000, SelectMode.SelectRead)) {
 				}
+				if (socket.Available == 0)
+					throw new HeaderException ("Connection closed", HttpStatusCode.BadGateway);
 				int received = socket.Receive (header, index, 1, SocketFlags.None);
 				if (received != 1)
 					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);
@@ -117,7 +132,7 @@ namespace HitProxy
 			}
 		}
 
-		
+
 		public static void NullSafeDispose (this IDisposable dis)
 		{
 			if (dis == null)
@@ -125,7 +140,7 @@ namespace HitProxy
 			
 			dis.Dispose ();
 		}
-		
+
 		/// <summary>
 		/// Exit read lock if held.
 		/// </summary>
@@ -134,7 +149,7 @@ namespace HitProxy
 			if (rwLock.IsReadLockHeld)
 				rwLock.ExitReadLock ();
 		}
-		
+
 		/// <summary>
 		/// Exit upgradeable lock if held
 		/// </summary>
@@ -143,7 +158,7 @@ namespace HitProxy
 			if (rwLock.IsUpgradeableReadLockHeld)
 				rwLock.ExitUpgradeableReadLock ();
 		}
-		
+
 		/// <summary>
 		/// Exit write lock if held
 		/// </summary>

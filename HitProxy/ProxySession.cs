@@ -136,6 +136,8 @@ namespace HitProxy
 		{
 			try {
 				string header = clientSocket.ReadHeader ();
+				if (header.Length > 10000)
+					Console.Error.WriteLine ("Large header");
 				request = ParseRequest (header);
 				if (request == null)
 					throw new HeaderException ("No request received", HttpStatusCode.BadRequest);
@@ -292,7 +294,7 @@ namespace HitProxy
 				
 				Status = "Connected";
 				return remote;
-			
+				
 			} catch (SocketException e) {
 				string extra = "";
 				if (request.Proxy != null)

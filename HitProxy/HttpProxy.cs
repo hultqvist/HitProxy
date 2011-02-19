@@ -49,7 +49,7 @@ namespace HitProxy
 			//link connection to response so that it will get closed on error
 			request.Response = new Response (remoteConnection);
 			
-			Status = "Sending request";
+			Status = "Sending request to server";
 			try {
 				request.SendHeaders (remoteConnection.remoteSocket);
 			} catch (IOException e) {
@@ -72,7 +72,7 @@ namespace HitProxy
 				}
 				
 				//Send response
-				Status = "Sending response";
+				Status = "Sending response back to browser";
 				request.Response.SendResponse (clientSocket);
 				
 				int code = (int)request.Response.HttpCode;

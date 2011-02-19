@@ -92,9 +92,7 @@ namespace HitProxy
 				if (remoteSocket.IsConnected () == false)
 					return;
 				int read = remoteSocket.Receive (buffer);
-				int sent = output.Send (buffer, 0, read, SocketFlags.None);
-				if (sent != read)
-					throw new SocketException ();
+				output.SendAll (buffer, read);
 				Received += read;
 			}
 		}
@@ -114,7 +112,9 @@ namespace HitProxy
 				int toread = buffer.Length;
 				if (totalRead + buffer.Length > length)
 					toread = (int)length - totalRead;
-				remoteSocket.Poll (5000000, SelectMode.SelectRead);
+				bool stat = remoteSocket.Poll (5000000, SelectMode.SelectRead);
+				if (stat == false)
+					continue;
 				if (remoteSocket.IsConnected () == false)
 					return;
 				int read = remoteSocket.Receive (buffer, 0, toread, SocketFlags.None);
@@ -123,9 +123,9 @@ namespace HitProxy
 						return;
 					continue;
 				}
-				output.Send (buffer, 0, read, SocketFlags.None);
-				Received += read;
+				output.SendAll (buffer, read);
 				
+				Received += read;
 				totalRead += read;
 				if (totalRead >= length)
 					return;
@@ -199,9 +199,7 @@ namespace HitProxy
 								return;
 							}
 						}
-					}
-					catch (ObjectDisposedException)
-					{
+					} catch (ObjectDisposedException) {
 						pipe.done.Set ();
 						return;
 					}

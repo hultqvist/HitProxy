@@ -84,7 +84,7 @@ namespace HitProxy
 			string[] parts = firstLine.Split (' ');
 			if (parts.Length != 3)
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
-				
+			
 			Method = parts[0].ToUpperInvariant ();
 			HttpVersion = parts[2];
 			if (System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri))
@@ -111,8 +111,7 @@ namespace HitProxy
 			}
 			
 			//Intercepting proxy get host from host header
-			if (Uri.IsAbsoluteUri == false || Uri.IsFile == true)
-			{
+			if (Uri.IsAbsoluteUri == false || Uri.IsFile == true) {
 				Uri baseUri = new Uri ("http://" + Host);
 				Uri = new Uri (baseUri, this.Uri);
 			}

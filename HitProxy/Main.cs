@@ -1,21 +1,50 @@
 using System;
 using System.IO;
 using HitProxy.Filters;
+using System.Net;
+using Mono.Options;
+using System.Collections.Generic;
 
 namespace HitProxy
 {
 	class MainClass
 	{
 		public const int ProxyPort = 8080;
-		
+
 		public static void Main (string[] args)
 		{
+			IPAddress listenIP = IPAddress.Loopback;
+			int port = ProxyPort;
+			bool startBrowser = true;
+			
+			OptionSet options = new OptionSet ();
+			options.Add ("l|listen=", "Listen on IP\nuse 0.0.0.0 for any, default(localhost)", v => listenIP = IPAddress.Parse (v));
+			options.Add ("p|port=", "Listen on port", v => port = int.Parse (v));
+			options.Add ("s|server|no-browser", "Server mode, do not invoke the browser", v => startBrowser = false);
+			List<string> extra;
+			try {
+				extra = options.Parse (args);
+			} catch (Exception e) {
+				Console.Error.WriteLine ("HitProxy: " + e.Message);
+				Console.WriteLine ();
+				options.WriteOptionDescriptions (Console.Out);
+				return;
+			}
+			
+			if (extra.Count > 0) {
+				foreach (string cmd in extra)
+					Console.Error.WriteLine ("Unknown argument: " + cmd);
+				Console.WriteLine ();
+				options.WriteOptionDescriptions (Console.Out);
+				return;
+			}
+			
 			//Prepare config folder
 			string configPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy");
 			Directory.CreateDirectory (configPath);
 			
 			ConnectionManager connectionManager = new ConnectionManager ();
-			Proxy proxy = new Proxy (ProxyPort, connectionManager);
+			Proxy proxy = new Proxy (listenIP, port, connectionManager);
 			System.Threading.Thread.CurrentThread.Name = "Main";
 			
 			//TODO: Read filter configuration from Filters.conf
@@ -44,10 +73,11 @@ namespace HitProxy
 			response.Add (new Cookies ());
 			
 			proxy.Start ();
-			#if !DEBUG
-			System.Threading.Thread.Sleep (3000);
-			System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
-			#endif
+			if (startBrowser)
+			{
+				System.Threading.Thread.Sleep (3000);
+				System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
+			}
 			proxy.Wait ();
 			proxy.Stop ();
 		}

@@ -88,6 +88,9 @@
     <Compile Include="Filters\ProxyTld.cs" />
     <Compile Include="SocksProxy.cs" />
     <Compile Include="BrowserProxy.cs" />
+    <Compile Include="..\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
+      <Link>Options.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

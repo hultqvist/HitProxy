@@ -10,6 +10,7 @@ namespace HitProxy
 {
 	public class Proxy
 	{
+		private IPAddress address;
 		private int port;
 		public int Port {
 			get { return port; }
@@ -17,7 +18,7 @@ namespace HitProxy
 		Thread thread;
 
 		public readonly BrowserProxy Browser;
-		
+
 		/// <summary>
 		/// List of active ProxySessions.
 		/// </summary>
@@ -26,8 +27,9 @@ namespace HitProxy
 
 		public Filter FilterRequest { get; set; }
 		public Filter FilterResponse { get; set; }
-		public Proxy (int port, ConnectionManager connectionManager)
+		public Proxy (IPAddress address, int port, ConnectionManager connectionManager)
 		{
+			this.address = address;
 			this.port = port;
 			this.Browser = new BrowserProxy (this);
 			this.connectionManager = connectionManager;
@@ -60,14 +62,14 @@ namespace HitProxy
 
 		public void Run ()
 		{
-			TcpListener listener = new TcpListener (new IPEndPoint (IPAddress.Any, Port));
+			TcpListener listener = new TcpListener (new IPEndPoint (address, Port));
 			
 			bool retrying = false;
 			
 			while (true) {
 				try {
 					listener.Start ();
-					Console.WriteLine ("Set your browser proxy settings to: localhost, port " + Port);
+					Console.WriteLine ("HTTP Proxy listening on " + address + ", port " + Port);
 					
 					while (true) {
 						

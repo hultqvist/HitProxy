@@ -1,0 +1,3 @@
+[submodule "ndesk-options"]
+	path = ndesk-options
+	url = git://git.ndesk.org/pub/scm/ndesk-options

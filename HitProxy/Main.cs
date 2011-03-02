@@ -75,8 +75,15 @@ namespace HitProxy
 			proxy.Start ();
 			if (startBrowser)
 			{
-				System.Threading.Thread.Sleep (3000);
-				System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
+				try
+				{
+					System.Threading.Thread.Sleep (3000);
+					System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
+				}
+				catch (Exception e)
+				{
+					Console.Error.WriteLine ("Failed to launch browser: " + e.Message);
+				}
 			}
 			proxy.Wait ();
 			proxy.Stop ();

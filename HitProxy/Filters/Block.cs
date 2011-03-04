@@ -1,5 +1,5 @@
-
 using System;
+using HitProxy.Http;
 
 namespace HitProxy.Filters
 {
@@ -10,7 +10,7 @@ namespace HitProxy.Filters
 	{
 		public override bool Apply (Request request)
 		{
-			request.Block ("Always block filter");
+			request.Response = new BlockedResponse ("Always block filter");
 			return true;
 		}
 	}

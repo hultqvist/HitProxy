@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Specialized;
 using System.IO;
+using HitProxy.Http;
 
 namespace HitProxy.Filters
 {

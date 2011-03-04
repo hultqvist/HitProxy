@@ -1,12 +1,13 @@
-
 using System;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Text;
+using HitProxy.Http;
+using HitProxy.Connection;
 
-namespace HitProxy
+namespace HitProxy.Session
 {
 	public partial class ProxySession : IDisposable
 	{
@@ -35,7 +36,7 @@ namespace HitProxy
 		/// <summary>
 		/// Start a new session thread for the incoming client.
 		/// </summary>
-		public ProxySession (Socket socket, Proxy proxy, ConnectionManager connectionManager)
+		public ProxySession (Socket socket,Proxy proxy,ConnectionManager connectionManager)
 		{
 			this.clientSocket = socket;
 			this.proxy = proxy;
@@ -260,7 +261,7 @@ namespace HitProxy
 		private CachedConnection ConnectRequest ()
 		{
 			if (request.Uri.Host == "localhost" && request.Uri.Port == MainClass.ProxyPort) {
-				request.Block ("Loopback protection");
+				request.Response = new BlockedResponse ("Loopback protection");
 				return null;
 			}
 			
@@ -341,19 +342,5 @@ namespace HitProxy
 			return name;
 		}
 		
-	}
-
-	/// <summary>
-	/// Indicates errors in the http headers
-	/// </summary>
-	public class HeaderException : Exception
-	{
-		public HttpStatusCode HttpCode { get; set; }
-
-		public HeaderException (string message, HttpStatusCode httpCode) : base(message)
-		{
-			//Console.Error.WriteLine (httpCode + " " + message);
-			this.HttpCode = httpCode;
-		}
 	}
 }

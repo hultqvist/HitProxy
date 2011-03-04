@@ -1,12 +1,12 @@
-
 using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using HitProxy.Connection;
 
-namespace HitProxy
+namespace HitProxy.Http
 {
 	/// <summary>
 	/// Both http request and response headers

@@ -1,10 +1,11 @@
-
 using System;
 using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
 using HitProxy.Filters;
+using HitProxy.Session;
+using HitProxy.Connection;
 
 namespace HitProxy
 {

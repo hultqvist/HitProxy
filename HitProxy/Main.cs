@@ -4,6 +4,7 @@ using HitProxy.Filters;
 using System.Net;
 using Mono.Options;
 using System.Collections.Generic;
+using HitProxy.Connection;
 
 namespace HitProxy
 {

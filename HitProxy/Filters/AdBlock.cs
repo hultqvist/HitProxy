@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.IO;
 using HitProxy;
+using HitProxy.Http;
 using System.Net;
 using System.Threading;
 using System.Collections.Specialized;
@@ -130,7 +131,7 @@ namespace HitProxy.Filters
 					if (regex.Type == AdBlock.FilterType.Pass)
 						return false;
 						
-					request.Block ("Adblock filter: " + regex.ToString () + "\n" + url);
+					request.Response = new BlockedResponse ("Adblock filter: " + regex.ToString () + "\n" + url);
 					request.Response.Add ("X-AdBlock: BLOCKED: " + regex.ToString ());
 					return true;
 				}

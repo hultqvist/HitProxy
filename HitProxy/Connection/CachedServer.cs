@@ -3,7 +3,7 @@ using System;
 using System.Net;
 using System.Collections.Generic;
 
-namespace HitProxy
+namespace HitProxy.Connection
 {
 	/// <summary>
 	/// Holds connection cache for a server on one IP address

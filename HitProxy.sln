@@ -18,7 +18,7 @@ Global
 		StartupItem = HitProxy\HitProxy.csproj
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
-		$1.DirectoryNamespaceAssociation = Hierarchical
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
 		$1.ResourceNamePolicy = FileFormatDefault
 		$0.TextStylePolicy = $2
 		$2.TabWidth = 4
@@ -34,7 +34,7 @@ Global
 		$4.scope = text/x-csharp
 		$0.StandardHeader = $5
 		$5.Text = 
-		$5.inheritsSet = Apache2License
+		$5.IncludeInNewFiles = True
 		$0.VersionControlPolicy = $6
 		$6.inheritsSet = Mono
 		$0.ChangeLogPolicy = $7

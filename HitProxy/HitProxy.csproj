@@ -10,7 +10,6 @@
     <RootNamespace>HitProxy</RootNamespace>
     <AssemblyName>HitProxy</AssemblyName>
     <StartupObject>HitProxy.MainClass</StartupObject>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,12 +40,6 @@
     <Compile Include="Main.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Proxy.cs" />
-    <Compile Include="ProxySession.cs" />
-    <Compile Include="ConnectProxy.cs" />
-    <Compile Include="BlockedResponse.cs" />
-    <Compile Include="Header.cs" />
-    <Compile Include="Request.cs" />
-    <Compile Include="Response.cs" />
     <Compile Include="Filters\Filter.cs" />
     <Compile Include="Filters\Password.cs" />
     <Compile Include="Filters\ProxyHeaders.cs" />
@@ -59,24 +52,17 @@
     <Compile Include="Filters\Cache.cs" />
     <Compile Include="Filters\Cookies.cs" />
     <Compile Include="Filters\CustomError.cs" />
-    <Compile Include="Filters\TriggerTrue.cs" />
     <Compile Include="Filters\BlockBreak.cs" />
     <Compile Include="Filters\NoScript.cs" />
-    <Compile Include="Filters\TriggerFalse.cs" />
     <Compile Include="Filters\Trigger.cs" />
     <Compile Include="Filters\Block.cs" />
     <Compile Include="Filters\TriggerLunchBreak.cs" />
-    <Compile Include="ConnectionManager.cs" />
-    <Compile Include="CachedConnection.cs" />
-    <Compile Include="CachedServer.cs" />
     <Compile Include="Filters\Slow.cs" />
     <Compile Include="Filters\AdBlock.cs" />
     <Compile Include="Filters\FilterList.cs" />
     <Compile Include="Filters\FilterListAnd.cs" />
     <Compile Include="Filters\FilterListFirst.cs" />
     <Compile Include="Filters\FilterListOr.cs" />
-    <Compile Include="HttpProxy.cs" />
-    <Compile Include="SocketData.cs" />
     <Compile Include="Filters\Command.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Filters\FilterListBlock.cs" />
@@ -86,25 +72,41 @@
     <Compile Include="Filters\Broken.cs" />
     <Compile Include="Filters\Onion.cs" />
     <Compile Include="Filters\ProxyTld.cs" />
-    <Compile Include="SocksProxy.cs" />
     <Compile Include="BrowserProxy.cs" />
     <Compile Include="..\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
       <Link>Options.cs</Link>
     </Compile>
+    <Compile Include="Session\ProxySession.cs" />
+    <Compile Include="Session\HttpProxy.cs" />
+    <Compile Include="Session\ConnectProxy.cs" />
+    <Compile Include="Http\Header.cs" />
+    <Compile Include="Http\Request.cs" />
+    <Compile Include="Http\Response.cs" />
+    <Compile Include="Http\BlockedResponse.cs" />
+    <Compile Include="Connection\CachedConnection.cs" />
+    <Compile Include="Connection\CachedServer.cs" />
+    <Compile Include="Connection\ConnectionManager.cs" />
+    <Compile Include="Connection\SocketExtensions.cs" />
+    <Compile Include="LockExtensions.cs" />
+    <Compile Include="Connection\SocketData.cs" />
+    <Compile Include="Session\SocksProxy.cs" />
+    <Compile Include="Http\HeaderException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <MonoDevelop>
       <Properties>
-        <Policies>
-          <DotNetNamingPolicy DirectoryNamespaceAssociation="Hierarchical" ResourceNamePolicy="FileName" />
-        </Policies>
         <Deployment.LinuxDeployData scriptName="privateproxy" />
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
   <ItemGroup>
     <Folder Include="Filters\" />
+    <Folder Include="Session\" />
+    <Folder Include="Http\" />
+    <Folder Include="Session\" />
+    <Folder Include="Session\" />
+    <Folder Include="Connection\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="style.css">

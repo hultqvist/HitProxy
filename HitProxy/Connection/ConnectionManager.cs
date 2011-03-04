@@ -1,11 +1,11 @@
-
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using HitProxy.Http;
 
-namespace HitProxy
+namespace HitProxy.Connection
 {
 
 	/// <summary>
@@ -27,7 +27,7 @@ namespace HitProxy
 					CachedServer[] list = new CachedServer[serverCache.Values.Count];
 					int n = 0;
 					foreach (CachedServer s in serverCache.Values) {
-						list[n] = s;
+						list [n] = s;
 						n++;
 					}
 					return list;
@@ -46,7 +46,7 @@ namespace HitProxy
 			IPAddress[] 	dns = GetCachedDns (uri.Host);
 			
 			if (dns == null)
-				throw new HeaderException("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
+				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
 			
 			return GetCachedConnection (dns, uri.Port, true, true);
 		}
@@ -62,7 +62,7 @@ namespace HitProxy
 			//DNS lookup caching
 			IPAddress[] dns = GetCachedDns (uri.Host);
 			if (dns == null)
-				throw new HeaderException("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
+				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
 			
 			CachedConnection connection = GetCachedConnection (dns, uri.Port, false, hold);
 			
@@ -129,7 +129,7 @@ namespace HitProxy
 		{
 			lock (dnsCache) {
 				if (dnsCache.ContainsKey (host))
-					return dnsCache[host];
+					return dnsCache [host];
 				else {
 					IPAddress[] address = Dns.GetHostAddresses (host);
 					

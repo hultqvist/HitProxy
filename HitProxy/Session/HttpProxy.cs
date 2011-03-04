@@ -1,12 +1,13 @@
-
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Net.Security;
 using System.IO;
 using System.Text;
+using HitProxy.Http;
+using HitProxy.Connection;
 
-namespace HitProxy
+namespace HitProxy.Session
 {
 	public partial class ProxySession
 	{

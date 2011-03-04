@@ -1,4 +1,6 @@
 using System;
+using HitProxy.Http;
+
 namespace HitProxy.Filters
 {
 	public abstract class ProxyTld : Filter
@@ -6,7 +8,7 @@ namespace HitProxy.Filters
 		private readonly string tld;
 		private readonly string proxy;
 		
-		public ProxyTld (string topLevelDomain, string proxy)
+		public ProxyTld (string topLevelDomain,string proxy)
 		{
 			this.tld = topLevelDomain;
 			this.proxy = proxy;
@@ -17,7 +19,7 @@ namespace HitProxy.Filters
 		/// </summary>
 		public override bool Apply (Request request)
 		{
-			if (!request.Uri.Host.EndsWith ("."+tld))
+			if (!request.Uri.Host.EndsWith ("." + tld))
 				return false;
 			
 			request.Proxy = new Uri (proxy);
@@ -27,7 +29,7 @@ namespace HitProxy.Filters
 		public override string Status ()
 		{
 			return "<p>This filter intercepts all requests to domains ending in <strong>" + tld
-				+ "</strong> and pass them to a local running http proxy.</p>";
+ + "</strong> and pass them to a local running http proxy.</p>";
 		}
 	}
 }

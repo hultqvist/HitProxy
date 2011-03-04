@@ -1,4 +1,6 @@
 using System;
+using HitProxy.Http;
+
 namespace HitProxy.Filters
 {
 	/// <summary>

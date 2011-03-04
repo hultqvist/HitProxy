@@ -6,7 +6,7 @@ using System.Text;
 using System.IO;
 using HitProxy.Filters;
 
-namespace HitProxy
+namespace HitProxy.Http
 {
 
 	/// <summary>

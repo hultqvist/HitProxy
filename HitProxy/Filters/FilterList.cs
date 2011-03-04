@@ -1,7 +1,8 @@
-
 using System;
 using System.Threading;
 using System.Collections.Generic;
+using HitProxy;
+using HitProxy.Http;
 
 namespace HitProxy.Filters
 {
@@ -19,8 +20,7 @@ namespace HitProxy.Filters
 				listLock.EnterWriteLock ();
 				List.Add (filter);
 				filter.Parent = this;
-			}
-			finally {
+			} finally {
 				listLock.TryExitWriteLock ();
 			}
 		}

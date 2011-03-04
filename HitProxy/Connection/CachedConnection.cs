@@ -3,7 +3,7 @@ using System;
 using System.Net.Sockets;
 using System.IO;
 
-namespace HitProxy
+namespace HitProxy.Connection
 {
 
 	public class CachedConnection : IDisposable

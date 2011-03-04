@@ -1,4 +1,3 @@
-
 using System;
 using System.Net;
 using System.Web;
@@ -6,6 +5,9 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Reflection;
+using HitProxy.Http;
+using HitProxy.Connection;
+using HitProxy.Session;
 
 namespace HitProxy.Filters
 {
@@ -163,7 +165,7 @@ namespace HitProxy.Filters
 			return response;
 		}
 
-		private string SessionStatus (HitProxy.ProxySession session)
+		private string SessionStatus (HitProxy.Session.ProxySession session)
 		{
 			string data = "";
 			
@@ -213,7 +215,7 @@ namespace HitProxy.Filters
 			return "<ul>" + data + "</ul>";
 		}
 
-		private string SessionList (ProxySession[] sessionList)
+		private string SessionList (Session.ProxySession[] sessionList)
 		{
 			string data = "";
 			foreach (ProxySession session in sessionList) {

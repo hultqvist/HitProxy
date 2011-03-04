@@ -4,8 +4,10 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Threading;
+using HitProxy.Connection;
+using HitProxy.Http;
 
-namespace HitProxy
+namespace HitProxy.Session
 {
 	/// <summary>
 	/// Proxy implementation for HTTP CONNECT

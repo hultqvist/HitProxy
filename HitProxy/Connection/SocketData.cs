@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Text;
 
-namespace HitProxy
+namespace HitProxy.Connection
 {
 	/// <summary>
 	/// The connection to the remote server or local client.

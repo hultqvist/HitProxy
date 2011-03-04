@@ -1,10 +1,10 @@
-
 using System;
 using System.Globalization;
 using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Collections.Specialized;
+using HitProxy.Http;
 
 namespace HitProxy.Filters
 {

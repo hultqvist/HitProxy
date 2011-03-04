@@ -1,6 +1,6 @@
-
 using System;
 using System.Net;
+using HitProxy.Http;
 
 namespace HitProxy.Filters
 {

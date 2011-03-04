@@ -1,10 +1,10 @@
-
 using System;
 using System.Net;
 using System.IO;
 using System.Net.Sockets;
+using HitProxy.Connection;
 
-namespace HitProxy
+namespace HitProxy.Http
 {
 	public class Request : Header
 	{
@@ -85,11 +85,11 @@ namespace HitProxy
 			if (parts.Length != 3)
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
 			
-			Method = parts[0].ToUpperInvariant ();
-			HttpVersion = parts[2];
-			if (System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri))
+			Method = parts [0].ToUpperInvariant ();
+			HttpVersion = parts [2];
+			if (System.Uri.TryCreate (parts [1], UriKind.Absolute, out this.Uri))
 				return;
-			if (System.Uri.TryCreate (parts[1], UriKind.Relative, out this.Uri))
+			if (System.Uri.TryCreate (parts [1], UriKind.Relative, out this.Uri))
 				return;
 		}
 
@@ -201,45 +201,37 @@ namespace HitProxy
 			}
 		}
 
-		/// <summary>
-		/// Block the request with a custom message
-		/// </summary>
-		public void Block (string message)
-		{
-			Response = new BlockedResponse (message);
-		}
-
 		public void Block (string title, string htmlMessage)
 		{
 			//Determine content type requested
-//			string cc = null;
-//			while (true) {
-//				if (Accept == null) {
-//					if (Uri.AbsolutePath.EndsWith (".js")) {
-//						cc = "application/x-javascript";
-//						break;
-//					}
-//					if (Uri.AbsolutePath.EndsWith (".css")) {
-//						cc = "text/css";
-//						break;
-//					}
-//					if (Uri.AbsolutePath.EndsWith (".png")) {
-//						cc = "image/png";
-//						break;
-//					}
-//					if (Uri.AbsolutePath.EndsWith (".js")) {
-//						cc = "application/javascript";
-//						break;
-//					}
-//				}
-//				if (Accept.StartsWith ("text/css")) {
-//					cc = "text/css";
-//					break;
-//				}
-//				
-//				cc = "text/html";
-//				break;
-//			}
+			//			string cc = null;
+			//			while (true) {
+			//				if (Accept == null) {
+			//					if (Uri.AbsolutePath.EndsWith (".js")) {
+			//						cc = "application/x-javascript";
+			//						break;
+			//					}
+			//					if (Uri.AbsolutePath.EndsWith (".css")) {
+			//						cc = "text/css";
+			//						break;
+			//					}
+			//					if (Uri.AbsolutePath.EndsWith (".png")) {
+			//						cc = "image/png";
+			//						break;
+			//					}
+			//					if (Uri.AbsolutePath.EndsWith (".js")) {
+			//						cc = "application/javascript";
+			//						break;
+			//					}
+			//				}
+			//				if (Accept.StartsWith ("text/css")) {
+			//					cc = "text/css";
+			//					break;
+			//				}
+			//				
+			//				cc = "text/html";
+			//				break;
+			//			}
 			
 			Response = new BlockedResponse (title, htmlMessage);
 		}

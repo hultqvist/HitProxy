@@ -1,12 +1,12 @@
-
 using System;
 using System.Net;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
 using System.Web;
+using HitProxy.Connection;
 
-namespace HitProxy
+namespace HitProxy.Http
 {
 	public class Response : Header
 	{

@@ -71,15 +71,14 @@ namespace HitProxy.Http
 		/// </summary>
 		public Response (HttpStatusCode code, string title, string message) : this(code)
 		{
-			Template (title, "<p>" + Html (message) + @"</p>");
+			Template (title, Html.Format ("<p>{0}</p>", message));
 		}
 
 		protected override void ParseFirstLine (string firstLine)
 		{
 			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
 			if (parts.Length == 3)
-				Message = parts[2];
-			else if (parts.Length == 2)
+				Message = parts[2]; else if (parts.Length == 2)
 				Message = "";
 			else
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadGateway);
@@ -206,28 +205,29 @@ namespace HitProxy.Http
 		/// <param name="data">
 		/// the content data
 		/// </param>
-		public void SetData (string data)
+		public void SetData (Html data)
 		{
 			if (DataSocket != null) {
 				DataSocket.Release ();
 				DataSocket = null;
 			}
 			
-			GeneratedResponse = Encoding.UTF8.GetBytes (data);
+			GeneratedResponse = Encoding.UTF8.GetBytes (data.HtmlString);
 			
 			ReplaceHeader ("Content-Length", GeneratedResponse.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
 			ContentLength = GeneratedResponse.Length;
 		}
 
+		/*
 		public static string Html (string text)
 		{
 			return HttpUtility.HtmlEncode (text);
-		}
+		}*/
 
-		public void Template (string title, string htmlContents)
+		public void Template (string title, Html htmlContents)
 		{
-			SetData (string.Format (@"<!DOCTYPE html>
+			SetData (Html.Format (@"<!DOCTYPE html>
 <html>
 <head>
 	<meta http-equiv=""Content-Type"" content=""text/html; charset=UTF-8"" />
@@ -238,7 +238,7 @@ namespace HitProxy.Http
 	<h1>{2}</h1>
 	{3}
 </body>
-</html>", Filters.WebUI.ConfigHost, HttpCode.ToString (), Html (title), htmlContents));
+</html>", Filters.WebUI.ConfigHost, HttpCode, title, htmlContents));
 		}
 		
 	}

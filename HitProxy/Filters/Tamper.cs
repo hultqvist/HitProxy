@@ -46,9 +46,9 @@ namespace HitProxy.Filters
 				return "Tamper";
 		}
 
-		public override string Status ()
+		public override Html Status ()
 		{
-			return "<p>" + last + "</p>";
+			return Html.Format ("<p>{0}</p>", last);
 		}
 	}
 }

@@ -10,10 +10,13 @@ namespace HitProxy.Filters
 	{
 		public override bool Apply (Request request)
 		{
+			if (request.TestClass ("break") == false)
+				return false;
+			
 			Response resp = new Response (System.Net.HttpStatusCode.ServiceUnavailable);
 			request.Response = resp;
 			
-			resp.Template ("Take a break", @"<p>It's now time for a break.</p>");
+			resp.Template ("Take a break", Html.Format(@"<p>It's now time for a break.</p>"));
 			
 			return true;
 		}

@@ -14,7 +14,7 @@ namespace HitProxy.Filters
 			throw new Exception ("This filter is really broken");
 		}
 		
-		public override string Status ()
+		public override Html Status ()
 		{
 			throw new Exception ("This filter is really broken");
 		}

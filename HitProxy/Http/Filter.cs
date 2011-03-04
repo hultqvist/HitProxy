@@ -4,15 +4,13 @@ using System.Collections.Specialized;
 using System.IO;
 using HitProxy.Http;
 
-namespace HitProxy.Filters
+namespace HitProxy.Http
 {
 	/// <summary>
 	/// Return true on filtered/modified and false otherwise
 	/// </summary>
 	public abstract class Filter
 	{
-		public Filter Parent { get; set; }
-
 		/// <summary>
 		/// Can be used to filter both requests and responses
 		/// For response filtering the request.Response is set
@@ -20,14 +18,14 @@ namespace HitProxy.Filters
 		/// <returns>True if some filter was applied</returns>
 		public abstract bool Apply (Request request);
 
-		public virtual string Status (NameValueCollection httpGet, Request request)
+		public virtual Html Status (NameValueCollection httpGet, Request request)
 		{
 			return Status ();
 		}
 
-		public virtual string Status ()
+		public virtual Html Status ()
 		{
-			return "<p>(no description)</p>";
+			return Html.Format("<p>(no description)</p>");
 		}
 
 		protected static string ConfigPath (string filterName)

@@ -121,14 +121,14 @@ namespace HitProxy.Filters
 			return header;
 		}
 
-		public override string Status ()
+		public override Html Status ()
 		{
-			string html = "<h1>Blocked</h1>";
+			Html html = Html.Format( "<h1>Blocked</h1>");
 			foreach (CookieHeader request in blockedJar)
-				html += "<p>" + request.ToString () + "</p>";
-			html += "<h1>All</h1>";
+				html += Html.Format( "<p>{0}</p>", request);
+			html += Html.Format("<h1>All</h1>");
 			foreach (CookieHeader request in cookieJar)
-				html += "<p>" + request.ToString () + "</p>";
+				html += Html.Format ("<p>{0}</p>", request);
 			return html;
 		}
 	}

@@ -8,12 +8,12 @@ using System.Net;
 using System.Threading;
 using System.Collections.Specialized;
 
-namespace HitProxy.Filters
+namespace HitProxy.Triggers
 {
 	/// <summary>
 	/// Filter requests using an adblock list
 	/// </summary>
-	public class AdBlock : Filter
+	public class AdBlock : Trigger
 	{
 		/// <summary>
 		/// Lock the lists during updates
@@ -130,9 +130,9 @@ namespace HitProxy.Filters
 					
 					if (regex.Type == AdBlock.FilterType.Pass)
 						return false;
-						
-					request.Response = new BlockedResponse ("Adblock filter: " + regex.ToString () + "\n" + url);
-					request.Response.Add ("X-AdBlock: BLOCKED: " + regex.ToString ());
+					
+					request.SetClass ("block");
+					request.SetTriggerHtml(Html.Escape("Adblock filter: " + regex.ToString () + "\n" + url));
 					return true;
 				}
 			}
@@ -140,9 +140,9 @@ namespace HitProxy.Filters
 			return false;
 		}
 
-		public override string Status (NameValueCollection httpGet, Request request)
+		public override Html Status (NameValueCollection httpGet, Request request)
 		{
-			string html = "";
+			Html html = new Html ();
 						
 			if (httpGet["return"] != null) {
 				request.Response.ReplaceHeader ("Location", httpGet["return"]);
@@ -182,22 +182,20 @@ namespace HitProxy.Filters
 				SaveFilters ();
 			}
 			
-			html += @"
+			html += Html.Format(@"
 				<h1>Add new filter</h1>
 				<form action=""?"" method=""get"">
 					<input type=""text"" name=""pattern"" value="""" />
 					<input type=""submit"" name=""action"" value=""Block"" />
-				</form>";
+				</form>");
 			
 			try {
 				listLock.EnterReadLock ();
 				
-				html += "<h1>Block List</h1>";
+				html += Html.Format("<h1>Block List</h1>");
 				foreach (RegexFilter regex in filterList)
 				{
-					html += "<p>" + Response.Html (regex.Pattern);
-					html += " <small>" + Response.Html (regex.ToString ()) + "</small>";
-					html += " <a href=\"?delete=" + regex.GetHashCode () + "\">delete</a></p>";
+					html += Html.Format("<p>{0} <small>{1}</small> <a href=\"?delete={2}\">delete</a></p>", regex.Pattern, regex, regex.GetHashCode ());
 				}
 			} finally {
 				listLock.ExitReadLock ();

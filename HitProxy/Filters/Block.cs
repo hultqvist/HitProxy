@@ -6,11 +6,19 @@ namespace HitProxy.Filters
 	/// <summary>
 	/// Base Class for filters that block unconditionally
 	/// </summary>
-	public abstract class Block : Filter
+	public class Block : Filter
 	{
 		public override bool Apply (Request request)
 		{
-			request.Response = new BlockedResponse ("Always block filter");
+			if (request.TestClass ("block") == false)
+				return false;
+			
+			Html status = new Html ();
+			Html hr = Html.Format ("<hr/>");
+			foreach (Html h in request.GetTriggerHtml ())
+				status += hr + h;
+			
+			request.Response = new BlockedResponse ("Blocked", status);
 			return true;
 		}
 	}

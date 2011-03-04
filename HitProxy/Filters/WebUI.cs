@@ -24,10 +24,10 @@ namespace HitProxy.Filters
 		Proxy proxy;
 		ConnectionManager connectionManager;
 
-		public WebUI (Proxy proxy, ConnectionManager connectionManager)
+		public WebUI (Proxy proxy)
 		{
 			this.proxy = proxy;
-			this.connectionManager = connectionManager;
+			this.connectionManager = proxy.ConnectionManager;
 			
 			if (webUI != null)
 				throw new InvalidOperationException ("There can only be one WebUI");
@@ -54,18 +54,22 @@ namespace HitProxy.Filters
 			case "Connection":
 				request.Response = ConnectionPage (path, httpGet);
 				break;
-			case "Filter":
+			case "Filters":
+			case "RequestFilter":
+			case "RequestTrigger":
+			case "ResponseFilter":
+			case "ResponseTrigger":
 				request.Response = new Response (HttpStatusCode.OK);
 				FiltersPage (path, httpGet, request);
 				break;
 			case "style.css":
 				request.Response = new Response (HttpStatusCode.OK);
-				string data = "";
+				Html data = new Html();
 				string configPath = ConfigPath ("style.css");
 				if (File.Exists (configPath) == false)
 					configPath = Path.Combine (Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location), "style.css");
 				if (File.Exists (configPath))
-					data = File.ReadAllText (configPath);
+					data = Html.Format(File.ReadAllText (configPath));
 				request.Response.SetData (data);
 				request.Response.ReplaceHeader ("Content-Type", "text/css");
 				break;
@@ -91,14 +95,14 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		private void Template (Response response, string title, string html)
+		private void Template (Response response, string title, Html html)
 		{
-			string menu = @"<ul class=""menu"">
+			Html menu = Html.Format(@"<ul class=""menu"">
 	<li><a href=""/"">About</a></li>
-	<li><a href=""/Session"">Session</a></li>
-	<li><a href=""/Connection"">Connection</a></li>
-	<li><a href=""/Filter"">Filters</a></li>
-</ul>";
+	<li><a href=""/Session/"">Session</a></li>
+	<li><a href=""/Connection/"">Connection</a></li>
+	<li><a href=""/Filters/"">Filters</a></li>
+</ul>");
 			response.Template (title, menu + html);
 		}
 
@@ -106,9 +110,13 @@ namespace HitProxy.Filters
 		{
 			Response response = new Response (HttpStatusCode.OK);
 			
-			string data = "";
+			Html data = new Html();
 			if (request.Uri.Host == "localhost") {
-				data += "<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>" + "<p>Try to visit it via <a href=\"http://" + ConfigHost + "/\">proxy mode</a>.</p>" + "<p>If it did not work you must first configure you proxy settings.</p>" + "<p>Set them: host=localhost, port=" + proxy.Port + "</p>";
+				data += Html.Format (@"
+<p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>
+<p>Try to visit it via <a href=""http://{0}"">proxy mode</a>.</p>
+<p>If it did not work you must first configure you proxy settings.</p>
+<p>Set them: host=localhost, port={1}</p>", ConfigHost, proxy.Port);
 			}
 			
 			if (proxy.Browser.CanSetProxy) {
@@ -117,13 +125,13 @@ namespace HitProxy.Filters
 				if (httpGet["active"] == "false")
 					proxy.Browser.Enabled = false;
 				
-				data += "<h1>Browser Proxy Status</h1>";
+				data += Html.Format("<h1>Browser Proxy Status</h1>");
 				if (proxy.Browser.Enabled)
-					data += @"<p><strong>Enabled</strong> <a href=""?active=false"">Disable proxy settings</a></p>";
+					data += Html.Format(@"<p><strong>Enabled</strong> <a href=""?active=false"">Disable proxy settings</a></p>");
 				else
-					data += @"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>";
+					data += Html.Format(@"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>");
 			}
-						
+			
 			Template (response, "HitProxy", data);
 			return response;
 		}
@@ -154,7 +162,7 @@ namespace HitProxy.Filters
 				}
 			}
 			
-			string data = "";
+			Html data;
 			if (showSession == null)
 				data = SessionList (sessionList);
 			else
@@ -165,24 +173,26 @@ namespace HitProxy.Filters
 			return response;
 		}
 
-		private string SessionStatus (HitProxy.Session.ProxySession session)
+		private Html SessionStatus (HitProxy.Session.ProxySession session)
 		{
-			string data = "";
+			Html data = new Html ();;
 			
 			Request req = session.Request;
 			Response resp = null;
 			if (req != null)
 				resp = req.Response;
 			
-			data += "<p>Status: " + session.Status + "</p>";
-			data += "<p>Served " + session.served + "</p>";
-			data += "<p>Close: <a href=\"?close=" + session.GetHashCode () + "\">close</a></p>";
+			data += Html.Format(@"
+<p>Status: {0}</p>
+<p>Served {1}</p>
+<p>Close: <a href=""?close={2}"">close</a></p>",
+				session.Status, session.served, session.GetHashCode ());
 			
-			data += "<h2>Request/Client</h2>";
+			data += Html.Format("<h2>Request/Client</h2>");
 			if (req != null)
 				data += RequestData (req);
 			
-			data += "<h2>Response/Remote</h2>";
+			data += Html.Format("<h2>Response/Remote</h2>");
 			if (resp != null)
 				data += HeaderData (resp);
 			
@@ -207,34 +217,39 @@ namespace HitProxy.Filters
 			
 			return "<div>" + data + "</div>";
 		}
-		private string HeaderData (Header header)
+		private Html HeaderData (Header header)
 		{
-			string data = "";
+			Html data = new Html ();
 			foreach (string h in header)
-				data += "<li>" + h + "</li>";
-			return "<ul>" + data + "</ul>";
+				data += Html.Format ("<li>{0}</li>", h);
+			return Html.Format("<ul>{0}</ul>", data);
 		}
 
-		private string SessionList (Session.ProxySession[] sessionList)
+		private Html SessionList (Session.ProxySession[] sessionList)
 		{
-			string data = "";
+			Html data = new Html();
 			foreach (ProxySession session in sessionList) {
 				
-				data += "<li>";
-				data += "<p><a href=\"?show=" + session.GetHashCode () + "\">Session</a>: ";
-				data += session.served + " requests served ";
-				data += " <a href=\"?close=" + session.GetHashCode () + "\">close</a> " + session.Status + "</p>";
+				data += Html.Format(@"
+<li>
+	<p>
+		<a href=""?show={0}"">Session</a>: {1} requests served
+		<a href=""?close={0}"">close</a> {2}
+	</p>",
+				session.GetHashCode (), session.served, session.Status);
+				
 				Request req = session.Request;
 				if (req != null) {
 					Response resp = req.Response;
 					
-					data += "<p>Request: " + req.Method + " <a href=\"" + req.Uri + "\">" + req.Uri.Scheme + "://" + req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port) + "/</a>";
+					data += Html.Format(@"<p>Request: {0} <a href=""{1}"">{2}://{3}</a>",
+						req.Method, req.Uri, req.Uri.Scheme, req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port));
 					data += " " + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s";
 					if (req.DataSocket.Received > 0)
 						data += "Sent: " + (req.DataSocket.Received / 1000) + " Kbytes";
-					data += "</p>";
+					data += Html.Format("</p>");
 					if (resp != null && resp.DataSocket != null) {
-						data += "<p>Response: " + ((int)resp.HttpCode) + " " + resp.HttpCode;
+						data += Html.Format("<p>Response: ") + ((int)resp.HttpCode) + " " + resp.HttpCode;
 						if (resp.DataSocket.Received > 0)
 							data += " Recv: " + (resp.DataSocket.Received / 1000) + " Kbytes";
 						if (resp.HasBody)
@@ -242,12 +257,12 @@ namespace HitProxy.Filters
 							data += " Total: chunked";
 						else
 							data += " Total: unknown";
-						data += "</p>";
+						data += Html.Format("</p>");
 					}
 				}
-				data += "</li>";
+				data += Html.Format("</li>");
 			}
-			data = "<ul>" + data + "</ul>";
+			data = Html.Format("<ul>{0}</ul>", data);
 			
 			return data;
 		}
@@ -256,7 +271,7 @@ namespace HitProxy.Filters
 		{
 			Response response = new Response (HttpStatusCode.OK);
 			
-			string data = "<h2>Remote connections</h2>";
+			Html data = Html.Format( "<h2>Remote connections</h2>");
 			foreach (CachedServer s in connectionManager.ServerArray) {
 				data += PrintCachedServer (s);
 			}
@@ -265,82 +280,85 @@ namespace HitProxy.Filters
 			return response;
 		}
 
-		string PrintCachedServer (CachedServer server)
+		Html PrintCachedServer (CachedServer server)
 		{
-			string data = "<h3>" + server.endpoint + "</h3>";
+			Html data = Html.Format( "<h3>{0}</h3>", server.endpoint);
 			foreach (CachedConnection c in server.Connections) {
 				if (c.Busy)
-					data += " <span style=\"background: green;\">busy</span> " + c.served;
+					data += Html.Format(" <span style=\"background: green;\">busy</span> ")+ c.served;
 				else
-					data += " <span style=\"background: gray;\">free</span> " + c.served;
+					data += Html.Format(" <span style=\"background: gray;\">free</span> ") + c.served;
 			}
 			return data;
 		}
 
 		static internal string FilterUrl ()
 		{
-			return "http://" + ConfigHost + "/Filter/";
+			return "http://" + ConfigHost + "/Filters/";
 		}
+		
 		static internal string FilterUrl (Filter filter)
 		{
-			Filter f = filter;
-			string path = "";
-			while (f.Parent != null) {
-				path = f.GetType ().Name + "/" + path;
-				f = f.Parent;
-			}
-			if (webUI.proxy.FilterRequest == f)
-				path = "Request/" + path;
-			if (webUI.proxy.FilterResponse == f)
-				path = "Response/" + path;
-			return FilterUrl () + path;
+			string path = "/";
+			
+			if (webUI.proxy.RequestFilters.Contains (filter))
+				path = "/RequestFilter/";
+			if (webUI.proxy.RequestTriggers.Contains (filter as Trigger))
+				path = "/RequestTrigger/";
+			if (webUI.proxy.ResponseFilters.Contains (filter))
+				path = "/ResponseFilter/";
+			if (webUI.proxy.ResponseTriggers.Contains (filter as Trigger))
+				path = "/ResponseTrigger/";
+			return path + filter.GetType ().Name + "/";;
 		}
 
 		private void FiltersPage (string[] path, NameValueCollection httpGet, Request request)
 		{
 			Response response = request.Response;
-			string data = "";
+			Html data = new Html ();
+			string page = path[1].ToLowerInvariant ();
 			
-			if (path.Length < 3 || path[2] == "") {
+			if (page == "filters" || path.Length < 3) {
 				//Add and remove commands
 				try {
 					AddFilter (httpGet);
 					DeleteFilter (httpGet);
 				} catch (Exception e) {
-					data += "<p><strong>Error:</strong> " + Response.Html (e.Message) + "</p>";
+					data += Html.Format ("<p><strong>Error:</strong> ") + e.Message + Html.Format ("</p>");
 					Console.Error.WriteLine ("WebUI, Filter error: " + e.Message);
 				}
 				
-				data += "<h2>Request Filters</h2>";
-				data += ListFilters (proxy.FilterRequest);
+				data += Html.Format ("<h2>Request Triggers</h2>");
+				data += ListFilters (proxy.RequestTriggers);
+				data += Html.Format ("<h2>Request Filters</h2>");
+				data += ListFilters (proxy.RequestFilters);
 				
-				data += "<h2>Response Filters</h2>";
-				data += ListFilters (proxy.FilterResponse);
+				data += Html.Format ("<h2>Response Triggers</h2>");
+				data += ListFilters (proxy.ResponseTriggers);
+				data += Html.Format ("<h2>Response Filters</h2>");
+				data += ListFilters (proxy.ResponseFilters);
 				
 				Template (response, "Filters", data);
-				
-			} else {
-				Filter f;
-				if (path[2].ToLowerInvariant () == "request") {
-					f = FindFilter (proxy.FilterRequest, path, 3);
-					if (f == null)
-						f = proxy.FilterRequest;
-				} else {
-					//Response
-					f = FindFilter (proxy.FilterResponse, path, 3);
-					if (f == null)
-						f = proxy.FilterResponse;
-				}
-				
-				if (f == null) {
-					response.HttpCode = HttpStatusCode.Found;
-					Template (response, "Filter not found", "<p><a href=\"" + FilterUrl () + "\">back</a></p>");
-					response.ReplaceHeader ("Location", FilterUrl ());
-					return;
-				}
-				Template (response, f.ToString (), f.Status (httpGet, request));
+				return;
 			}
 			
+			Filter f = null;
+			if (page == "requesttrigger")
+				f = Find (proxy.RequestTriggers, path[2]);
+			if (page == "requestfilter")
+				f = Find (proxy.RequestFilters, path[2]);
+			if (page == "responsetrigger")
+				f = Find (proxy.ResponseTriggers, path[2]);
+			if (page == "responsefilter")
+				f = Find (proxy.ResponseFilters, path[2]);
+			
+			if (f == null) {
+				response.HttpCode = HttpStatusCode.Found;
+				Template (response, "Filter not found", Html.Format(@"<p><a href=""{0}"">back</a></p>", FilterUrl ()));
+				response.ReplaceHeader ("Location", FilterUrl ());
+				return;
+			}
+			Template (response, f.ToString (), f.Status (httpGet, request));
 			return;
 		}
 
@@ -353,8 +371,8 @@ namespace HitProxy.Filters
 				return;
 			
 			int deleteIndex = int.Parse (args);
-			DeleteFilter (proxy.FilterRequest, deleteIndex);
-			DeleteFilter (proxy.FilterResponse, deleteIndex);
+			DeleteFilter (proxy.RequestFilters, deleteIndex);
+			DeleteFilter (proxy.ResponseFilters, deleteIndex);
 		}
 
 		private void AddFilter (NameValueCollection keys)
@@ -362,106 +380,90 @@ namespace HitProxy.Filters
 			string args = keys["add"];
 			if (args == null)
 				return;
-			int addIndex = int.Parse (args);
-			FilterList list;
-			list = FindFilter (proxy.FilterRequest, addIndex) as FilterList;
-			if (list == null)
-				list = FindFilter (proxy.FilterResponse, addIndex) as FilterList;
-			if (list != null) {
-				Filter f = FilterLoader.FromString (keys["type"]);
-				if (f != null)
-					list.Add (f);
-			}
+			
+			Filter f = FilterLoader.FromString (keys["type"]);
+			if (f == null)
+				return;
+			
+			if (args == "requestfilter")
+				proxy.RequestFilters.Add (f);
+			if (args == "requesttrigger")
+				proxy.RequestTriggers.Add ((Trigger)f);
+			if (args == "responsefilter")
+				proxy.ResponseFilters.Add (f);
+			if (args == "responsetrigger")
+				proxy.ResponseTriggers.Add ((Trigger)f);
 		}
 
-		Filter FindFilter (Filter filter, string[] path, int index)
+		Filter Find (List<Filter> filters, string path)
 		{
-			if (index > path.Length || path[index] == "")
-				return null;
-			
-			FilterList list = filter as FilterList;
-			if (list == null)
-				return null;
-			
-			Filter match = null;
-			foreach (Filter f in list.ToArray ()) {
-				if (path[index] == f.GetType ().Name)
-					match = f;
-				Filter test = FindFilter (f, path, index + 1);
-				if (test != null)
-					return test;
-				if (match != null)
-					return match;
+			foreach (Filter f in filters.ToArray ()) {
+				if (path == f.GetType ().Name)
+					return f;
 			}
 			return null;
 		}
 
-		Filter FindFilter (Filter filter, int id)
+		Filter Find (List<Trigger> filters, string path)
 		{
-			if (filter.GetHashCode () == id)
-				return filter;
-			
-			FilterList list = filter as FilterList;
-			if (list == null)
-				return null;
-			
-			foreach (Filter f in list.ToArray ()) {
-				Filter test = FindFilter (f, id);
-				if (test != null)
-					return test;
+			foreach (Filter f in filters.ToArray ()) {
+				if (path == f.GetType ().Name)
+					return f;
+			}
+			return null;
+		}
+
+		Filter Find (List<Filter> filters, int id)
+		{
+			foreach (Filter f in filters.ToArray ()) {
+				if (f.GetHashCode () == id)
+					return f;
 			}
 			return null;
 		}
 
 
-		void DeleteFilter (Filter filter, int needle)
+		void DeleteFilter (List<Filter> filters, int needle)
 		{
-			FilterList list = filter as FilterList;
-			if (list != null) {
-				foreach (Filter f in list.ToArray ()) {
-					if (f.GetHashCode () == needle) {
-						//Prevent it from deleting itself
-						if (f == this)
-							return;
-						
-						list.Remove (f);
-						return;
-					} else
-						
-						DeleteFilter (f, needle);
+			foreach (Filter f in filters.ToArray ()) {
+				if (f.GetHashCode () == needle) {
+					filters.Remove (f);
+					return;
 				}
 			}
 		}
 
-
-		private string ListFilters (Filter filter)
+		private Html ListFilters (List<Filter> filters)
 		{
-			string data = "<li><a href=\"" + FilterUrl (filter) + "\">" + filter.GetType ().Name + "</a>";
-			
-			//Don't show delete on root filters
-			if (filter != proxy.FilterRequest && filter != proxy.FilterResponse)
-				data += " (<a href=\"" + FilterUrl () + "?delete=" + filter.GetHashCode () + "\">delete</a>)";
-			
-			FilterList list = filter as FilterList;
-			if (list != null) {
-				data += "<ul>";
-				foreach (Filter f in list.ToArray ())
-					data += ListFilters (f);
-				
-				data += "<li>" + "<form method=\"get\" action=\"" + FilterUrl () + "\">" + "<input type=\"hidden\" name=\"add\" value=\"" + list.GetHashCode () + "\" />" + "<input type=\"text\" name=\"type\" />" + "<input type=\"submit\" value=\"Add\" />" + "</form>" + "</li>";
-				
-				data += "</ul>";
+			Html data = Html.Format ("<ul>");
+			foreach (Filter f in filters.ToArray ()) {
+				data += Html.Format ("<li><a href=\"{0}\">{1}</a>", FilterUrl (f), f.GetType ().Name);
+				data += Html.Format (" (<a href=\"{0}?delete={1}\">delete</a>)", FilterUrl (), f.GetHashCode ());
 			}
+			//data += "<li>" + "<form method=\"get\" action=\"" + FilterUrl () + "\">" + "<input type=\"hidden\" name=\"add\" value=\"" + list.GetHashCode () + "\" />" + "<input type=\"text\" name=\"type\" />" + "<input type=\"submit\" value=\"Add\" />" + "</form>" + "</li>";
+			data += Html.Format("</ul>");
+			return data;
+		}
+
+		private Html ListFilters (List<Trigger> triggers)
+		{
+			Html data = new Html();
 			
-			data += "</li>";
+			data += Html.Format("<ul>");
+			foreach (Filter f in triggers.ToArray ()) {
+				data += Html.Format("<li><a href=\"{0}\">{1}</a>", FilterUrl (f), f.GetType ().Name);
+				data += Html.Format(" (<a href=\"{0}?delete={1}\">delete</a>)", FilterUrl (), f.GetHashCode ());
+			}
+			//data += "<li>" + "<form method=\"get\" action=\"" + FilterUrl () + "\">" + "<input type=\"hidden\" name=\"add\" value=\"" + list.GetHashCode () + "\" />" + "<input type=\"text\" name=\"type\" />" + "<input type=\"submit\" value=\"Add\" />" + "</form>" + "</li>";
+			data += Html.Format ("</ul>");
 			return data;
 		}
 
 		#endregion
 
-		public override string Status ()
+		public override Html Status ()
 		{
-			return "Web based user interface, If you can read this, the filter is working.";
+			return Html.Escape("Web based user interface, If you can read this, the filter is working.");
 		}
 	}
 }

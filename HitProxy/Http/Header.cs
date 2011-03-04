@@ -135,5 +135,65 @@ namespace HitProxy.Http
 		{
 			Add (key + ": " + value);
 		}
+		
+		
+		#region Trigger/Filter Classification
+		
+		/// <summary>
+		/// Attributes set by triggers and used by filters.
+		/// </summary>
+		private readonly List<string> filterClass = new List<string> ();
+		
+		/// <summary>
+		/// Add classes from a comma separated list
+		/// </summary>
+		/// <param name="classNames">
+		/// A comma separated list of filtering classification names
+		/// </param>
+		public void SetClass (string classNames)
+		{
+			string[] fa = classNames.ToLowerInvariant().Split (',');
+			foreach (string c in fa)
+			{
+				if (filterClass.Contains (c) == false)
+					filterClass.Add (c);
+			}
+		}
+		
+		/// <summary>
+		/// Test wether any of the supplied classes has been set
+		/// </summary>
+		/// <param name="classNames">
+		/// A comma separated list of class names
+		/// </param>
+		/// <returns>
+		/// Whether the request/response has been assigned the class
+		/// </returns>
+		public bool TestClass (string classNames)
+		{
+			string[] fa = classNames.ToLowerInvariant().Split (',');
+			foreach (string c in fa) {
+				if (filterClass.Contains (c))
+					return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// HTML to be presented on the block page.
+		/// </summary>
+		private readonly List<Html> filterHtml = new List<Html> ();
+
+		public void SetTriggerHtml (Html html)
+		{
+			filterHtml.Add (html);
+		}
+		
+		public List<Html> GetTriggerHtml ()
+		{
+			return filterHtml;
+		}
+		
+		#endregion
 	}
 }

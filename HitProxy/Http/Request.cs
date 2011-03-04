@@ -201,7 +201,7 @@ namespace HitProxy.Http
 			}
 		}
 
-		public void Block (string title, string htmlMessage)
+		public void Block (string title, Html htmlMessage)
 		{
 			//Determine content type requested
 			//			string cc = null;

@@ -1,7 +1,7 @@
 
 using System;
 
-namespace HitProxy.Filters
+namespace HitProxy.Http
 {
 	/// <summary>
 	/// Base class for filters that do not modify the request.

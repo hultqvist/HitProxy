@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using HitProxy.Http;
 using HitProxy.Connection;
+using HitProxy.Filters;
 
 namespace HitProxy.Session
 {
@@ -67,7 +68,10 @@ namespace HitProxy.Session
 				//Filter Response
 				Status = "Filtering response";
 				try {
-					proxy.FilterResponse.Apply (request);
+					foreach (Trigger t in proxy.ResponseTriggers.ToArray ())
+						t.Apply (request);
+					foreach (Filter f in proxy.ResponseFilters.ToArray ())
+						f.Apply (request);
 				} catch (Exception e) {
 					request.Response = FilterException (e);
 				}

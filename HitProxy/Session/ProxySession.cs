@@ -6,6 +6,7 @@ using System.IO;
 using System.Text;
 using HitProxy.Http;
 using HitProxy.Connection;
+using HitProxy.Filters;
 
 namespace HitProxy.Session
 {
@@ -152,7 +153,10 @@ namespace HitProxy.Session
 			
 			//Filter Request
 			try {
-				proxy.FilterRequest.Apply (request);
+				foreach (Trigger t in proxy.RequestTriggers.ToArray ())
+					t.Apply (request);
+				foreach (Filter f in proxy.RequestFilters.ToArray ())
+					f.Apply (request);
 			} catch (Exception e) {
 				request.Response = FilterException (e);
 			}
@@ -309,7 +313,7 @@ namespace HitProxy.Session
 		private Response FilterException (Exception e)
 		{
 			Response response = new Response (HttpStatusCode.InternalServerError);
-			response.Template ("Filter Error", string.Format (@"
+			response.Template ("Filter Error", Html.Format (@"
 <h2>{0}, {2}</h2>
 <p>{1}</p>
 <pre>{3}</pre>

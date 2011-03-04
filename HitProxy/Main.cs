@@ -1,9 +1,10 @@
 using System;
 using System.IO;
-using HitProxy.Filters;
 using System.Net;
-using Mono.Options;
 using System.Collections.Generic;
+using Mono.Options;
+using HitProxy.Triggers;
+using HitProxy.Filters;
 using HitProxy.Connection;
 
 namespace HitProxy
@@ -44,34 +45,33 @@ namespace HitProxy
 			string configPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy");
 			Directory.CreateDirectory (configPath);
 			
-			ConnectionManager connectionManager = new ConnectionManager ();
-			Proxy proxy = new Proxy (listenIP, port, connectionManager);
+			Proxy proxy = new Proxy (listenIP, port);
 			System.Threading.Thread.CurrentThread.Name = "Main";
 			
 			//TODO: Read filter configuration from Filters.conf
 			//TODO: Separate List, Trigger, Modify and Block-Filters.
 			
 			//Setup default filters
-			FilterList list = new FilterListBlock ();
-			proxy.FilterRequest = list;
-			list.Add (new WebUI (proxy, connectionManager));
-			//list.Add (new Tamper ("Before filtering"));
-			//list.Add (new TransparentSSL ());
-			list.Add (new AdBlock ());
-			list.Add (new Rewrite ());
-			list.Add (new Referer ());
-			list.Add (new UserAgent ());
-			list.Add (new Cookies ());
-			list.Add (new ProxyHeaders ());
-			list.Add (new I2PProxy ());
-			list.Add (new Onion ());
+			proxy.RequestTriggers.Add (new AdBlock ());
+			proxy.RequestTriggers.Add (new Triggers.CrossDomain ());
+
+			proxy.RequestFilters.Add (new WebUI (proxy));
+			proxy.RequestFilters.Add (new Block ());
+			proxy.RequestFilters.Add (new BlockBreak ());
+			//proxy.FilterRequest.Add (new Tamper ("Before filtering"));
+			//proxy.FilterRequest.Add (new TransparentSSL ());
+			proxy.RequestFilters.Add (new Filters.Referer ());
+			proxy.RequestFilters.Add (new Rewrite ());
+			proxy.RequestFilters.Add (new UserAgent ());
+			proxy.RequestFilters.Add (new Cookies ());
+			proxy.RequestFilters.Add (new ProxyHeaders ());
+			proxy.RequestFilters.Add (new I2PProxy ());
+			proxy.RequestFilters.Add (new Onion ());
 			//list.Add (new Tamper ("After filtering"));
 			
-			FilterList response = new FilterList ();
-			proxy.FilterResponse = response;
-			//response.Add (new Tamper ("Response"));
-			//response.Add (new CustomError ());
-			response.Add (new Cookies ());
+			//proxy.FilterResponse.Add (new Tamper ("Response"));
+			//proxy.FilterResponse.Add (new CustomError ());
+			proxy.ResponseFilters.Add (new Cookies ());
 			
 			proxy.Start ();
 			if (startBrowser)

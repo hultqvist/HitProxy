@@ -24,15 +24,15 @@ namespace HitProxy.Filters
 				return false;
 			
 			request.Response = new Response (HttpStatusCode.NotFound);
-			request.Response.Template("Not Found", @"
+			request.Response.Template("Not Found", Html.Format(@"
 <h1>Hmm, that page wasn't really there was it?</h1>
-<p>This is a custom error page from HitProxy.</p>");
+<p>This is a custom error page from HitProxy.</p>"));
 			return true;
 		}
 
-		public override string Status ()
+		public override Html Status ()
 		{
-			return "<p>Replaces <em>\"404 - file not found\"</em> error pages with a custom one.</p>";
+			return Html.Format("<p>Replaces <em>\"404 - file not found\"</em> error pages with a custom one.</p>");
 		}
 	}
 }

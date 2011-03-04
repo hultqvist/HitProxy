@@ -13,8 +13,9 @@ namespace HitProxy.Filters
 			TimeSpan now = DateTime.Now.TimeOfDay;
 			if (now.Hours < 12 || now.Hours > 13)
 				return false;
-			else
-				return true;
+			
+			request.SetClass ("break");
+			return true;
 		}
 	}
 }

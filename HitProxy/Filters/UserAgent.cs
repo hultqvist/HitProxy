@@ -138,10 +138,8 @@ namespace HitProxy.Filters
 						request.ReplaceHeader ("User-Agent", r.UserAgent);
 					
 					if (r.Lang == "")
-						request.RemoveHeader ("Accept-Language");
-					else if (r.Lang.ToLowerInvariant () == "random")
-						request.ReplaceHeader ("Accept-Language", GetRandom (lang));
-					else if (r.Lang.ToLowerInvariant () != "pass")
+						request.RemoveHeader ("Accept-Language"); else if (r.Lang.ToLowerInvariant () == "random")
+						request.ReplaceHeader ("Accept-Language", GetRandom (lang)); else if (r.Lang.ToLowerInvariant () != "pass")
 						request.ReplaceHeader ("Accept-Language", r.Lang);
 					
 				} else {
@@ -154,11 +152,11 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override string Status (NameValueCollection httpGet, Request request)
+		public override Html Status (NameValueCollection httpGet, Request request)
 		{
-			string html = "<p>Replaces the User-Agent and Accept-Language headers with random ones</p>";
-			html += "<p><strong>Your: </strong> " + Response.Html (request.GetHeader ("User-Agent")) + "</p>";
-			html += "<p><strong>Random: </strong> " + Response.Html (RandomUserAgent ()) + "</p>";
+			Html html = Html.Format ("<p>Replaces the User-Agent and Accept-Language headers with random ones</p>");
+			html += Html.Format ("<p><strong>Your: </strong> {0}</p>", request.GetHeader ("User-Agent"));
+			html += Html.Format("<p><strong>Random: </strong> {0}</p>", RandomUserAgent ());
 			
 			if (httpGet["delete"] != null) {
 				try {
@@ -194,7 +192,7 @@ namespace HitProxy.Filters
 					saveSettings ();
 			}
 			
-			html += @"<form action=""?"" method=""get"">
+			html += Html.Format(@"<form action=""?"" method=""get"">
 								<p><label for=""domain"">Domain</label>: <input type=""text"" name=""domain"" value="""" /></p>
 								<p><label for=""lang"">Language</label>: <input type=""text"" name=""lang"" value="""" /></p>
 								<p><label for=""agent"">User-Agent</label>: <input type=""text"" name=""agent"" value="""" />
@@ -202,12 +200,12 @@ namespace HitProxy.Filters
 									""pass"" = pass through unmodified</p>
 								<input type=""submit"" name=""action"" value=""Permanent"" />
 								<input type=""submit"" name=""action"" value=""Temporary"" />
-							</form>";
+							</form>");
 			try {
 				listLock.EnterReadLock ();
 				
 				foreach (UserAgentRule rule in staticAgent.Values) {
-					html += "<p>" + rule + " <a href=\"?delete=" + rule.Domain + "\">delete</a></p>";
+					html += Html.Format("<p>{0} <a href=\"?delete={1}\">delete</a></p>", rule, rule.Domain);
 				}
 			} finally {
 				listLock.ExitReadLock ();

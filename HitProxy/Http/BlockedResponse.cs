@@ -14,11 +14,11 @@ namespace HitProxy.Http
 	/// </summary>
 	public class BlockedResponse : Response
 	{
-		public BlockedResponse (string message) : this("Blocked Forever", Html(message))
+		public BlockedResponse (string message) : this("Blocked Forever", Html.Format(message))
 		{
 		}
 
-		public BlockedResponse (string title, string htmlMessage) : base(HttpStatusCode.Gone)
+		public BlockedResponse (string title, Html htmlMessage) : base(HttpStatusCode.Gone)
 		{
 			//Console.WriteLine ("Blocked: " + message);
 			KeepAlive = true;

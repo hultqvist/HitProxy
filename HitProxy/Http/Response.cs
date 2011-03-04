@@ -115,7 +115,8 @@ namespace HitProxy.Http
 					break;
 				case "connection":
 					if (s.ToLowerInvariant () == "close")
-						KeepAlive = false; else if (s.ToLowerInvariant ().Contains ("keep-alive"))
+						KeepAlive = false;
+					else if (s.ToLowerInvariant ().Contains ("keep-alive"))
 						KeepAlive = true;
 					else
 						Console.WriteLine ("ResponseHeader: unknown Connection: " + s);

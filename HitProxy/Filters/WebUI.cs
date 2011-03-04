@@ -36,7 +36,7 @@ namespace HitProxy.Filters
 
 		public override bool Apply (Request request)
 		{
-			bool direct = request.Uri.Host == "localhost" && request.Uri.Port == proxy.Port;
+			bool direct = request.Uri.IsLoopback && request.Uri.Port == proxy.Port;
 			bool webUI = request.Uri.Host == ConfigHost;
 			if ((request.Uri.IsAbsoluteUri == true) && (webUI == false) && (direct == false))
 				return false;
@@ -111,7 +111,7 @@ namespace HitProxy.Filters
 			Response response = new Response (HttpStatusCode.OK);
 			
 			Html data = new Html();
-			if (request.Uri.Host == "localhost") {
+			if (request.Uri.IsLoopback) {
 				data += Html.Format (@"
 <p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>
 <p>Try to visit it via <a href=""http://{0}"">proxy mode</a>.</p>

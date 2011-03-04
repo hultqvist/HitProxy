@@ -162,10 +162,15 @@ namespace HitProxy.Session
 			}
 			
 			//Send filter generated responses
+			//Duplicate code: do changes here below too
 			if (request.Response != null) {
+				//Fix response keep alive header
+				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
+					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
+				
 				Status = "Sending filter response";
 				request.Response.SendResponse (clientSocket);
-				return true;
+				return request.KeepAlive;
 			}
 			
 			//Make connection
@@ -179,10 +184,15 @@ namespace HitProxy.Session
 			}
 			
 			//So far all responses are generated from errors
+			//Duplicate code: do changes here above too
 			if (request.Response != null) {
+				//Fix response keep alive header
+				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
+					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
+
 				Status = "Sending response";
 				request.Response.SendResponse (clientSocket);
-				return true;
+				return request.KeepAlive;
 			}
 			
 			try {
@@ -203,7 +213,7 @@ namespace HitProxy.Session
 				ProcessHttp (remoteConnection);
 				
 				Status = "Request done";
-				
+			
 			} catch (HeaderException e) {
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message);
 				if (Status == "Sending response")
@@ -244,6 +254,7 @@ namespace HitProxy.Session
 			if (request.Response.KeepAlive == false)
 				return false;
 			
+			//Check so there is no extra data sent from the remote server
 			try {
 				if (remoteConnection.remoteSocket.Available > 0 && clientSocket.IsConnected ()) {
 					byte[] buffer = new byte[remoteConnection.remoteSocket.Available];
@@ -255,7 +266,8 @@ namespace HitProxy.Session
 			} catch (ObjectDisposedException) {
 				return false;
 			}
-			return true;
+			
+			return request.KeepAlive;
 		}
 
 		/// <summary>
@@ -331,9 +343,10 @@ namespace HitProxy.Session
 					if (client.IsConnected () == false)
 						return false;
 					
+					client.Poll (1000000, SelectMode.SelectRead);
+					
 					if (DateTime.Now > timeout)
 						return false;
-					Thread.Sleep (20);
 				}
 				return true;
 			} catch (SocketException) {

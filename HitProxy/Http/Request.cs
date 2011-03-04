@@ -34,6 +34,8 @@ namespace HitProxy.Http
 		public string TE;
 		public string UserAgent;
 
+		public bool KeepAlive = false;
+
 		/// <summary>
 		/// If set connection is made to this host rather than from Uri.
 		/// Used to pipe to http proxies
@@ -100,6 +102,11 @@ namespace HitProxy.Http
 			if (Method == "CONNECT")
 				return;
 			
+			if (HttpVersion == "HTTP/1.0")
+				KeepAlive = false;
+			if (HttpVersion == "HTTP/1.1")
+				KeepAlive = true;
+			
 			foreach (string line in this) {
 				int keysep = line.IndexOf (':');
 				if (keysep < 0)
@@ -137,6 +144,12 @@ namespace HitProxy.Http
 				break;
 			case "content-length":
 				long.TryParse (value, out ContentLength);
+				break;
+			case "connection":
+				if (value.ToLowerInvariant() == "keep-alive")
+					KeepAlive = true;
+				if (value == "close")
+					KeepAlive = false;
 				break;
 			case "expect":
 				Expect = value;

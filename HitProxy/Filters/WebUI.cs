@@ -299,16 +299,16 @@ namespace HitProxy.Filters
 		
 		static internal string FilterUrl (Filter filter)
 		{
-			string path = "/";
+			string path = "http://" + ConfigHost + "/";
 			
 			if (webUI.proxy.RequestFilters.Contains (filter))
-				path = "/RequestFilter/";
+				path += "RequestFilter/";
 			if (webUI.proxy.RequestTriggers.Contains (filter as Trigger))
-				path = "/RequestTrigger/";
+				path += "RequestTrigger/";
 			if (webUI.proxy.ResponseFilters.Contains (filter))
-				path = "/ResponseFilter/";
+				path += "ResponseFilter/";
 			if (webUI.proxy.ResponseTriggers.Contains (filter as Trigger))
-				path = "/ResponseTrigger/";
+				path += "ResponseTrigger/";
 			return path + filter.GetType ().Name + "/";;
 		}
 

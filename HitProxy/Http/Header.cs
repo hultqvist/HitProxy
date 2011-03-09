@@ -21,7 +21,11 @@ namespace HitProxy.Http
 		public SocketData DataSocket {
 			get { return socketdata; }
 			set {
-				socketdata.NullSafeDispose ();
+				if (socketdata != null)
+				{
+					socketdata.NullSafeDispose ();
+					throw new Exception ("when should this happen???");
+				}
 				socketdata = value;
 			}
 		}
@@ -68,7 +72,7 @@ namespace HitProxy.Http
 		/// </summary>
 		public void FilterData (IDataFilter filter)
 		{
-			DataSocket = new FilteredData (filter, DataSocket);
+			socketdata = new FilteredData (filter, socketdata);
 		}
 
 		#endregion
@@ -157,38 +161,38 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Attributes set by triggers and used by filters.
 		/// </summary>
-		private readonly List<string> filterClass = new List<string> ();
+		private readonly List<string> filterFlags = new List<string> ();
 		
 		/// <summary>
-		/// Add classes from a comma separated list
+		/// Add flags from a comma separated list
 		/// </summary>
 		/// <param name="classNames">
 		/// A comma separated list of filtering classification names
 		/// </param>
-		public void SetClass (string classNames)
+		public void SetFlags (string flagNames)
 		{
-			string[] fa = classNames.ToLowerInvariant().Split (',');
-			foreach (string c in fa)
+			string[] fa = flagNames.ToLowerInvariant().Split (',');
+			foreach (string f in fa)
 			{
-				if (filterClass.Contains (c) == false)
-					filterClass.Add (c);
+				if (filterFlags.Contains (f) == false)
+					filterFlags.Add (f);
 			}
 		}
 		
 		/// <summary>
 		/// Test wether any of the supplied classes has been set
 		/// </summary>
-		/// <param name="classNames">
-		/// A comma separated list of class names
+		/// <param name="flags">
+		/// A comma separated list of flag names
 		/// </param>
 		/// <returns>
-		/// Whether the request/response has been assigned the class
+		/// True if the request/response has been assigned the flag
 		/// </returns>
-		public bool TestClass (string classNames)
+		public bool TestFlags (string flags)
 		{
-			string[] fa = classNames.ToLowerInvariant().Split (',');
-			foreach (string c in fa) {
-				if (filterClass.Contains (c))
+			string[] fa = flags.ToLowerInvariant().Split (',');
+			foreach (string f in fa) {
+				if (filterFlags.Contains (f))
 					return true;
 			}
 			return false;

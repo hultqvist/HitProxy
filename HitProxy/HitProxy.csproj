@@ -95,6 +95,7 @@
     <Compile Include="Connection\SocketOutput.cs" />
     <Compile Include="Connection\FilteredData.cs" />
     <Compile Include="Connection\IDataFilter.cs" />
+    <Compile Include="Triggers\MediaTrigger.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

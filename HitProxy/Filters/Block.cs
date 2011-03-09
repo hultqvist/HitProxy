@@ -4,13 +4,13 @@ using HitProxy.Http;
 namespace HitProxy.Filters
 {
 	/// <summary>
-	/// Base Class for filters that block unconditionally
+	/// Block requests flagged "block"
 	/// </summary>
 	public class Block : Filter
 	{
 		public override bool Apply (Request request)
 		{
-			if (request.TestClass ("block") == false)
+			if (request.TestFlags ("block") == false)
 				return false;
 			
 			Html status = new Html ();

@@ -9,7 +9,7 @@ namespace HitProxy.Connection
 		private IDataFilter filter;
 		private SocketData remote;
 		private IDataOutput output;
-		
+
 		public FilteredData (IDataFilter filter, SocketData remote)
 		{
 			this.filter = filter;
@@ -17,7 +17,12 @@ namespace HitProxy.Connection
 		}
 
 		#region SocketData Methods
-		
+
+		public override int Received {
+			get { return remote.Received; }
+			set { remote.Received = value; }
+		}
+
 		public override void PipeTo (IDataOutput output, long length)
 		{
 			this.output = output;
@@ -33,39 +38,40 @@ namespace HitProxy.Connection
 		public override string SendChunkedResponse (IDataOutput output)
 		{
 			byte[] message = System.Text.ASCIIEncoding.ASCII.GetBytes ("Not yet implemented saving chunked response.");
-			filter.Send(message, message.Length, nullOutput);
+			filter.Send (message, message.Length, nullOutput);
 			Console.Error.WriteLine ("Not yet implemented saving chunked response.");
 			
 			return remote.SendChunkedResponse (output);
 		}
 
 		#endregion
-		
+
 		#region DataOutput methods
 
 		public void Send (byte[] buffer)
 		{
 			filter.Send (buffer, buffer.Length, output);
 		}
-		
+
 		public void Send (byte[] buffer, int length)
 		{
 			filter.Send (buffer, length, output);
 		}
-		
+
 		#endregion
-		
+
 		public override void Dispose ()
 		{
 			base.Dispose ();
 			filter.Dispose ();
+			remote.Dispose ();
 		}
-		
-		
+
+
 		#region NullOutput
-		
-		private readonly NullOutput nullOutput = new NullOutput();
-		
+
+		private readonly NullOutput nullOutput = new NullOutput ();
+
 		class NullOutput : IDataOutput
 		{
 			public void Send (byte[] buffer)

@@ -108,10 +108,10 @@ namespace HitProxy.Triggers
 				foreach (RefererPair pair in watchlist) {
 					
 					if (pair.Match (requestPair)) {
-						httpRequest.SetClass ("Referer" + pair.Filter.ToString());
+						httpRequest.SetFlags ("Referer" + pair.Filter.ToString());
 						
 						if (pair.Filter == RefererOperation.Block) {
-							httpRequest.SetClass ("block");
+							httpRequest.SetFlags ("block");
 							httpRequest.SetTriggerHtml (Html.Format(@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p>Blocked by: {2} <a href=""{3}?delete={4}&amp;return={5}"">delete</a></p>",
@@ -143,7 +143,7 @@ namespace HitProxy.Triggers
 			if (requestPair.FromHost == "")
 				return false;
 
-			httpRequest.SetClass ("block");
+			httpRequest.SetFlags ("block");
 			httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p style=""text-align:center""><a href=""{0}"">{2}</a></p>", httpRequest.Uri, httpRequest.Uri.Host, httpRequest.Uri.PathAndQuery));

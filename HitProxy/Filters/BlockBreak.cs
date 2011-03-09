@@ -10,7 +10,7 @@ namespace HitProxy.Filters
 	{
 		public override bool Apply (Request request)
 		{
-			if (request.TestClass ("break") == false)
+			if (request.TestFlags ("break") == false)
 				return false;
 			
 			Response resp = new Response (System.Net.HttpStatusCode.ServiceUnavailable);

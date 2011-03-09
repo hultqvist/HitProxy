@@ -14,7 +14,7 @@ namespace HitProxy.Filters
 			if (now.Hours < 12 || now.Hours > 13)
 				return false;
 			
-			request.SetClass ("break");
+			request.SetFlags ("break");
 			return true;
 		}
 	}

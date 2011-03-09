@@ -20,7 +20,7 @@ namespace HitProxy.Connection
 		/// <summary>
 		/// Data received from this connection
 		/// </summary>
-		public int Received { get; set; }
+		public virtual int Received { get; set; }
 		
 		/// <summary>
 		/// For use by filter replacements

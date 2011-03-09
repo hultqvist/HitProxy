@@ -175,7 +175,7 @@ namespace HitProxy.Http
 				}
 				
 				if (Chunked) {
-					DataSocket.SendChunkedResponse (new SocketOutput(outputSocket));
+					DataSocket.SendChunkedResponse (new SocketOutput (outputSocket));
 					return true;
 				}
 				
@@ -187,7 +187,8 @@ namespace HitProxy.Http
 				
 				//Pipe result back to client
 				if (ContentLength > 0)
-					DataSocket.PipeTo (new SocketOutput(outputSocket), ContentLength); else if (ContentLength < 0)
+					DataSocket.PipeTo (new SocketOutput (outputSocket), ContentLength);
+				else if (ContentLength < 0)
 					DataSocket.PipeTo (new SocketOutput(outputSocket));
 				return true;
 			} catch (SocketException se) {

@@ -90,6 +90,7 @@
     <Compile Include="Triggers\TriggerLunchBreak.cs" />
     <Compile Include="Triggers\CrossDomain.cs" />
     <Compile Include="Http\Html.cs" />
+    <Compile Include="Filters\Saver.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

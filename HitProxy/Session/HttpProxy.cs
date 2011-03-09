@@ -62,7 +62,6 @@ namespace HitProxy.Session
 				Status = "Waiting for response";
 				
 				string respHeader = remoteConnection.remoteSocket.ReadHeader ();
-				
 				request.Response.Parse (respHeader, request);
 				
 				//Filter Response

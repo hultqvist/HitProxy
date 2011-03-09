@@ -220,12 +220,6 @@ namespace HitProxy.Http
 			ContentLength = GeneratedResponse.Length;
 		}
 
-		/*
-		public static string Html (string text)
-		{
-			return HttpUtility.HtmlEncode (text);
-		}*/
-
 		public void Template (string title, Html htmlContents)
 		{
 			SetData (Html.Format (@"<!DOCTYPE html>

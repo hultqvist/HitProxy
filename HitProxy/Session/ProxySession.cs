@@ -150,7 +150,6 @@ namespace HitProxy.Session
 			}
 			
 			Status = "Got request, filtering";
-			
 			FilterRequest (request);
 			
 			//Send filter generated responses

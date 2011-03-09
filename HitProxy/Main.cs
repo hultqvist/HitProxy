@@ -3,8 +3,6 @@ using System.IO;
 using System.Net;
 using System.Collections.Generic;
 using Mono.Options;
-using HitProxy.Triggers;
-using HitProxy.Filters;
 using HitProxy.Connection;
 
 namespace HitProxy
@@ -52,25 +50,26 @@ namespace HitProxy
 			//TODO: Separate List, Trigger, Modify and Block-Filters.
 			
 			//Setup default filters
-			proxy.RequestTriggers.Add (new AdBlock ());
+			proxy.RequestTriggers.Add (new Triggers.AdBlock ());
 			proxy.RequestTriggers.Add (new Triggers.CrossDomain ());
 
-			proxy.RequestFilters.Add (new Block ());
-			proxy.RequestFilters.Add (new BlockBreak ());
+			proxy.RequestFilters.Add (new Filters.Block ());
+			proxy.RequestFilters.Add (new Filters.BlockBreak ());
 			//proxy.FilterRequest.Add (new Tamper ("Before filtering"));
 			//proxy.FilterRequest.Add (new TransparentSSL ());
 			proxy.RequestFilters.Add (new Filters.Referer ());
-			proxy.RequestFilters.Add (new Rewrite ());
-			proxy.RequestFilters.Add (new UserAgent ());
-			proxy.RequestFilters.Add (new Cookies ());
-			proxy.RequestFilters.Add (new ProxyHeaders ());
-			proxy.RequestFilters.Add (new I2PProxy ());
-			proxy.RequestFilters.Add (new Onion ());
+			proxy.RequestFilters.Add (new Filters.Rewrite ());
+			proxy.RequestFilters.Add (new Filters.UserAgent ());
+			proxy.RequestFilters.Add (new Filters.Cookies ());
+			proxy.RequestFilters.Add (new Filters.ProxyHeaders ());
+			proxy.RequestFilters.Add (new Filters.I2PProxy ());
+			proxy.RequestFilters.Add (new Filters.Onion ());
 			//list.Add (new Tamper ("After filtering"));
 			
 			//proxy.FilterResponse.Add (new Tamper ("Response"));
 			//proxy.FilterResponse.Add (new CustomError ());
-			proxy.ResponseFilters.Add (new Cookies ());
+			proxy.ResponseFilters.Add (new Filters.Cookies ());
+			proxy.ResponseFilters.Add (new Filters.Saver());
 			
 			proxy.Start ();
 			if (startBrowser)

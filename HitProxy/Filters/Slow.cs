@@ -1,5 +1,7 @@
 using System;
 using HitProxy.Http;
+using HitProxy.Connection;
+using System.Collections.Specialized;
 
 namespace HitProxy.Filters
 {
@@ -11,14 +13,52 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class Slow : Filter
 	{
-
-		public Slow ()
-		{
-		}
-
 		public override bool Apply (Request request)
 		{
-			throw new System.NotImplementedException ();
+			if (request.Response == null)
+				return false;
+			if ((request.TestFlags ("slow") || request.Response.TestFlags ("slow")) == false)
+				return false;
+			
+			//Intercept data connection
+			request.Response.FilterData (new SlowOutput ());
+			
+			return true;
+		}
+
+		public override Html Status (NameValueCollection httpGet, Request request)
+		{
+			Html html = Html.Format (@"<p>Slows down the receiving speed to simulate slow websites, triggered by <strong>slow</strong> flag.</p>");
+			return html;
+		}
+
+		class SlowOutput : IDataFilter
+		{
+			int rate = 1024;
+			//bytes per second
+			DateTime starttime;
+			int totalSent = 0;
+
+			public void Send (byte[] inBuffer, int start, int inLength, IDataOutput output)
+			{
+				if (totalSent == 0)
+					starttime = DateTime.Now;
+				
+				int sent = 0;
+				while (sent < inLength) {
+					int tosend = (int)(DateTime.Now - starttime).TotalSeconds * rate - sent - totalSent;
+					if (start + sent + tosend > inLength)
+						tosend = inLength - start - sent;
+					output.Send (inBuffer, start + sent, tosend);
+					sent += tosend;
+				}
+				totalSent += inLength;
+			}
+			
+			public void Dispose ()
+			{
+				
+			}
 		}
 	}
 }

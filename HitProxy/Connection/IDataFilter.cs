@@ -7,7 +7,7 @@ namespace HitProxy.Connection
 		/// This call is made to the filter with remote incoming data in the buffer.
 		/// The filter then send its output to output.
 		/// </summary>
-		void Send (byte[] inBuffer, int inLength, IDataOutput output);
+		void Send (byte[] inBuffer, int start, int inLength, IDataOutput output);
 	}
 }
 

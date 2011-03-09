@@ -38,7 +38,7 @@ namespace HitProxy.Connection
 		public override string SendChunkedResponse (IDataOutput output)
 		{
 			byte[] message = System.Text.ASCIIEncoding.ASCII.GetBytes ("Not yet implemented saving chunked response.");
-			filter.Send (message, message.Length, nullOutput);
+			filter.Send (message, 0, message.Length, nullOutput);
 			Console.Error.WriteLine ("Not yet implemented saving chunked response.");
 			
 			return remote.SendChunkedResponse (output);
@@ -48,14 +48,9 @@ namespace HitProxy.Connection
 
 		#region DataOutput methods
 
-		public void Send (byte[] buffer)
+		public void Send (byte[] buffer, int start, int length)
 		{
-			filter.Send (buffer, buffer.Length, output);
-		}
-
-		public void Send (byte[] buffer, int length)
-		{
-			filter.Send (buffer, length, output);
+			filter.Send (buffer, start, length, output);
 		}
 
 		#endregion
@@ -74,11 +69,7 @@ namespace HitProxy.Connection
 
 		class NullOutput : IDataOutput
 		{
-			public void Send (byte[] buffer)
-			{
-				return;
-			}
-			public void Send (byte[] buffer, int length)
+			public void Send (byte[] buffer, int start, int length)
 			{
 				return;
 			}

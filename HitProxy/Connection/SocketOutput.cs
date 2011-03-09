@@ -13,14 +13,9 @@ namespace HitProxy.Connection
 			this.socket = socket;
 		}
 
-		public void Send (byte[] buffer)
+		public void Send (byte[] buffer, int start, int length)
 		{
-			socket.SendAll (buffer);
-		}
-
-		public void Send (byte[] buffer, int length)
-		{
-			socket.SendAll (buffer, length);
+			socket.SendAll (buffer, start, length);
 		}
 	}
 }

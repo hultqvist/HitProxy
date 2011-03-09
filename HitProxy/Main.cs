@@ -79,6 +79,7 @@ namespace HitProxy
 			//Filters
 			//proxy.ResponseFilters.Add (new Filters.Cookies ());
 			proxy.ResponseFilters.Add (new Filters.Saver ());
+			proxy.ResponseFilters.Add (new Filters.Slow ());
 			//proxy.FilterResponse.Add (new Tamper ("Response"));
 			//proxy.FilterResponse.Add (new CustomError ());
 			

@@ -1,4 +1,3 @@
-
 using System;
 using System.IO;
 using System.Net;
@@ -16,12 +15,12 @@ namespace HitProxy.Connection
 	{
 		private CachedConnection connection;
 		private Socket remoteSocket;
-		
+
 		/// <summary>
 		/// Data received from this connection
 		/// </summary>
 		public virtual int Received { get; set; }
-		
+
 		/// <summary>
 		/// For use by filter replacements
 		/// </summary>
@@ -29,7 +28,7 @@ namespace HitProxy.Connection
 		{
 			
 		}
-		
+
 		/// <summary>
 		/// From a remote connection with allocated buffer.
 		/// </summary>
@@ -72,15 +71,15 @@ namespace HitProxy.Connection
 				int length = int.Parse (header, System.Globalization.NumberStyles.HexNumber);
 				
 				byte[] cHeader = Encoding.ASCII.GetBytes (header);
-				output.Send (cHeader);
+				output.Send (cHeader, 0, cHeader.Length);
 				
 				if (length == 0) {
 					//Closing crnl
 					string footer = remoteSocket.ReadHeader ();
 					byte[] footerBytes = Encoding.ASCII.GetBytes (footer);
-					output.Send (footerBytes);
+					output.Send (footerBytes, 0, footerBytes.Length);
 					byte[] crnl = new byte[2] { 0xD, 0xA };
-					output.Send (crnl);
+					output.Send (crnl, 0, crnl.Length);
 					return footer;
 				}
 				
@@ -100,7 +99,7 @@ namespace HitProxy.Connection
 				if (remoteSocket.IsConnected () == false)
 					return;
 				int read = remoteSocket.Receive (buffer);
-				output.Send (buffer, read);
+				output.Send (buffer, 0, read);
 				Received += read;
 			}
 		}
@@ -131,7 +130,7 @@ namespace HitProxy.Connection
 						return;
 					continue;
 				}
-				output.Send (buffer, read);
+				output.Send (buffer, 0, read);
 				
 				Received += read;
 				totalRead += read;

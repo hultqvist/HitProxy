@@ -67,10 +67,10 @@ namespace HitProxy.Filters
 				this.saver = saver;
 			}
 
-			public void Send (byte[] inBuffer, int inLength, IDataOutput output)
+			public void Send (byte[] inBuffer, int start, int inLength, IDataOutput output)
 			{
-				file.Write (inBuffer, 0, inLength);
-				output.Send (inBuffer, inLength);
+				file.Write (inBuffer, start, inLength);
+				output.Send (inBuffer, start, inLength);
 			}
 			
 			public override string ToString ()

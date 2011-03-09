@@ -6,8 +6,7 @@ namespace HitProxy.Connection
 	/// </summary>
 	public interface IDataOutput
 	{
-		void Send (byte[] buffer);
-		void Send (byte[] buffer, int length);
+		void Send (byte[] buffer, int start, int length);
 	}
 }
 

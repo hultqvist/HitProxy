@@ -33,11 +33,11 @@ namespace HitProxy.Connection
 		/// </summary>
 		/// <param name="buffer"></param>
 		/// <param name="length"></param>
-		public static void SendAll (this Socket socket, byte[] buffer, int length)
+		public static void SendAll (this Socket socket, byte[] buffer, int start, int length)
 		{
 			int sent = 0;
 			while (sent < length) {
-				int delta = socket.Send (buffer, sent, length - sent, SocketFlags.None);
+				int delta = socket.Send (buffer, start + sent, length - sent, SocketFlags.None);
 				if (delta < 0)
 					throw new InvalidOperationException ("Send less than zero bytes");
 				sent += delta;
@@ -53,7 +53,7 @@ namespace HitProxy.Connection
 		/// <param name="length"></param>
 		public static void SendAll (this Socket socket, byte[] buffer)
 		{
-			SendAll (socket, buffer, buffer.Length);
+			SendAll (socket, buffer, 0, buffer.Length);
 		}
 
 		/// <summary>

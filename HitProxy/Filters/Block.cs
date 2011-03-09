@@ -16,7 +16,7 @@ namespace HitProxy.Filters
 			Html status = new Html ();
 			Html hr = Html.Format ("<hr/>");
 			foreach (Html h in request.GetTriggerHtml ())
-				status += hr + h;
+				status += h + hr;
 			
 			request.Response = new BlockedResponse ("Blocked", status);
 			return true;

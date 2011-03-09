@@ -49,10 +49,13 @@ namespace HitProxy
 			//TODO: Read filter configuration from Filters.conf
 			//TODO: Separate List, Trigger, Modify and Block-Filters.
 			
-			//Setup default filters
+			#region Request
+			
+			//Triggers
 			proxy.RequestTriggers.Add (new Triggers.AdBlock ());
 			proxy.RequestTriggers.Add (new Triggers.CrossDomain ());
-
+			
+			//Filters
 			proxy.RequestFilters.Add (new Filters.Block ());
 			proxy.RequestFilters.Add (new Filters.BlockBreak ());
 			//proxy.FilterRequest.Add (new Tamper ("Before filtering"));
@@ -60,16 +63,26 @@ namespace HitProxy
 			proxy.RequestFilters.Add (new Filters.Referer ());
 			proxy.RequestFilters.Add (new Filters.Rewrite ());
 			proxy.RequestFilters.Add (new Filters.UserAgent ());
-			proxy.RequestFilters.Add (new Filters.Cookies ());
+			//proxy.RequestFilters.Add (new Filters.Cookies ());
 			proxy.RequestFilters.Add (new Filters.ProxyHeaders ());
 			proxy.RequestFilters.Add (new Filters.I2PProxy ());
 			proxy.RequestFilters.Add (new Filters.Onion ());
-			//list.Add (new Tamper ("After filtering"));
+			//proxy.RequestFilters.Add (new Tamper ("After filtering"));
 			
+			#endregion
+			
+			#region Response
+			
+			//Triggers
+			proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
+			
+			//Filters
+			//proxy.ResponseFilters.Add (new Filters.Cookies ());
+			proxy.ResponseFilters.Add (new Filters.Saver ());
 			//proxy.FilterResponse.Add (new Tamper ("Response"));
 			//proxy.FilterResponse.Add (new CustomError ());
-			proxy.ResponseFilters.Add (new Filters.Cookies ());
-			proxy.ResponseFilters.Add (new Filters.Saver());
+			
+			#endregion
 			
 			proxy.Start ();
 			if (startBrowser)

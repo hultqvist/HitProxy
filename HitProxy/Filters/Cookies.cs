@@ -61,12 +61,12 @@ namespace HitProxy.Filters
 		{
 			foreach (CookieHeader cr in list.ToArray ()) {
 				//Block third party cookies
-								/* //Too aggressive, need finer UI control before activating this
+				//TODO: Too aggressive, need finer UI control before activating this
 				if (cr.ContainsKey ("domain") && (("." + request.Uri.Host).EndsWith (cr["domain"]) == false)) {
 					list.Remove (cr);
 					blockedJar.Add (cr);
-				}*/
-
+				}
+				
 				//Block cookies in cross domain requests
 				if (request.Referer != null) {
 					string referer = new Uri (request.Referer).Host;

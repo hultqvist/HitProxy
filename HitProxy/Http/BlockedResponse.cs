@@ -23,7 +23,12 @@ namespace HitProxy.Http
 			//Console.WriteLine ("Blocked: " + message);
 			KeepAlive = true;
 		
-			Template(title, htmlMessage);
+			Template (title, htmlMessage);
+			
+			ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
+			ReplaceHeader ("Pragma", "no-cache");
+			HttpCode = HttpStatusCode.ServiceUnavailable;
+			AddHeader ("X-Referer-Filter", "BLOCKED: Unmatched");
 		}
 	}
 }

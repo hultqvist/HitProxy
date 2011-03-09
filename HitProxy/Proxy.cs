@@ -18,6 +18,8 @@ namespace HitProxy
 			get { return port; }
 		}
 
+		public readonly Filters.WebUI WebUI;
+		
 		Thread thread;
 		public readonly BrowserProxy Browser;
 
@@ -42,7 +44,7 @@ namespace HitProxy
 			this.address = address;
 			this.port = port;
 			this.Browser = new BrowserProxy (this);
-
+			this.WebUI = new Filters.WebUI (this);
 		}
 
 		public void Start ()

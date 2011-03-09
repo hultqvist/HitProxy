@@ -55,7 +55,6 @@ namespace HitProxy
 			proxy.RequestTriggers.Add (new AdBlock ());
 			proxy.RequestTriggers.Add (new Triggers.CrossDomain ());
 
-			proxy.RequestFilters.Add (new WebUI (proxy));
 			proxy.RequestFilters.Add (new Block ());
 			proxy.RequestFilters.Add (new BlockBreak ());
 			//proxy.FilterRequest.Add (new Tamper ("Before filtering"));

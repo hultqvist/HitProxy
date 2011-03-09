@@ -142,27 +142,48 @@ namespace HitProxy.Triggers
 			
 			if (requestPair.FromHost == "")
 				return false;
-			
-			httpRequest.Block ("Referer mismatch", Html.Format(@"
-<h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
-<form action=""{2}"" method=""get"">
-	<input type=""hidden"" name=""return"" value=""{0}"" />
-	<input type=""text"" name=""from"" value=""{3}"" />
-	<input type=""text"" name=""to"" value=""{4}"" />
-	<input type=""submit"" name=""action"" value=""Pass"" />
-	<input type=""submit"" name=""action"" value=""Fake"" />
-	<input type=""submit"" name=""action"" value=""Clean"" />
-	<input type=""submit"" name=""action"" value=""Remove"" />
-	<input type=""submit"" name=""action"" value=""Block"" />
-</form>", httpRequest.Uri, httpRequest.Uri.Host, Filters.WebUI.FilterUrl (this), requestPair.FromHost, requestPair.ToHost));
-			httpRequest.Response.ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
-			httpRequest.Response.ReplaceHeader ("Pragma", "no-cache");
-			httpRequest.Response.HttpCode = HttpStatusCode.ServiceUnavailable;
-			httpRequest.Response.Add ("X-Referer-Filter: BLOCKED: Unmatched");
-			
+
+			httpRequest.SetClass ("block");
+			httpRequest.SetTriggerHtml (Form(requestPair, httpRequest.Uri.ToString()));			
 			return true;
 		}
 
+		private Html Form (RefererPair pair)
+		{
+			return Form (pair.FromHost, pair.ToHost, null);
+		}
+
+		private Html Form (RefererPair pair, string returnUrl)
+		{
+			return Form (pair.FromHost, pair.ToHost, returnUrl);
+		}
+
+		private Html Form (string fromHost, string toHost)
+		{
+			return Form (fromHost, toHost, null);
+		}
+		
+		private Html Form (string fromHost, string toHost, string returnUrl)
+		{
+			Html returnHtml = new Html ();
+			if(returnUrl != null)
+				returnHtml = Html.Format(@"<input type=""hidden"" name=""return"" value=""{0}"" />", returnUrl);
+			
+			return Html.Format (@"
+<form action=""{0}"" method=""get"">
+	{1}
+	<input type=""text"" name=""from"" value=""{2}"" />
+	<input type=""text"" name=""to"" value=""{3}"" />
+	<nobr>
+		<input type=""submit"" name=""action"" value=""Pass"" />
+		<input type=""submit"" name=""action"" value=""Fake"" />
+		<input type=""submit"" name=""action"" value=""Clean"" />
+		<input type=""submit"" name=""action"" value=""Remove"" />
+		<input type=""submit"" name=""action"" value=""Block"" />
+	</nobr>
+</form>", Filters.WebUI.FilterUrl (this), returnHtml, fromHost, toHost);
+		}
+		
 		public override Html Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = Html.Format(@"
@@ -234,30 +255,13 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			html += Html.Format(@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>
-							<form action=""?"" method=""get"">
-								<input type=""text"" name=""from"" value="""" />
-								<input type=""text"" name=""to"" value="""" />
-								<input type=""submit"" name=""action"" value=""Pass"" />
-								<input type=""submit"" name=""action"" value=""Fake"" />
-								<input type=""submit"" name=""action"" value=""Clean"" />
-								<input type=""submit"" name=""action"" value=""Remove"" />
-								<input type=""submit"" name=""action"" value=""Block"" />
-							</form>");
+			html += Html.Format(@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>");
+			html += Form("", "");
 			try {
 				listLock.EnterReadLock ();
 				
 				foreach (RefererPair pair in blocked) {
-					html += Html.Format(@"
-									<form action=""?"" method=""get"">
-									<input type=""text"" name=""from"" value=""{0}"" />
-									<input type=""text"" name=""to"" value=""{1}"" />
-									<input type=""submit"" name=""action"" value=""Pass"" />
-									<input type=""submit"" name=""action"" value=""Fake"" />
-									<input type=""submit"" name=""action"" value=""Clean"" />
-									<input type=""submit"" name=""action"" value=""Remove"" />
-									<input type=""submit"" name=""action"" value=""Block"" />
-								</form>", pair.FromHost, pair.ToHost);
+					html += Form(pair);
 				}
 				
 				html += Html.Format("<h1>Watchlist</h1>");

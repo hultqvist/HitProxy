@@ -151,15 +151,7 @@ namespace HitProxy.Session
 			
 			Status = "Got request, filtering";
 			
-			//Filter Request
-			try {
-				foreach (Trigger t in proxy.RequestTriggers.ToArray ())
-					t.Apply (request);
-				foreach (Filter f in proxy.RequestFilters.ToArray ())
-					f.Apply (request);
-			} catch (Exception e) {
-				request.Response = FilterException (e);
-			}
+			FilterRequest (request);
 			
 			//Send filter generated responses
 			//Duplicate code: do changes here below too
@@ -270,6 +262,20 @@ namespace HitProxy.Session
 			return request.KeepAlive;
 		}
 
+		private void FilterRequest (Request request)
+		{
+			try {
+				if (proxy.WebUI.Apply (request))
+					return;
+				foreach (Trigger t in proxy.RequestTriggers.ToArray ())
+					t.Apply (request);
+				foreach (Filter f in proxy.RequestFilters.ToArray ())
+					f.Apply (request);
+			} catch (Exception e) {
+				request.Response = FilterException (e);
+			}
+		}
+		
 		/// <summary>
 		/// From the data in the request,
 		/// Connect, return connection if successful.

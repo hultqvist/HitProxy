@@ -61,6 +61,20 @@ namespace HitProxy.Http
 			}
 		}
 
+		#region Data Filter
+		
+		/// <summary>
+		/// Set filter to be used on data.
+		/// </summary>
+		public void FilterData (IDataFilter filter)
+		{
+			DataSocket = new FilteredData (filter, DataSocket);
+		}
+
+		#endregion
+		
+		#region Header operations
+		
 		public virtual void SendHeaders (Socket socket)
 		{
 			//Headers
@@ -136,6 +150,7 @@ namespace HitProxy.Http
 			Add (key + ": " + value);
 		}
 		
+		#endregion
 		
 		#region Trigger/Filter Classification
 		

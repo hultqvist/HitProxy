@@ -45,6 +45,17 @@ namespace HitProxy.Connection
 			if (sent > length)
 				throw new InvalidOperationException ("Sent more data than received");
 		}
+
+		/// <summary>
+		/// Send all bytes in buffer even when Socket.Send would return, this retries untill all bytes are sent.
+		/// </summary>
+		/// <param name="buffer"></param>
+		/// <param name="length"></param>
+		public static void SendAll (this Socket socket, byte[] buffer)
+		{
+			SendAll (socket, buffer, buffer.Length);
+		}
+
 		/// <summary>
 		/// Read headers in a chunked encoding
 		/// Return a string with the chunk header

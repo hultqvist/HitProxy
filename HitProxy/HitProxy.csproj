@@ -91,6 +91,10 @@
     <Compile Include="Triggers\CrossDomain.cs" />
     <Compile Include="Http\Html.cs" />
     <Compile Include="Filters\Saver.cs" />
+    <Compile Include="Connection\IDataOutput.cs" />
+    <Compile Include="Connection\SocketOutput.cs" />
+    <Compile Include="Connection\FilteredData.cs" />
+    <Compile Include="Connection\IDataFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

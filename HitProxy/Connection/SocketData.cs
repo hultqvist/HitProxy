@@ -16,11 +16,27 @@ namespace HitProxy.Connection
 	{
 		private CachedConnection connection;
 		private Socket remoteSocket;
-
+		
 		/// <summary>
 		/// Data received from this connection
 		/// </summary>
 		public int Received { get; set; }
+		
+		/// <summary>
+		/// For use by filter replacements
+		/// </summary>
+		protected SocketData ()
+		{
+			
+		}
+		
+		/// <summary>
+		/// From a remote connection with allocated buffer.
+		/// </summary>
+		public SocketData (CachedConnection connection) : this(connection.remoteSocket)
+		{
+			this.connection = connection;
+		}
 
 		/// <summary>
 		/// For incoming sockets
@@ -28,14 +44,6 @@ namespace HitProxy.Connection
 		public SocketData (Socket socket)
 		{
 			this.remoteSocket = socket;
-		}
-
-		/// <summary>
-		/// From a remote connection with allocated buffer.
-		/// </summary>
-		public SocketData (CachedConnection connection) : this(connection.remoteSocket)
-		{
-			this.connection = connection;
 		}
 
 		/// <summary>
@@ -48,7 +56,7 @@ namespace HitProxy.Connection
 			connection = null;
 		}
 
-		public void Dispose ()
+		public virtual void Dispose ()
 		{
 			connection.NullSafeDispose ();
 		}
@@ -57,26 +65,26 @@ namespace HitProxy.Connection
 		/// Send response data delivered in chunked format.
 		/// Returns footer.
 		/// </summary>
-		public string SendChunkedResponse (Socket clientSocket)
+		public virtual string SendChunkedResponse (IDataOutput output)
 		{
 			while (true) {
 				string header = remoteSocket.ReadChunkedHeader ();
 				int length = int.Parse (header, System.Globalization.NumberStyles.HexNumber);
 				
 				byte[] cHeader = Encoding.ASCII.GetBytes (header);
-				clientSocket.Send (cHeader);
+				output.Send (cHeader);
 				
 				if (length == 0) {
 					//Closing crnl
 					string footer = remoteSocket.ReadHeader ();
 					byte[] footerBytes = Encoding.ASCII.GetBytes (footer);
-					clientSocket.Send (footerBytes);
+					output.Send (footerBytes);
 					byte[] crnl = new byte[2] { 0xD, 0xA };
-					clientSocket.Send (crnl);
+					output.Send (crnl);
 					return footer;
 				}
 				
-				PipeTo (clientSocket, length);
+				PipeTo (output, length);
 			}
 		}
 
@@ -84,7 +92,7 @@ namespace HitProxy.Connection
 		/// Send all data from incoming socket to output.
 		/// Buffer is assumed to be empty.
 		/// </summary>
-		public void PipeTo (Socket output)
+		public virtual void PipeTo (IDataOutput output)
 		{
 			byte[] buffer = new byte[0x10000];
 			while (true) {
@@ -92,7 +100,7 @@ namespace HitProxy.Connection
 				if (remoteSocket.IsConnected () == false)
 					return;
 				int read = remoteSocket.Receive (buffer);
-				output.SendAll (buffer, read);
+				output.Send (buffer, read);
 				Received += read;
 			}
 		}
@@ -101,7 +109,7 @@ namespace HitProxy.Connection
 		/// Send length bytes of data from incoming socket to output.
 		/// Buffer is assumed to be empty.
 		/// </summary>
-		public void PipeTo (Socket output, long length)
+		public virtual void PipeTo (IDataOutput output, long length)
 		{
 			if (length <= 0)
 				return;
@@ -123,7 +131,7 @@ namespace HitProxy.Connection
 						return;
 					continue;
 				}
-				output.SendAll (buffer, read);
+				output.Send (buffer, read);
 				
 				Received += read;
 				totalRead += read;

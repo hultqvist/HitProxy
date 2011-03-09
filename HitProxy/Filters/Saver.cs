@@ -16,11 +16,11 @@ namespace HitProxy.Filters
 		{
 			if (request.Response == null)
 				return false;
-			if (request.TestClass ("save") == false)
+			if ((request.TestClass ("save") || request.Response.TestClass("save")) == false)
 				return false;
 			
 			//Intercept data connection
-			request.Response.DataSocket = new FilteredData (request.Response.DataSocket);
+			request.Response.FilterData(new FileOutput());
 			
 			return true;
 		}
@@ -30,22 +30,28 @@ namespace HitProxy.Filters
 			return Html.Format (@"<p>Saves request data with class <strong>save</strong> onto disk.</p>");
 		}
 
-		/// <summary>
-		/// Pass request into remote SocketData and saves incoming bytes to file.
-		/// </summary>
-		class FilteredData : SocketData
+		
+		class FileOutput : IDataFilter
 		{
 			private FileStream file;
-			private SocketData remote;
-				
-			public FilteredData (SocketData remote)
+
+			public FileOutput ()
 			{
-				this.remote = remote;
-				
 				string path = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.MyComputer), "Saver");
 				DateTime now = DateTime.Now;
 				path = Path.Combine (path, now.ToShortDateString () + " " + now.ToShortTimeString () + " " + new Random ().Next ());
 				file = new FileStream (path, FileMode.Create);
+			}
+
+			public void Send (byte[] inBuffer, int inLength, IDataOutput output)
+			{
+				file.Write (inBuffer, 0, inLength);
+				output.Send (inBuffer, inLength);
+			}
+			
+			public void Dispose ()
+			{
+				file.Close ();
 			}
 		}
 	}

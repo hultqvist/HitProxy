@@ -10,9 +10,13 @@ namespace HitProxy.Http
 	{
 		public HttpStatusCode HttpCode { get; set; }
 
-		public HeaderException (string message,HttpStatusCode httpCode) : base(message)
+		public HeaderException (string message, HttpStatusCode httpCode) : base(message)
 		{
-			//Console.Error.WriteLine (httpCode + " " + message);
+			this.HttpCode = httpCode;
+		}
+		
+		public HeaderException (string message, HttpStatusCode httpCode, Exception e) : base(message, e)
+		{
 			this.HttpCode = httpCode;
 		}
 	}

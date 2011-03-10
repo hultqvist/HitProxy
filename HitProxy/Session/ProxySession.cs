@@ -169,9 +169,9 @@ namespace HitProxy.Session
 			try {
 				remoteConnection = ConnectRequest ();
 			} catch (TimeoutException e) {
-				request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Timeout", e.Message);
+				request.Response = new Response (e, Html.Escape("Connection Timeout"));
 			} catch (HeaderException e) {
-				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", request + ", " + e.Message);
+				request.Response = new Response (e, new Html());
 			}
 			
 			//So far all responses are generated from errors
@@ -209,8 +209,7 @@ namespace HitProxy.Session
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message);
 				if (Status == "Sending response")
 					return false;
-				
-				request.Response = new Response (HttpStatusCode.BadGateway, "Header Error", e.Message);
+				request.Response = new Response (e);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (SocketException e) {
@@ -218,7 +217,7 @@ namespace HitProxy.Session
 				if (Status == "Sending response")
 					return false;
 				
-				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Error", e.Message);
+				request.Response = new Response (e);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (IOException e) {
@@ -226,7 +225,7 @@ namespace HitProxy.Session
 				if (Status == "Sending response")
 					return false;
 				
-				request.Response = new Response (HttpStatusCode.BadGateway, "IO Error", e.Message);
+				request.Response = new Response (e);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			} catch (ObjectDisposedException e) {
@@ -234,7 +233,7 @@ namespace HitProxy.Session
 				if (Status == "Sending response")
 					return false;
 				
-				request.Response = new Response (HttpStatusCode.BadGateway, "Connection Abruptly Closed", e.Message);
+				request.Response = new Response (e);
 				if (request.Response.SendResponse (clientSocket) == false)
 					return false;
 			}
@@ -271,7 +270,7 @@ namespace HitProxy.Session
 				foreach (Filter f in proxy.RequestFilters.ToArray ())
 					f.Apply (request);
 			} catch (Exception e) {
-				request.Response = FilterException (e);
+				request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
 			}
 		}
 		
@@ -321,21 +320,10 @@ namespace HitProxy.Session
 				string extra = "";
 				if (request.Proxy != null)
 					extra = ": " + request.Proxy;
-				throw new HeaderException (e.Message + extra, HttpStatusCode.BadGateway);
+				throw new HeaderException (e.Message + extra, HttpStatusCode.BadGateway, e);
 			} catch (IOException e) {
-				throw new HeaderException (e.Message, HttpStatusCode.BadGateway);
+				throw new HeaderException (e.Message, HttpStatusCode.BadGateway, e);
 			}
-		}
-
-		private Response FilterException (Exception e)
-		{
-			Response response = new Response (HttpStatusCode.InternalServerError);
-			response.Template ("Filter Error", Html.Format (@"
-<h2>{0}, {2}</h2>
-<p>{1}</p>
-<pre>{3}</pre>
-<p><a href=""{4}"">Manage filters</a></p>", e.GetType ().Name, e.Message, e.Source, e.StackTrace, Filters.WebUI.FilterUrl ()));
-			return response;
 		}
 
 		private bool GotNewRequest (Socket client)

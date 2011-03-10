@@ -31,9 +31,8 @@ namespace HitProxy.Connection
 		}
 		public void Connect ()
 		{
-			TcpClient connection = new TcpClient ();
-			connection.Connect (server.endpoint);
-			remoteSocket = connection.Client;
+			remoteSocket = new Socket (server.endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			remoteSocket.Connect (server.endpoint);
 		}
 
 		public void Dispose ()

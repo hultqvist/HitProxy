@@ -20,6 +20,8 @@ namespace HitProxy.Triggers
 				return false;
 			
 			string type = request.Response.GetHeader ("Content-Type");
+			if (type == null)
+				return false;
 			
 			if (type.StartsWith ("video/")) {
 				request.Response.SetFlags ("save");

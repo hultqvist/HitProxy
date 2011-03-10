@@ -74,6 +74,29 @@ namespace HitProxy.Http
 			Template (title, Html.Format ("<p>{0}</p>", message));
 		}
 
+		/// <summary>
+		/// Generated response with message from the proxy
+		/// </summary>
+		public Response (Exception e) : this(e, new Html())
+		{
+		}
+		
+		/// <summary>
+		/// Generated response with message from the proxy
+		/// </summary>
+		public Response (Exception e, Html message) : this((e is TimeoutException) ? HttpStatusCode.GatewayTimeout : HttpStatusCode.BadGateway)
+		{
+			Exception ne = e;
+			while (ne != null)
+			{
+				message += Html.Format (@"<h2>{0}</h2><p>{1}</p><pre>{2}</pre>", ne.GetType().FullName, ne.Message, ne.StackTrace);
+				
+				ne = ne.InnerException;
+			}
+			
+			Template (e.GetType ().Name, message);
+		}
+
 		protected override void ParseFirstLine (string firstLine)
 		{
 			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
@@ -115,8 +138,7 @@ namespace HitProxy.Http
 					break;
 				case "connection":
 					if (s.ToLowerInvariant () == "close")
-						KeepAlive = false;
-					else if (s.ToLowerInvariant ().Contains ("keep-alive"))
+						KeepAlive = false; else if (s.ToLowerInvariant ().Contains ("keep-alive"))
 						KeepAlive = true;
 					else
 						Console.WriteLine ("ResponseHeader: unknown Connection: " + s);
@@ -187,9 +209,8 @@ namespace HitProxy.Http
 				
 				//Pipe result back to client
 				if (ContentLength > 0)
-					DataSocket.PipeTo (new SocketOutput (outputSocket), ContentLength);
-				else if (ContentLength < 0)
-					DataSocket.PipeTo (new SocketOutput(outputSocket));
+					DataSocket.PipeTo (new SocketOutput (outputSocket), ContentLength); else if (ContentLength < 0)
+					DataSocket.PipeTo (new SocketOutput (outputSocket));
 				return true;
 			} catch (SocketException se) {
 				Console.Error.WriteLine (se.GetType ().ToString () + ": " + se.Message);

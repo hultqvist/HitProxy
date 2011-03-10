@@ -55,7 +55,7 @@ namespace HitProxy.Session
 			try {
 				request.SendHeaders (remoteConnection.remoteSocket);
 			} catch (IOException e) {
-				throw new HeaderException ("While sending request to remote: " + e.Message, HttpStatusCode.BadGateway);
+				throw new HeaderException ("While sending request to remote: " + e.Message, HttpStatusCode.BadGateway, e);
 			}
 			//Read response header
 			while (true) {
@@ -72,7 +72,7 @@ namespace HitProxy.Session
 					foreach (Filter f in proxy.ResponseFilters.ToArray ())
 						f.Apply (request);
 				} catch (Exception e) {
-					request.Response = FilterException (e);
+					request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
 				}
 				
 				//Send response

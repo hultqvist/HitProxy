@@ -32,10 +32,6 @@ namespace HitProxy.Http
 		public bool Chunked = false;
 
 		/// <summary>
-		/// Whether a response is generated in the proxy or a remote response
-		/// </summary>
-		private byte[] GeneratedResponse = null;
-		/// <summary>
 		/// True if content-length is specified.
 		/// Otherwise it is a Connection: close session.
 		/// </summary>
@@ -63,7 +59,7 @@ namespace HitProxy.Http
 		/// </summary>
 		public Response (CachedConnection connection)
 		{
-			DataSocket = new SocketData (connection);
+			DataRaw = new SocketData (connection);
 		}
 
 		/// <summary>
@@ -183,45 +179,6 @@ namespace HitProxy.Http
 		}
 
 		/// <summary>
-		/// Send response, headers and data, back to client
-		/// </summary>
-		public bool SendResponse (Socket outputSocket)
-		{
-			try {
-				//Send back headers
-				SendHeaders (outputSocket);
-				
-				if (GeneratedResponse != null) {
-					outputSocket.Send (GeneratedResponse);
-					return true;
-				}
-				
-				if (Chunked) {
-					DataSocket.SendChunkedResponse (new SocketOutput (outputSocket));
-					return true;
-				}
-				
-				if (HasBody == false)
-					return true;
-				
-				if (DataSocket == null)
-					return false;
-				
-				//Pipe result back to client
-				if (ContentLength > 0)
-					DataSocket.PipeTo (new SocketOutput (outputSocket), ContentLength); else if (ContentLength < 0)
-					DataSocket.PipeTo (new SocketOutput (outputSocket));
-				return true;
-			} catch (SocketException se) {
-				Console.Error.WriteLine (se.GetType ().ToString () + ": " + se.Message);
-				return false;
-			} catch (ObjectDisposedException ode) {
-				Console.Error.WriteLine (ode.GetType ().ToString () + ": " + ode.Message);
-				return false;
-			}
-		}
-
-		/// <summary>
 		/// Generates a custom data for the response.
 		/// Content-Length and Content-Type headers are added automatically
 		/// </summary>
@@ -230,16 +187,15 @@ namespace HitProxy.Http
 		/// </param>
 		public void SetData (Html data)
 		{
-			if (DataSocket != null) {
-				DataSocket.Release ();
-				DataSocket = null;
-			}
+			if (DataRaw != null)
+				throw new InvalidOperationException ("Data is not null, therefore cannot be set to any html");
 			
-			GeneratedResponse = Encoding.UTF8.GetBytes (data.HtmlString);
+			HtmlData htmlData = new HtmlData (data);
+			DataProtocol = htmlData;
 			
-			ReplaceHeader ("Content-Length", GeneratedResponse.Length.ToString ());
+			ReplaceHeader ("Content-Length", htmlData.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
-			ContentLength = GeneratedResponse.Length;
+			ContentLength = htmlData.Length;			
 		}
 
 		public void Template (string title, Html htmlContents)

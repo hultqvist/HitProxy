@@ -32,6 +32,7 @@
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
+    <Commandlineparameters>-s</Commandlineparameters>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -92,10 +93,14 @@
     <Compile Include="Http\Html.cs" />
     <Compile Include="Filters\Saver.cs" />
     <Compile Include="Connection\IDataOutput.cs" />
-    <Compile Include="Connection\SocketOutput.cs" />
     <Compile Include="Connection\FilteredData.cs" />
-    <Compile Include="Connection\IDataFilter.cs" />
     <Compile Include="Triggers\MediaTrigger.cs" />
+    <Compile Include="Connection\IDataIO.cs" />
+    <Compile Include="Connection\IDataInput.cs" />
+    <Compile Include="Connection\ChunkedOutput.cs" />
+    <Compile Include="Connection\ChunkedInput.cs" />
+    <Compile Include="Connection\HtmlData.cs" />
+    <Compile Include="Connection\IDataFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

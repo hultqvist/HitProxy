@@ -2,46 +2,34 @@ using System;
 namespace HitProxy.Connection
 {
 	/// <summary>
-	/// Used by filters who 
+	/// Used by filters who intercept the datastream
 	/// </summary>
-	class FilteredData : SocketData, IDataOutput
+	class FilteredData : IDataIO
 	{
 		private IDataFilter filter;
-		private SocketData remote;
+		private IDataInput input;
 		private IDataOutput output;
 
-		public FilteredData (IDataFilter filter, SocketData remote)
+		public FilteredData (IDataFilter filter, IDataInput input)
 		{
 			this.filter = filter;
-			this.remote = remote;
+			this.input = input;
 		}
 
-		#region SocketData Methods
+		#region IDataInput
 
-		public override int Received {
-			get { return remote.Received; }
-			set { remote.Received = value; }
-		}
-
-		public override void PipeTo (IDataOutput output, long length)
+		public void PipeTo (IDataOutput output, long length)
 		{
 			this.output = output;
-			remote.PipeTo (this, length);
+			input.PipeTo (this, length);
+			this.output = null;
 		}
 
-		public override void PipeTo (IDataOutput output)
+		public void PipeTo (IDataOutput output)
 		{
 			this.output = output;
-			remote.PipeTo (this);
-		}
-
-		public override string SendChunkedResponse (IDataOutput output)
-		{
-			byte[] message = System.Text.ASCIIEncoding.ASCII.GetBytes ("Not yet implemented saving chunked response.");
-			filter.Send (message, 0, message.Length, nullOutput);
-			Console.Error.WriteLine ("Not yet implemented saving chunked response.");
-			
-			return remote.SendChunkedResponse (output);
+			input.PipeTo (this);
+			this.output = null;
 		}
 
 		#endregion
@@ -53,30 +41,19 @@ namespace HitProxy.Connection
 			filter.Send (buffer, start, length, output);
 		}
 
+		public void EndOfData ()
+		{
+			filter.Send (null, 0, 0, output);
+			output.EndOfData ();
+		}
+		
 		#endregion
 
-		public override void Dispose ()
+		public void Dispose ()
 		{
-			base.Dispose ();
 			filter.Dispose ();
-			remote.Dispose ();
+			input.Dispose ();
 		}
-
-
-		#region NullOutput
-
-		private readonly NullOutput nullOutput = new NullOutput ();
-
-		class NullOutput : IDataOutput
-		{
-			public void Send (byte[] buffer, int start, int length)
-			{
-				return;
-			}
-		}
-		
-		#endregion
-		
 	}
 }
 

@@ -18,10 +18,8 @@ namespace HitProxy.Session
 		/// <returns>
 		/// A <see cref="Request"/>
 		/// </returns>
-		private Request ParseRequest (string header)
+		private void ParseRequest (string header)
 		{
-			Request request = new Request (clientSocket);
-			
 			try {
 				Status = "Got request";
 				
@@ -40,7 +38,6 @@ namespace HitProxy.Session
 				request.Response = new Response (HttpStatusCode.BadRequest, "Bad Request", e.Message + "\n" + e.StackTrace);
 				request.Response.KeepAlive = false;
 			}
-			return request;
 		}
 
 		/// <summary>
@@ -53,7 +50,7 @@ namespace HitProxy.Session
 			
 			Status = "Sending request to server";
 			try {
-				request.SendHeaders (remoteConnection.remoteSocket);
+				request.SendHeaders (request.Response.DataRaw);
 			} catch (IOException e) {
 				throw new HeaderException ("While sending request to remote: " + e.Message, HttpStatusCode.BadGateway, e);
 			}
@@ -61,8 +58,14 @@ namespace HitProxy.Session
 			while (true) {
 				Status = "Waiting for response";
 				
-				string respHeader = remoteConnection.remoteSocket.ReadHeader ();
+				string respHeader = request.Response.DataRaw.ReadHeader ();
 				request.Response.Parse (respHeader, request);
+				
+				//Apply chunked data
+				if (request.Response.Chunked) {
+					request.Response.DataProtocol = new ChunkedInput (request.Response.DataRaw);
+					request.DataProtocol = new ChunkedOutput (request.DataProtocol);
+				}
 				
 				//Filter Response
 				Status = "Filtering response";
@@ -77,7 +80,7 @@ namespace HitProxy.Session
 				
 				//Send response
 				Status = "Sending response back to browser";
-				request.Response.SendResponse (clientSocket);
+				SendResponse ();
 				
 				int code = (int)request.Response.HttpCode;
 				if (code < 100 || code > 199)

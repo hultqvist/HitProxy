@@ -22,24 +22,37 @@ namespace HitProxy.Session
 		/// A <see cref="Request"/>
 		/// </param>
 		public void ProcessHttpConnect (CachedConnection remote)
-		{			
+		{
 			request.Response = new Response (HttpStatusCode.OK);
+			request.Response.DataRaw = new SocketData (remote);
 			request.Response.KeepAlive = false;
 			request.Response.Add ("Proxy-Agent: HitProxy");
-			request.Response.SendHeaders (clientSocket);
-			request.Response.DataSocket = new SocketData (remote);
+			request.Response.SendHeaders (request.DataRaw);
 			
-			//Pass data in both directions
-			ManualResetEvent doneReq = request.DataSocket.PipeSocketAsync (remote.remoteSocket);
-			ManualResetEvent doneRes = request.Response.DataSocket.PipeSocketAsync (clientSocket);
 			
-			//Wait until any side disconnects
-			doneReq.WaitOne ();
-			doneRes.WaitOne ();
+			Thread t = new Thread (InputThread);
+			t.Name = Thread.CurrentThread.Name + "ConnectInput";
+			t.Start ();
+			try {
+				request.DataFiltered.PipeTo (request.Response.DataFiltered);
+			} catch (Exception) {
+			} finally {
+				request.Response.DataRaw.Close ();
+			}
 			Status = "Connection closed";
 			
 			request.Response.Dispose ();
 			request.Response = null;
+		}
+
+		private void InputThread ()
+		{
+			try {
+				request.Response.DataFiltered.PipeTo (request.DataFiltered);
+			} catch (Exception) {
+			} finally {
+				request.DataRaw.Close ();
+			}
 		}
 	}
 }

@@ -18,18 +18,43 @@ namespace HitProxy.Http
 		/// </summary>
 		public abstract string FirstLine { get; }
 
-		public SocketData DataSocket {
-			get { return socketdata; }
+		/// <summary>
+		/// The raw, outermost Data
+		/// </summary>
+		public SocketData DataRaw {
+			get { return dataRaw; }
 			set {
-				if (socketdata != null)
-				{
-					socketdata.NullSafeDispose ();
-					throw new Exception ("when should this happen???");
-				}
-				socketdata = value;
+				if (dataRaw != null)
+					throw new InvalidOperationException ();
+				dataRaw = value;
 			}
 		}
-		private SocketData socketdata;
+		private SocketData dataRaw = null;
+
+		/// <summary>
+		/// Temporary protocol filters, e.g. chunked http encoding
+		/// </summary>
+		public IDataIO DataProtocol {
+			get {
+				if (dataProtocol == null)
+					return DataRaw;
+				return dataProtocol;
+			}
+			set { dataProtocol = value; }
+		}
+		private IDataIO dataProtocol = null;
+
+		/// <summary>
+		/// Chain of filters applied
+		/// </summary>
+		public IDataIO DataFiltered {
+			get {
+				if (dataFiltered == null)
+					return DataProtocol;
+				return dataFiltered;
+			}
+		}
+		private IDataIO dataFiltered = null;
 
 		protected Header ()
 		{
@@ -37,7 +62,9 @@ namespace HitProxy.Http
 
 		public virtual void Dispose ()
 		{
-			DataSocket.NullSafeDispose ();
+			DataRaw.NullSafeDispose ();
+			DataProtocol.NullSafeDispose ();
+			DataFiltered.NullSafeDispose ();
 		}
 
 		protected abstract void ParseFirstLine (string firstLine);
@@ -66,20 +93,20 @@ namespace HitProxy.Http
 		}
 
 		#region Data Filter
-		
+
 		/// <summary>
 		/// Set filter to be used on data.
 		/// </summary>
 		public void FilterData (IDataFilter filter)
 		{
-			socketdata = new FilteredData (filter, socketdata);
+			dataFiltered = new FilteredData (filter, DataFiltered);
 		}
 
 		#endregion
-		
+
 		#region Header operations
-		
-		public virtual void SendHeaders (Socket socket)
+
+		public virtual void SendHeaders (IDataOutput output)
 		{
 			//Headers
 			string header = FirstLine + "\r\n";
@@ -87,7 +114,7 @@ namespace HitProxy.Http
 				header += line + "\r\n";
 			header += "\r\n";
 			byte[] buffer = System.Text.Encoding.ASCII.GetBytes (header);
-			socket.Send (buffer);
+			output.Send (buffer, 0, buffer.Length);
 		}
 
 		/// <summary>
@@ -153,16 +180,16 @@ namespace HitProxy.Http
 		{
 			Add (key + ": " + value);
 		}
-		
+
 		#endregion
-		
+
 		#region Trigger/Filter Classification
-		
+
 		/// <summary>
 		/// Attributes set by triggers and used by filters.
 		/// </summary>
 		private readonly List<string> filterFlags = new List<string> ();
-		
+
 		/// <summary>
 		/// Add flags from a comma separated list
 		/// </summary>
@@ -171,14 +198,13 @@ namespace HitProxy.Http
 		/// </param>
 		public void SetFlags (string flagNames)
 		{
-			string[] fa = flagNames.ToLowerInvariant().Split (',');
-			foreach (string f in fa)
-			{
+			string[] fa = flagNames.ToLowerInvariant ().Split (',');
+			foreach (string f in fa) {
 				if (filterFlags.Contains (f) == false)
 					filterFlags.Add (f);
 			}
 		}
-		
+
 		/// <summary>
 		/// Test wether any of the supplied classes has been set
 		/// </summary>
@@ -190,7 +216,7 @@ namespace HitProxy.Http
 		/// </returns>
 		public bool TestFlags (string flags)
 		{
-			string[] fa = flags.ToLowerInvariant().Split (',');
+			string[] fa = flags.ToLowerInvariant ().Split (',');
 			foreach (string f in fa) {
 				if (filterFlags.Contains (f))
 					return true;
@@ -207,7 +233,7 @@ namespace HitProxy.Http
 		{
 			filterHtml.Add (html);
 		}
-		
+
 		public List<Html> GetTriggerHtml ()
 		{
 			return filterHtml;

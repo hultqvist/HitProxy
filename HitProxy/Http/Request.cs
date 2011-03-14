@@ -70,7 +70,7 @@ namespace HitProxy.Http
 
 		public Request (Socket socket)
 		{
-			DataSocket = new SocketData (socket);
+			DataRaw = new SocketData (socket);
 			Method = "NULL";
 			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);
 		}
@@ -199,14 +199,14 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Send Headers and POST data.
 		/// </summary>
-		public override void SendHeaders (Socket socket)
+		public override void SendHeaders (IDataOutput output)
 		{
-			base.SendHeaders (socket);
+			base.SendHeaders (output);
 			
 			//Send POST data, if available
 			if (Method == "POST") {
 				if (ContentLength > 0) {
-					DataSocket.PipeTo (new SocketOutput(socket), ContentLength);
+					DataFiltered.PipeTo (output, ContentLength);
 				} else {
 					//Ignore, assume content-length of 0 is ok.
 					//throw new HeaderException ("Missing Content-Length in POST request", HttpStatusCode.BadRequest);

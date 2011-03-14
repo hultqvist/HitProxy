@@ -2,6 +2,7 @@ using System;
 using HitProxy.Http;
 using HitProxy.Connection;
 using System.Collections.Specialized;
+using System.Threading;
 
 namespace HitProxy.Filters
 {
@@ -49,6 +50,11 @@ namespace HitProxy.Filters
 					int tosend = (int)(DateTime.Now - starttime).TotalSeconds * rate - sent - totalSent;
 					if (start + sent + tosend > inLength)
 						tosend = inLength - start - sent;
+					if (tosend == 0)
+					{
+						Thread.Sleep (1000);
+						continue;
+					}
 					output.Send (inBuffer, start + sent, tosend);
 					sent += tosend;
 				}

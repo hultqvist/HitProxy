@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Text;
+using HitProxy.Http;
 
 namespace HitProxy.Connection
 {
@@ -11,23 +12,21 @@ namespace HitProxy.Connection
 	/// The connection to the remote server or local client.
 	/// Handles reading of header and the following transfer of data.
 	/// </summary>
-	public class SocketData : IDisposable
+	public class SocketData : IDataIO
 	{
+		/// <summary>
+		/// Remote connections
+		/// </summary>
 		private CachedConnection connection;
-		private Socket remoteSocket;
+		/// <summary>
+		/// Client socket
+		/// </summary>
+		private Socket socket;
 
 		/// <summary>
 		/// Data received from this connection
 		/// </summary>
-		public virtual int Received { get; set; }
-
-		/// <summary>
-		/// For use by filter replacements
-		/// </summary>
-		protected SocketData ()
-		{
-			
-		}
+		public int Received { get; set; }
 
 		/// <summary>
 		/// From a remote connection with allocated buffer.
@@ -42,7 +41,7 @@ namespace HitProxy.Connection
 		/// </summary>
 		public SocketData (Socket socket)
 		{
-			this.remoteSocket = socket;
+			this.socket = socket;
 		}
 
 		/// <summary>
@@ -55,50 +54,93 @@ namespace HitProxy.Connection
 			connection = null;
 		}
 
-		public virtual void Dispose ()
+		public void Dispose ()
 		{
 			connection.NullSafeDispose ();
 		}
-
+		
 		/// <summary>
-		/// Send response data delivered in chunked format.
-		/// Returns footer.
+		/// Closes the client session.
+		/// Currently only used in the end of HTTP Connect requests
 		/// </summary>
-		public virtual string SendChunkedResponse (IDataOutput output)
+		public void Close ()
 		{
-			while (true) {
-				string header = remoteSocket.ReadChunkedHeader ();
-				int length = int.Parse (header, System.Globalization.NumberStyles.HexNumber);
-				
-				byte[] cHeader = Encoding.ASCII.GetBytes (header);
-				output.Send (cHeader, 0, cHeader.Length);
-				
-				if (length == 0) {
-					//Closing crnl
-					string footer = remoteSocket.ReadHeader ();
-					byte[] footerBytes = Encoding.ASCII.GetBytes (footer);
-					output.Send (footerBytes, 0, footerBytes.Length);
-					byte[] crnl = new byte[2] { 0xD, 0xA };
-					output.Send (crnl, 0, crnl.Length);
-					return footer;
-				}
-				
-				PipeTo (output, length);
-			}
+			socket.Close ();
 		}
 
+		#region IDataInput
+
+		/// <summary>
+		/// Return the http headers read from the socket in a single string.
+		/// This data can be sent directly to Header.Parse(string).
+		/// </summary>
+		/// <returns>
+		/// Complete http headers.
+		/// </returns>
+		public string ReadHeader ()
+		{
+			byte[] header = new byte[16 * 1024];
+			int index = 0;
+			int nlcount = 0;
+			byte b;
+			
+			while (true) {
+				while (false == socket.Poll (5 * 1000000, SelectMode.SelectRead)) {
+				}
+				if (socket.Available == 0)
+					throw new HeaderException ("Connection closed", HttpStatusCode.BadGateway);
+				int received = socket.Receive (header, index, 1, SocketFlags.None);
+				if (received != 1)
+					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);
+				
+				b = header [index];
+				index += 1;
+				
+				if (index >= header.Length)
+					throw new HeaderException ("Header too large, limit is at " + header.Length, HttpStatusCode.RequestEntityTooLarge);
+				
+				if (b != 0xa) {
+					if (b != 0xd)
+						nlcount = 0;
+					continue;
+				}
+				//Test for end of header
+				nlcount += 1;
+				if (nlcount < 2 && !(nlcount == 1 && index <= 2))
+					continue;
+				
+				//Remove last empty line
+				if (header [index - 2] == 0xd)
+					index -= 2;
+				else
+					index -= 1;
+				
+				return Encoding.ASCII.GetString (header, 0, index);
+			}
+		}
+			
+		public void Receive (byte[] buffer, int start, int length)
+		{
+			int read = 0;
+			while (read < length)
+			{
+				int rcvd = socket.Receive (buffer, start + read, length - read, SocketFlags.None);
+				read += rcvd;
+			}
+		}
+		
 		/// <summary>
 		/// Send all data from incoming socket to output.
 		/// Buffer is assumed to be empty.
 		/// </summary>
-		public virtual void PipeTo (IDataOutput output)
+		public void PipeTo (IDataOutput output)
 		{
 			byte[] buffer = new byte[0x10000];
 			while (true) {
-				remoteSocket.Poll (5000000, SelectMode.SelectRead);
-				if (remoteSocket.IsConnected () == false)
+				socket.Poll (5000000, SelectMode.SelectRead);
+				if (socket.IsConnected () == false)
 					return;
-				int read = remoteSocket.Receive (buffer);
+				int read = socket.Receive (buffer);
 				output.Send (buffer, 0, read);
 				Received += read;
 			}
@@ -108,7 +150,7 @@ namespace HitProxy.Connection
 		/// Send length bytes of data from incoming socket to output.
 		/// Buffer is assumed to be empty.
 		/// </summary>
-		public virtual void PipeTo (IDataOutput output, long length)
+		public void PipeTo (IDataOutput output, long length)
 		{
 			if (length <= 0)
 				return;
@@ -119,12 +161,12 @@ namespace HitProxy.Connection
 				int toread = buffer.Length;
 				if (totalRead + buffer.Length > length)
 					toread = (int)length - totalRead;
-				bool stat = remoteSocket.Poll (5000000, SelectMode.SelectRead);
+				bool stat = socket.Poll (5000000, SelectMode.SelectRead);
 				if (stat == false)
 					continue;
-				if (remoteSocket.IsConnected () == false)
+				if (socket.IsConnected () == false)
 					return;
-				int read = remoteSocket.Receive (buffer, 0, toread, SocketFlags.None);
+				int read = socket.Receive (buffer, 0, toread, SocketFlags.None);
 				if (read <= 0) {
 					if (totalRead == length)
 						return;
@@ -139,124 +181,29 @@ namespace HitProxy.Connection
 			}
 		}
 
-		/// <summary>
-		/// Invokes an async copying from input socket to output
-		/// until the input end is closed.
-		/// </summary>
-		public ManualResetEvent PipeSocketAsync (Socket output)
-		{
-			SocketAsyncPipe pipe = new SocketAsyncPipe ();
-			pipe.input = remoteSocket;
-			pipe.output = output;
-			pipe.done = new ManualResetEvent (false);
-			
-			SocketAsyncEventArgs e = new SocketAsyncEventArgs ();
-			e.Completed += PipeSocketCallback;
-			byte[] buffer = new byte[0x10000];
-			e.SetBuffer (buffer, 0, buffer.Length);
-			e.UserToken = pipe;
-			try {
-				if (pipe.input.ReceiveAsync (e) == false)
-					PipeSocketCallback (null, e);
-			} catch (ObjectDisposedException) {
-				pipe.done.Set ();
-			} catch (Exception ex) {
-				Console.Error.WriteLine ("PipeSocketAsync: " + ex.Message);
-				pipe.done.Set ();
-			}
-			return pipe.done;
-		}
+		#endregion
 
-		private void PipeSocketCallback (object sender, SocketAsyncEventArgs e)
-		{
-			SocketAsyncPipe pipe = e.UserToken as SocketAsyncPipe;
-			
-			if (e.SocketError != SocketError.Success) {
-				switch (e.SocketError) {
-				case SocketError.Interrupted:
-				case SocketError.ConnectionReset:
-					break;
-				default:
-					Console.Error.WriteLine ("Pipe error: " + e.SocketError);
-					break;
-				}
-				pipe.Close ();
-				return;
-			}
-			if (pipe.output.IsConnected () == false) {
-				//if (e.LastOperation == SocketAsyncOperation.Receive && e.BytesTransferred > 0)
-				//	Console.Error.WriteLine ("Pipe error: " + pipe.output.RemoteEndPoint + " disconnected, got at least " + e.BytesTransferred + " more bytes to send");
-				pipe.Close ();
-				return;
-			}
-			
-			//receive on false
-			bool send;
-			
-			if (e.LastOperation == SocketAsyncOperation.Receive) {
-				if (e.BytesTransferred == 0) {
-					e.SetBuffer (0, e.Buffer.Length);
-					send = false;
-					
-					try {
-						if (pipe.input.Poll (5000000, SelectMode.SelectRead) == true) {
-							if (pipe.input.Available == 0) {
-								//Connection closed
-								pipe.done.Set ();
-								return;
-							}
-						}
-					} catch (ObjectDisposedException) {
-						pipe.done.Set ();
-						return;
-					}
-				} else {
-					Received += e.BytesTransferred;
-					e.SetBuffer (0, e.BytesTransferred);
-					send = true;
-				}
-			} else if (e.LastOperation == SocketAsyncOperation.Send) {
-				if (e.BytesTransferred < e.Count) {
-					e.SetBuffer (e.Offset + e.BytesTransferred, e.Count - e.BytesTransferred);
-					send = true;
-				} else {
-					e.SetBuffer (0, e.Buffer.Length);
-					send = false;
-				}
-			} else {
-				Console.Error.WriteLine ("PipeSocketCallback, unhandled operation: " + e.LastOperation);
-				pipe.done.Set ();
-				return;
-			}
-			
-			try {
-				if (send) {
-					if (pipe.output.SendAsync (e) == false)
-						PipeSocketCallback (null, e);
-				} else {
-					if (pipe.input.ReceiveAsync (e) == false)
-						PipeSocketCallback (null, e);
-				}
-			} catch (ObjectDisposedException) {
-				pipe.Close ();
-			} catch (Exception ex) {
-				Console.Error.WriteLine ("PipeSocketAsync Exception: " + ex.Message);
-				pipe.Close ();
-			}
-		}
+		#region IDataOutput
 
-		private class SocketAsyncPipe
+		public void Send (byte[] buffer, int start, int length)
 		{
-			public Socket input;
-			public Socket output;
-			public ManualResetEvent done;
-
-			public void Close ()
-			{
-				input.Close ();
-				output.Close ();
-				done.Set ();
+			int sent = 0;
+			while (sent < length) {
+				int delta = socket.Send (buffer, start + sent, length - sent, SocketFlags.None);
+				if (delta < 0)
+					throw new InvalidOperationException ("Send less than zero bytes");
+				sent += delta;
 			}
+			if (sent > length)
+				throw new InvalidOperationException ("Sent more data than received");
 		}
+		
+		public void EndOfData ()
+		{
+			
+		}
+		
+		#endregion
+		
 	}
 }

@@ -37,7 +37,7 @@ namespace HitProxy.Session
 		/// <summary>
 		/// Start a new session thread for the incoming client.
 		/// </summary>
-		public ProxySession (Socket socket,Proxy proxy,ConnectionManager connectionManager)
+		public ProxySession (Socket socket, Proxy proxy, ConnectionManager connectionManager)
 		{
 			this.clientSocket = socket;
 			this.proxy = proxy;
@@ -117,7 +117,7 @@ namespace HitProxy.Session
 						break;
 					
 					//Release proxy client connection
-					Request.DataSocket.Release ();
+					request.DataRaw.Release ();
 					
 					//Cleanup remaining resources
 					Request.Dispose ();
@@ -137,10 +137,11 @@ namespace HitProxy.Session
 		private bool RunRequest ()
 		{
 			try {
-				string header = clientSocket.ReadHeader ();
+				request = new Request (clientSocket);
+				string header = request.DataRaw.ReadHeader ();
 				if (header.Length > 10000)
 					Console.Error.WriteLine ("Large header");
-				request = ParseRequest (header);
+				ParseRequest (header);
 				if (request == null)
 					throw new HeaderException ("No request received", HttpStatusCode.BadRequest);
 			} catch (ObjectDisposedException) {
@@ -160,7 +161,7 @@ namespace HitProxy.Session
 					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
 				
 				Status = "Sending filter response";
-				request.Response.SendResponse (clientSocket);
+				SendResponse ();
 				return request.KeepAlive;
 			}
 			
@@ -169,9 +170,9 @@ namespace HitProxy.Session
 			try {
 				remoteConnection = ConnectRequest ();
 			} catch (TimeoutException e) {
-				request.Response = new Response (e, Html.Escape("Connection Timeout"));
+				request.Response = new Response (e, Html.Escape ("Connection Timeout"));
 			} catch (HeaderException e) {
-				request.Response = new Response (e, new Html());
+				request.Response = new Response (e, new Html ());
 			}
 			
 			//So far all responses are generated from errors
@@ -180,9 +181,9 @@ namespace HitProxy.Session
 				//Fix response keep alive header
 				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
 					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
-
+				
 				Status = "Sending response";
-				request.Response.SendResponse (clientSocket);
+				SendResponse ();
 				return request.KeepAlive;
 			}
 			
@@ -204,13 +205,13 @@ namespace HitProxy.Session
 				ProcessHttp (remoteConnection);
 				
 				Status = "Request done";
-			
+				
 			} catch (HeaderException e) {
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message);
 				if (Status == "Sending response")
 					return false;
 				request.Response = new Response (e);
-				if (request.Response.SendResponse (clientSocket) == false)
+				if (SendResponse () == false)
 					return false;
 			} catch (SocketException e) {
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
@@ -218,7 +219,7 @@ namespace HitProxy.Session
 					return false;
 				
 				request.Response = new Response (e);
-				if (request.Response.SendResponse (clientSocket) == false)
+				if (SendResponse () == false)
 					return false;
 			} catch (IOException e) {
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
@@ -226,7 +227,7 @@ namespace HitProxy.Session
 					return false;
 				
 				request.Response = new Response (e);
-				if (request.Response.SendResponse (clientSocket) == false)
+				if (SendResponse () == false)
 					return false;
 			} catch (ObjectDisposedException e) {
 				Console.Error.WriteLine (e.GetType () + ": " + e.Message + "\n" + e.StackTrace);
@@ -234,7 +235,7 @@ namespace HitProxy.Session
 					return false;
 				
 				request.Response = new Response (e);
-				if (request.Response.SendResponse (clientSocket) == false)
+				if (SendResponse () == false)
 					return false;
 			}
 			
@@ -260,6 +261,38 @@ namespace HitProxy.Session
 			return request.KeepAlive;
 		}
 
+		/// <summary>
+		/// Send response, headers and data, back to client
+		/// </summary>
+		bool SendResponse ()
+		{
+			try {
+				//Send back headers
+				request.Response.SendHeaders (request.DataRaw);
+				
+				if (request.Response.HasBody == false)
+					return true;
+				
+				if (request.Response.DataFiltered == null)
+					return false;
+		
+				//Pipe result back to client
+				if (request.Response.ContentLength > 0)
+					request.Response.DataFiltered.PipeTo (request.DataFiltered, request.Response.ContentLength);
+				if (request.Response.ContentLength < 0)
+					request.Response.DataFiltered.PipeTo (request.DataFiltered);
+				
+				return true;
+				
+			} catch (SocketException se) {
+				Console.Error.WriteLine (se.GetType ().ToString () + ": " + se.Message);
+				return false;
+			} catch (ObjectDisposedException ode) {
+				Console.Error.WriteLine (ode.GetType ().ToString () + ": " + ode.Message);
+				return false;
+			}
+		}
+
 		private void FilterRequest (Request request)
 		{
 			try {
@@ -273,7 +306,7 @@ namespace HitProxy.Session
 				request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
 			}
 		}
-		
+
 		/// <summary>
 		/// From the data in the request,
 		/// Connect, return connection if successful.

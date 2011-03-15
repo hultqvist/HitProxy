@@ -53,7 +53,7 @@ namespace HitProxy.Http
 			set {
 				if (response != null) {
 					if(response.DataSocket != null)
-						if (response.DataSocket.Equals(value.DataSocket) == false)
+						if (value == null || response.DataSocket.Equals(value.DataSocket) == false)
 							response.Dispose ();
 				}
 				response = value;

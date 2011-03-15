@@ -18,13 +18,15 @@ namespace HitProxy.Connection
 
 		#region IDataInput
 		
-		public void PipeTo (IDataOutput output)
+		public int PipeTo (IDataOutput output)
 		{
 			if (buffer == null)
 				throw new InvalidOperationException ("Buffer already sent");
 			
+			int total = buffer.Length;
 			output.Send (buffer, 0, buffer.Length);
 			buffer = null;
+			return total;
 		}
 
 		public void PipeTo (IDataOutput output, long length)

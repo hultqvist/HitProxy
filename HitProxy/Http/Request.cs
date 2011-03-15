@@ -51,7 +51,11 @@ namespace HitProxy.Http
 		public Response Response {
 			get { return response; }
 			set {
-				response.NullSafeDispose ();
+				if (response != null) {
+					if(response.DataSocket != null)
+						if (response.DataSocket.Equals(value.DataSocket) == false)
+							response.Dispose ();
+				}
 				response = value;
 			}
 		}
@@ -68,9 +72,8 @@ namespace HitProxy.Http
 			}
 		}
 
-		public Request (Socket socket)
+		public Request (Socket socket) : base(new SocketData (socket))
 		{
-			DataRaw = new SocketData (socket);
 			Method = "NULL";
 			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);
 		}
@@ -87,11 +90,11 @@ namespace HitProxy.Http
 			if (parts.Length != 3)
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
 			
-			Method = parts [0].ToUpperInvariant ();
-			HttpVersion = parts [2];
-			if (System.Uri.TryCreate (parts [1], UriKind.Absolute, out this.Uri))
+			Method = parts[0].ToUpperInvariant ();
+			HttpVersion = parts[2];
+			if (System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri))
 				return;
-			if (System.Uri.TryCreate (parts [1], UriKind.Relative, out this.Uri))
+			if (System.Uri.TryCreate (parts[1], UriKind.Relative, out this.Uri))
 				return;
 		}
 
@@ -146,7 +149,7 @@ namespace HitProxy.Http
 				long.TryParse (value, out ContentLength);
 				break;
 			case "connection":
-				if (value.ToLowerInvariant() == "keep-alive")
+				if (value.ToLowerInvariant () == "keep-alive")
 					KeepAlive = true;
 				if (value == "close")
 					KeepAlive = false;

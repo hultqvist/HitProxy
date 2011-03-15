@@ -24,11 +24,7 @@ namespace HitProxy.Session
 		/// <summary>
 		/// Current request being served
 		/// </summary>
-		public Request Request {
-			get { return request; }
-			set { request = value; }
-		}
-		private Request request;
+		public Request request;
 
 		string name;
 		public int served = 0;
@@ -50,7 +46,7 @@ namespace HitProxy.Session
 		public void Dispose ()
 		{
 			proxy.Remove (this);
-			Request.NullSafeDispose ();
+			request.NullSafeDispose ();
 			clientSocket.Close ();
 		}
 
@@ -116,12 +112,9 @@ namespace HitProxy.Session
 					if (keepAlive == false)
 						break;
 					
-					//Release proxy client connection
-					request.DataRaw.Release ();
-					
 					//Cleanup remaining resources
-					Request.Dispose ();
-					Request = null;
+					request.Dispose ();
+					request = null;
 				}
 			} finally {
 				request.NullSafeDispose ();
@@ -138,7 +131,7 @@ namespace HitProxy.Session
 		{
 			try {
 				request = new Request (clientSocket);
-				string header = request.DataRaw.ReadHeader ();
+				string header = request.DataSocket.ReadHeader ();
 				if (header.Length > 10000)
 					Console.Error.WriteLine ("Large header");
 				ParseRequest (header);
@@ -268,14 +261,14 @@ namespace HitProxy.Session
 		{
 			try {
 				//Send back headers
-				request.Response.SendHeaders (request.DataRaw);
+				request.Response.SendHeaders (request.DataSocket);
 				
 				if (request.Response.HasBody == false)
 					return true;
 				
 				if (request.Response.DataFiltered == null)
 					return false;
-		
+				
 				//Pipe result back to client
 				if (request.Response.ContentLength > 0)
 					request.Response.DataFiltered.PipeTo (request.DataFiltered, request.Response.ContentLength);

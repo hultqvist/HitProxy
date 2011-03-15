@@ -21,15 +21,7 @@ namespace HitProxy.Http
 		/// <summary>
 		/// The raw, outermost Data
 		/// </summary>
-		public SocketData DataRaw {
-			get { return dataRaw; }
-			set {
-				if (dataRaw != null)
-					throw new InvalidOperationException ();
-				dataRaw = value;
-			}
-		}
-		private SocketData dataRaw = null;
+		public readonly SocketData DataSocket;
 
 		/// <summary>
 		/// Temporary protocol filters, e.g. chunked http encoding
@@ -37,7 +29,7 @@ namespace HitProxy.Http
 		public IDataIO DataProtocol {
 			get {
 				if (dataProtocol == null)
-					return DataRaw;
+					return DataSocket;
 				return dataProtocol;
 			}
 			set { dataProtocol = value; }
@@ -56,13 +48,14 @@ namespace HitProxy.Http
 		}
 		private IDataIO dataFiltered = null;
 
-		protected Header ()
+		protected Header (SocketData dataRaw)
 		{
+			this.DataSocket = dataRaw;
 		}
 
 		public virtual void Dispose ()
 		{
-			DataRaw.NullSafeDispose ();
+			DataSocket.NullSafeDispose ();
 			DataProtocol.NullSafeDispose ();
 			DataFiltered.NullSafeDispose ();
 		}
@@ -77,6 +70,7 @@ namespace HitProxy.Http
 		/// </param>
 		protected void Parse (string header)
 		{
+			Clear ();
 			TextReader reader = new StringReader (header);
 			ParseFirstLine (reader.ReadLine ());
 			while (true) {

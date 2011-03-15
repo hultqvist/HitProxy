@@ -25,11 +25,12 @@ namespace HitProxy.Connection
 			this.output = null;
 		}
 
-		public void PipeTo (IDataOutput output)
+		public int PipeTo (IDataOutput output)
 		{
 			this.output = output;
-			input.PipeTo (this);
+			int total = input.PipeTo (this);
 			this.output = null;
+			return total;
 		}
 
 		#endregion

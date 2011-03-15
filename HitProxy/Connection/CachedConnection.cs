@@ -74,5 +74,10 @@ namespace HitProxy.Connection
 		{
 			return string.Format ("[CachedConnection busy: {0}, served: {1}, avail: {2}, cacheServer: {3} ]", Busy, served, remoteSocket.Available, server);
 		}
+		
+		public override int GetHashCode ()
+		{
+			return remoteSocket.GetHashCode ();
+		}
 	}
 }

@@ -44,8 +44,9 @@ namespace HitProxy.Connection
 
 		#region IDataInput
 
-		public void PipeTo (IDataOutput output)
+		public int PipeTo (IDataOutput output)
 		{
+			int total = 0;
 			while (true) {
 				string header = ReadChunkedHeader ();
 				int length = int.Parse (header, System.Globalization.NumberStyles.HexNumber);
@@ -56,21 +57,25 @@ namespace HitProxy.Connection
 					
 					//Footer
 					string footer = input.ReadHeader ();
-					byte[] footerBytes = Encoding.ASCII.GetBytes (footer);
+					byte[] footerBytes = Encoding.ASCII.GetBytes (footer + "\r\n");
 					output.Send (footerBytes, 0, footerBytes.Length);
 					
-					return;
+					return total + header.Length + footerBytes.Length;
 				}
 				
 				byte[] buffer = new byte[length];
 				input.Receive (buffer, 0, length);
 				output.Send (buffer, 0, length);
+				
+				total += length + header.Length;
 			}
 		}
 
 		public void PipeTo (IDataOutput output, long length)
 		{
-			throw new InvalidOperationException ();
+			int sent = PipeTo (output);
+			if (length != sent)
+				Console.Error.WriteLine ("Content-Length={0} DOES NOT EQUAL Chunked={1}", length, sent);
 		}
 
 		public void Dispose ()

@@ -24,7 +24,7 @@ namespace HitProxy.Connection
 		private Socket socket;
 
 		/// <summary>
-		/// Data received from this connection
+		/// Data received from this session
 		/// </summary>
 		public int Received { get; set; }
 
@@ -47,7 +47,7 @@ namespace HitProxy.Connection
 		/// <summary>
 		/// Release underlying resources so that they can be reused.
 		/// </summary>
-		public void Release ()
+		public void ReleaseRemoteConnection ()
 		{
 			if (connection != null)
 				connection.Release ();
@@ -58,12 +58,12 @@ namespace HitProxy.Connection
 		{
 			connection.NullSafeDispose ();
 		}
-		
+
 		/// <summary>
 		/// Closes the client session.
 		/// Currently only used in the end of HTTP Connect requests
 		/// </summary>
-		public void Close ()
+		public void CloseClientSocket ()
 		{
 			socket.Close ();
 		}
@@ -93,7 +93,7 @@ namespace HitProxy.Connection
 				if (received != 1)
 					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);
 				
-				b = header [index];
+				b = header[index];
 				index += 1;
 				
 				if (index >= header.Length)
@@ -110,7 +110,7 @@ namespace HitProxy.Connection
 					continue;
 				
 				//Remove last empty line
-				if (header [index - 2] == 0xd)
+				if (header[index - 2] == 0xd)
 					index -= 2;
 				else
 					index -= 1;
@@ -118,31 +118,32 @@ namespace HitProxy.Connection
 				return Encoding.ASCII.GetString (header, 0, index);
 			}
 		}
-			
+
 		public void Receive (byte[] buffer, int start, int length)
 		{
 			int read = 0;
-			while (read < length)
-			{
+			while (read < length) {
 				int rcvd = socket.Receive (buffer, start + read, length - read, SocketFlags.None);
 				read += rcvd;
 			}
 		}
-		
+
 		/// <summary>
 		/// Send all data from incoming socket to output.
 		/// Buffer is assumed to be empty.
 		/// </summary>
-		public void PipeTo (IDataOutput output)
+		public int PipeTo (IDataOutput output)
 		{
+			int total = 0;
 			byte[] buffer = new byte[0x10000];
 			while (true) {
 				socket.Poll (5000000, SelectMode.SelectRead);
 				if (socket.IsConnected () == false)
-					return;
+					return total;
 				int read = socket.Receive (buffer);
 				output.Send (buffer, 0, read);
 				Received += read;
+				total += read;
 			}
 		}
 
@@ -197,13 +198,27 @@ namespace HitProxy.Connection
 			if (sent > length)
 				throw new InvalidOperationException ("Sent more data than received");
 		}
-		
+
 		public void EndOfData ()
 		{
 			
 		}
-		
+
 		#endregion
-		
+
+		public override bool Equals (object obj)
+		{
+			SocketData o = obj as SocketData;
+			if (o == null)
+				return false;
+			return (o.GetHashCode () == GetHashCode ());
+		}
+
+		public override int GetHashCode ()
+		{
+			if (socket != null)
+				return socket.GetHashCode ();
+			return connection.GetHashCode ();
+		}
 	}
 }

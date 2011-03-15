@@ -46,7 +46,7 @@ namespace HitProxy.Connection
 		{
 		}
 
-		public void PipeTo (IDataOutput output)
+		public int PipeTo (IDataOutput output)
 		{
 			throw new InvalidOperationException ();
 		}

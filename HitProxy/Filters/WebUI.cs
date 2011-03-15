@@ -177,7 +177,7 @@ namespace HitProxy.Filters
 		{
 			Html data = new Html ();;
 			
-			Request req = session.Request;
+			Request req = session.request;
 			Response resp = null;
 			if (req != null)
 				resp = req.Response;
@@ -205,10 +205,10 @@ namespace HitProxy.Filters
 			if (req != null) {
 				data += "<p>Request: <a href=\"" + req.Uri + "\">" + req.Uri.Scheme + "://" + req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port) + "/</a></p>";
 				data += "<p>" + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s ago</p>";
-				if (req.DataRaw.Received > 0)
-					data += "Sent " + (req.DataRaw.Received / 1000) + " Kbytes";
-				if (req.Response != null && req.Response.DataRaw != null && req.Response.DataRaw.Received > 0)
-					data += " Recv " + (req.Response.DataRaw.Received / 1000) + " Kbytes";
+				if (req.DataSocket.Received > 0)
+					data += "Sent " + (req.DataSocket.Received / 1000) + " Kbytes";
+				if (req.Response != null && req.Response.DataSocket != null && req.Response.DataSocket.Received > 0)
+					data += " Recv " + (req.Response.DataSocket.Received / 1000) + " Kbytes";
 				
 				data += HeaderData (req);
 			} else
@@ -238,20 +238,20 @@ namespace HitProxy.Filters
 	</p>",
 				session.GetHashCode (), session.served, session.Status);
 				
-				Request req = session.Request;
+				Request req = session.request;
 				if (req != null) {
 					Response resp = req.Response;
 					
 					data += Html.Format(@"<p>Request: {0} <a href=""{1}"">{2}://{3}</a>",
 						req.Method, req.Uri, req.Uri.Scheme, req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port));
 					data += " " + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s";
-					if (req.DataRaw.Received > 0)
-						data += "Sent: " + (req.DataRaw.Received / 1000) + " Kbytes";
+					if (req.DataSocket.Received > 0)
+						data += "Sent: " + (req.DataSocket.Received / 1000) + " Kbytes";
 					data += Html.Format("</p>");
-					if (resp != null && resp.DataRaw != null) {
+					if (resp != null && resp.DataSocket != null) {
 						data += Html.Format("<p>Response: ") + ((int)resp.HttpCode) + " " + resp.HttpCode;
-						if (resp.DataRaw.Received > 0)
-							data += " Recv: " + (resp.DataRaw.Received / 1000) + " Kbytes";
+						if (resp.DataSocket.Received > 0)
+							data += " Recv: " + (resp.DataSocket.Received / 1000) + " Kbytes";
 						if (resp.HasBody)
 							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes"; else if (resp.Chunked)
 							data += " Total: chunked";

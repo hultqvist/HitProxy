@@ -3,7 +3,7 @@ namespace HitProxy.Connection
 {
 	public interface IDataInput : IDisposable
 	{		
-		void PipeTo (IDataOutput output);
+		int PipeTo (IDataOutput output);
 		void PipeTo (IDataOutput output, long length);
 	}
 }

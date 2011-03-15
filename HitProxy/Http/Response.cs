@@ -45,7 +45,7 @@ namespace HitProxy.Http
 		/// Used for local generated data such as
 		/// error, block and configuration pages.
 		/// </summary>
-		public Response (HttpStatusCode code)
+		public Response (HttpStatusCode code) : base(null)
 		{
 			this.HttpVersion = "HTTP/1.1";
 			this.HttpCode = code;
@@ -57,9 +57,8 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Default constructor for incoming responses.
 		/// </summary>
-		public Response (CachedConnection connection)
+		public Response (CachedConnection connection) : base(new SocketData (connection))
 		{
-			DataRaw = new SocketData (connection);
 		}
 
 		/// <summary>
@@ -73,19 +72,18 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Generated response with message from the proxy
 		/// </summary>
-		public Response (Exception e) : this(e, new Html())
+		public Response (Exception e) : this(e, new Html ())
 		{
 		}
-		
+
 		/// <summary>
 		/// Generated response with message from the proxy
 		/// </summary>
 		public Response (Exception e, Html message) : this((e is TimeoutException) ? HttpStatusCode.GatewayTimeout : HttpStatusCode.BadGateway)
 		{
 			Exception ne = e;
-			while (ne != null)
-			{
-				message += Html.Format (@"<h2>{0}</h2><p>{1}</p><pre>{2}</pre>", ne.GetType().FullName, ne.Message, ne.StackTrace);
+			while (ne != null) {
+				message += Html.Format (@"<h2>{0}</h2><p>{1}</p><pre>{2}</pre>", ne.GetType ().FullName, ne.Message, ne.StackTrace);
 				
 				ne = ne.InnerException;
 			}
@@ -187,7 +185,7 @@ namespace HitProxy.Http
 		/// </param>
 		public void SetData (Html data)
 		{
-			if (DataRaw != null)
+			if (DataSocket != null)
 				throw new InvalidOperationException ("Data is not null, therefore cannot be set to any html");
 			
 			HtmlData htmlData = new HtmlData (data);
@@ -195,7 +193,7 @@ namespace HitProxy.Http
 			
 			ReplaceHeader ("Content-Length", htmlData.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
-			ContentLength = htmlData.Length;			
+			ContentLength = htmlData.Length;
 		}
 
 		public void Template (string title, Html htmlContents)

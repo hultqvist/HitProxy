@@ -24,7 +24,9 @@ namespace HitProxy.Session
 		public void ProcessHttpConnect (CachedConnection remote)
 		{
 			request.Response = new Response (remote);
+			request.Response.HttpVersion = "HTTP/1.1";
 			request.Response.HttpCode = HttpStatusCode.OK;
+			request.Response.Message = HttpStatusCode.OK.ToString ();
 			request.Response.KeepAlive = false;
 			request.Response.Add ("Proxy-Agent: HitProxy");
 			request.Response.SendHeaders (request.DataSocket);

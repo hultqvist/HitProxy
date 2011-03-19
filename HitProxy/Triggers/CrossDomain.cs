@@ -127,7 +127,11 @@ namespace HitProxy.Triggers
 			} finally {
 				listLock.ExitReadLock ();
 			}
-			
+
+			//Already blocked, don't add to blocked list
+			if(httpRequest.TestFlags("block"))
+				return true;
+						
 			try {
 				listLock.EnterUpgradeableReadLock ();
 				if (blocked.Contains (requestPair) == false) {

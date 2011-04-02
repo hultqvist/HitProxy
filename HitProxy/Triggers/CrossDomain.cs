@@ -70,7 +70,7 @@ namespace HitProxy.Triggers
 				listLock.EnterReadLock ();
 				writer = new StreamWriter (new FileStream (ConfigPath ("Referer"), FileMode.Create, FileAccess.Write));
 				foreach (RefererPair pair in watchlist) {
-					writer.WriteLine (pair.Flags + " " + pair.FromHost + " " + pair.ToHost);
+					writer.WriteLine (pair.Flags.Serialize() + " " + pair.FromHost + " " + pair.ToHost);
 				}
 			} finally {
 				listLock.ExitReadLock ();

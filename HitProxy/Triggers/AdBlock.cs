@@ -55,8 +55,14 @@ namespace HitProxy.Triggers
 				using (TextReader reader = new StreamReader (new FileStream (configPath, FileMode.Open, FileAccess.Read))) {
 					string pattern;
 					while ((pattern = reader.ReadLine ()) != null) {
-						RegexFilter regex = RegexFilter.Parse (pattern);
-						AddFilter(regex);
+						string[] parts = pattern.Split ('\t');
+						RegexFilter regex;
+						if (parts.Length < 2)
+							regex = RegexFilter.Parse (pattern, new Flags ("block"));
+						else
+							regex = RegexFilter.Parse (parts[0], new Flags (parts[1]));
+						if (regex != null)
+							AddFilter (regex);
 					}
 				}
 			} finally {
@@ -71,7 +77,7 @@ namespace HitProxy.Triggers
 				listLock.EnterReadLock ();
 				writer = new StreamWriter (new FileStream (configPath, FileMode.Create, FileAccess.Write));
 				foreach (RegexFilter rf in filterList) {
-					writer.WriteLine (rf.Pattern);
+					writer.WriteLine (rf.Pattern + "\t" + rf.Flags.Serialize ());
 				}
 			} finally {
 				listLock.ExitReadLock ();
@@ -82,7 +88,7 @@ namespace HitProxy.Triggers
 		private void AddFilter (RegexFilter regex)
 		{
 			filterList.Add (regex);
-		
+			
 			//Get continous strings from pattern
 			string[] parts = regex.Wildcard.Split (wildcards);
 			
@@ -120,19 +126,12 @@ namespace HitProxy.Triggers
 					continue;
 				
 				foreach (RegexFilter regex in kvp.Value) {
-					if (regex.Type == AdBlock.FilterType.Comment)
-						continue;
-					if (regex.Type == AdBlock.FilterType.NotImplemented)
-						continue;
 					
 					if (regex.IsMatch (url) == false)
 						continue;
 					
-					if (regex.Type == AdBlock.FilterType.Pass)
-						return false;
-					
-					request.Flags.Set ("block");
-					request.SetTriggerHtml(Html.Escape("Adblock filter: " + regex.ToString () + "\n" + url));
+					request.Flags.Set (regex.Flags);
+					request.SetTriggerHtml (Html.Escape ("Adblock filter: " + regex.ToString () + "\n" + url));
 					return true;
 				}
 			}
@@ -143,7 +142,7 @@ namespace HitProxy.Triggers
 		public override Html Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = new Html ();
-						
+			
 			if (httpGet["return"] != null) {
 				request.Response.ReplaceHeader ("Location", httpGet["return"]);
 				request.Response.HttpCode = HttpStatusCode.Redirect;
@@ -154,12 +153,10 @@ namespace HitProxy.Triggers
 				try {
 					listLock.EnterWriteLock ();
 					foreach (RegexFilter rf in filterList.ToArray ()) {
-						if (rf.GetHashCode () == item)
-						{
+						if (rf.GetHashCode () == item) {
 							filterList.Remove (rf);
-							foreach(KeyValuePair<string, List<RegexFilter>> pair in hashList)
-							{
-								pair.Value.Remove(rf);
+							foreach (KeyValuePair<string, List<RegexFilter>> pair in hashList) {
+								pair.Value.Remove (rf);
 							}
 						}
 					}
@@ -169,9 +166,9 @@ namespace HitProxy.Triggers
 				
 				SaveFilters ();
 			}
-						
+			
 			if (httpGet["action"] != null) {
-				RegexFilter filter = RegexFilter.Parse(httpGet["pattern"]);
+				RegexFilter filter = RegexFilter.Parse (httpGet["pattern"], new Flags (httpGet["flags"]));
 				
 				try {
 					listLock.EnterWriteLock ();
@@ -182,21 +179,24 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			html += Html.Format(@"
+			html += Html.Format (@"
 				<h1>Add new filter</h1>
 				<form action=""?"" method=""get"">
-					<input type=""text"" name=""pattern"" value="""" />
-					<input type=""submit"" name=""action"" value=""Block"" />
+						<input type=""text"" name=""pattern"" value="""" />
+						<input type=""text"" name=""flags"" value=""block"" />
+						<input type=""submit"" name=""action"" value=""Set"" />
 				</form>");
 			
 			try {
 				listLock.EnterReadLock ();
 				
-				html += Html.Format("<h1>Block List</h1>");
-				foreach (RegexFilter regex in filterList)
-				{
-					html += Html.Format("<p>{0} <small>{1}</small> <a href=\"?delete={2}\">delete</a></p>", regex.Pattern, regex, regex.GetHashCode ());
+				html += Html.Format ("<h1>Block List</h1>");
+				html += Html.Format ("<table>" +
+					"<tr><th>Pattern</th><th>Flags</th><th></th></th>");
+				foreach (RegexFilter regex in filterList) {
+					html += Html.Format ("<tr><td>{1}</td><td><a href=\"?delete={2}\">delete</a></td><td>{0}</td></tr>", regex.Pattern, regex.Flags, regex.GetHashCode ());
 				}
+				html += Html.Format ("</table>");
 			} finally {
 				listLock.ExitReadLock ();
 			}
@@ -204,56 +204,49 @@ namespace HitProxy.Triggers
 			return html;
 		}
 
-		enum FilterType
-		{
-			Comment,
-			Block,
-			Pass,
-			NotImplemented
-		}
-
 		class RegexFilter : Regex
 		{
 			private readonly string fpattern;
-			private readonly FilterType type;
+			public readonly Flags Flags = new Flags ();
 			private readonly string wildcard;
+
+			public override string ToString ()
+			{
+				return string.Format ("[RegexFilter: Pattern={0}, Flags={1}]", wildcard, Flags);
+			}
 
 			public string Pattern {
 				get { return fpattern; }
-			}
-
-			public FilterType Type {
-				get { return type; }
 			}
 
 			public string Wildcard {
 				get { return wildcard; }
 			}
 
-			private RegexFilter (string pattern, FilterType type, string regex, string wildcard) : base(regex)
+			private RegexFilter (string pattern, Flags flags, string regex, string wildcard) : base(regex)
 			{
 				this.fpattern = pattern;
-				this.type = type;
+				this.Flags.Set (flags);
 				this.wildcard = wildcard;
 			}
-			
-			public static RegexFilter Parse (string pattern)
+
+			public static RegexFilter Parse (string pattern, Flags flags)
 			{
 				//Filter out headers and pattern extras
 				if (pattern.Trim () == "")
-					return new RegexFilter ("", FilterType.Comment, "", "");
+					return null;
 				//Comments
 				if (pattern.StartsWith ("!") || pattern.StartsWith ("["))
-					return new RegexFilter (pattern, FilterType.Comment, "", "");
+					return null;
 				//Whitelist, not implemented
 				if (pattern.StartsWith ("@@"))
-					return new RegexFilter (pattern, FilterType.NotImplemented, "", "");
+					return null;
 				//Html element filters, proxy not designed to be able to implement
 				if (pattern.Contains ("##"))
-					return new RegexFilter (pattern, FilterType.NotImplemented, "", "");
+					return null;
 				//Third party, not implemented
 				if (pattern.EndsWith ("$third-party"))
-					return new RegexFilter (pattern, FilterType.NotImplemented, "", "");
+					return null;
 				
 				string regex = pattern.Trim ();
 				
@@ -289,7 +282,7 @@ namespace HitProxy.Triggers
 				else
 					regex = regex + "$";
 				
-				return new RegexFilter (pattern, FilterType.Block, regex, wildcard);
+				return new RegexFilter (pattern, flags, regex, wildcard);
 			}
 		}
 	}

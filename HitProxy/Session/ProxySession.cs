@@ -108,6 +108,11 @@ namespace HitProxy.Session
 						break;
 					
 					bool keepAlive = RunRequest ();
+					
+					//Flush the TCP connection, temporarily disable Nagle's algorithm
+					clientSocket.NoDelay = true;
+					clientSocket.NoDelay = false;					
+					
 					served += 1;
 					if (keepAlive == false)
 						break;

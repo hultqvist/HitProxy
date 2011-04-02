@@ -24,7 +24,7 @@ namespace HitProxy.Triggers
 				return false;
 			
 			if (type.StartsWith ("video/")) {
-				request.Response.SetFlags ("save");
+				request.Response.Flags.Set ("save");
 				return true;
 			}
 			
@@ -32,7 +32,7 @@ namespace HitProxy.Triggers
 			if (request.Response.ContentLength < 0 || request.Response.ContentLength > 2000000)
 			{
 				if (type.EndsWith ("octet-stream")) {
-					request.Response.SetFlags ("save");
+					request.Response.Flags.Set ("save");
 					return true;
 				}
 			}

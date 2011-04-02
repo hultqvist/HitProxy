@@ -101,6 +101,7 @@
     <Compile Include="Connection\ChunkedInput.cs" />
     <Compile Include="Connection\HtmlData.cs" />
     <Compile Include="Connection\IDataFilter.cs" />
+    <Compile Include="Http\Flags.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

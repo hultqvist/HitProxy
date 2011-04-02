@@ -23,6 +23,8 @@ namespace HitProxy.Http
 		/// </summary>
 		public readonly SocketData DataSocket;
 
+		public readonly Flags Flags = new Flags();
+		
 		/// <summary>
 		/// Temporary protocol filters, e.g. chunked http encoding
 		/// </summary>
@@ -177,47 +179,8 @@ namespace HitProxy.Http
 
 		#endregion
 
-		#region Trigger/Filter Classification
-
-		/// <summary>
-		/// Attributes set by triggers and used by filters.
-		/// </summary>
-		private readonly List<string> filterFlags = new List<string> ();
-
-		/// <summary>
-		/// Add flags from a comma separated list
-		/// </summary>
-		/// <param name="classNames">
-		/// A comma separated list of filtering classification names
-		/// </param>
-		public void SetFlags (string flagNames)
-		{
-			string[] fa = flagNames.ToLowerInvariant ().Split (',');
-			foreach (string f in fa) {
-				if (filterFlags.Contains (f) == false)
-					filterFlags.Add (f);
-			}
-		}
-
-		/// <summary>
-		/// Test wether any of the supplied classes has been set
-		/// </summary>
-		/// <param name="flags">
-		/// A comma separated list of flag names
-		/// </param>
-		/// <returns>
-		/// True if the request/response has been assigned the flag
-		/// </returns>
-		public bool TestFlags (string flags)
-		{
-			string[] fa = flags.ToLowerInvariant ().Split (',');
-			foreach (string f in fa) {
-				if (filterFlags.Contains (f))
-					return true;
-			}
-			return false;
-		}
-
+		#region Filter HTML
+		
 		/// <summary>
 		/// HTML to be presented on the block page.
 		/// </summary>

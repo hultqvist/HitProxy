@@ -10,7 +10,7 @@ namespace HitProxy.Filters
 	{
 		public override bool Apply (Request request)
 		{
-			if (request.TestFlags ("block") == false)
+			if (request.Flags["block"] == false)
 				return false;
 			
 			Html status = new Html ();

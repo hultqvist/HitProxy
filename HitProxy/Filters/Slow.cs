@@ -18,7 +18,7 @@ namespace HitProxy.Filters
 		{
 			if (request.Response == null)
 				return false;
-			if ((request.TestFlags ("slow") || request.Response.TestFlags ("slow")) == false)
+			if ((request.Flags["slow"] || request.Response.Flags["slow"]) == false)
 				return false;
 			
 			//Intercept data connection

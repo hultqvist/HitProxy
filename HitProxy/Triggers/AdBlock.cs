@@ -131,7 +131,7 @@ namespace HitProxy.Triggers
 					if (regex.Type == AdBlock.FilterType.Pass)
 						return false;
 					
-					request.SetFlags ("block");
+					request.Flags.Set ("block");
 					request.SetTriggerHtml(Html.Escape("Adblock filter: " + regex.ToString () + "\n" + url));
 					return true;
 				}

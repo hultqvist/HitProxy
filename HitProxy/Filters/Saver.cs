@@ -19,7 +19,7 @@ namespace HitProxy.Filters
 		{
 			if (request.Response == null)
 				return false;
-			if ((request.TestFlags ("save") || request.Response.TestFlags ("save")) == false)
+			if ((request.Flags["save"] || request.Response.Flags["save"]) == false)
 				return false;
 			
 			//Intercept data connection
@@ -61,7 +61,7 @@ namespace HitProxy.Filters
 					path += request.Uri.Host + " " + new Random ().Next (100) + " " + Path.GetFileName (request.Uri.AbsolutePath);
 					
 					file = new FileStream (path, FileMode.Create);
-				} catch (Exception e) {
+				} catch (Exception) {
 					file.NullSafeDispose ();
 					file = null;
 				}

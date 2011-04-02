@@ -54,17 +54,7 @@ namespace HitProxy.Triggers
 							continue;
 						
 						RefererPair p = new RefererPair (parts[1], parts[2]);
-						if (parts[0] == "Pass")
-							p.Filter = RefererOperation.Pass;
-						if (parts[0] == "Fake")
-							p.Filter = RefererOperation.Fake;
-						if (parts[0] == "Clean")
-							p.Filter = RefererOperation.Clean;
-						if (parts[0] == "Remove")
-							p.Filter = RefererOperation.Remove;
-						if (parts[0] == "Block")
-							p.Filter = RefererOperation.Block;
-						
+						p.Flags.Set (parts[0]);
 						watchlist.Add (p);
 					}
 				}
@@ -80,7 +70,7 @@ namespace HitProxy.Triggers
 				listLock.EnterReadLock ();
 				writer = new StreamWriter (new FileStream (ConfigPath ("Referer"), FileMode.Create, FileAccess.Write));
 				foreach (RefererPair pair in watchlist) {
-					writer.WriteLine (pair.Filter + " " + pair.FromHost + " " + pair.ToHost);
+					writer.WriteLine (pair.Flags + " " + pair.FromHost + " " + pair.ToHost);
 				}
 			} finally {
 				listLock.ExitReadLock ();
@@ -108,30 +98,27 @@ namespace HitProxy.Triggers
 				foreach (RefererPair pair in watchlist) {
 					
 					if (pair.Match (requestPair)) {
-						httpRequest.SetFlags ("Referer" + pair.Filter.ToString());
+						httpRequest.Flags.Set (pair.Flags);
 						
-						if (pair.Filter == RefererOperation.Block) {
-							httpRequest.SetFlags ("block");
-							httpRequest.SetTriggerHtml (Html.Format(@"
+						if (pair.Flags["block"]) {
+							httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
-<p>Blocked by: {2} <a href=""{3}?delete={4}&amp;return={5}"">delete</a></p>",
-									httpRequest.Uri, httpRequest.Uri.Host, pair,
-									Filters.WebUI.FilterUrl (this), pair.GetHashCode (), Uri.EscapeUriString (httpRequest.Uri.ToString ())));
+<p>Blocked by: {2} <a href=""{3}?delete={4}&amp;return={5}"">delete</a></p>", httpRequest.Uri, httpRequest.Uri.Host, pair, Filters.WebUI.FilterUrl (this), pair.GetHashCode (), Uri.EscapeUriString (httpRequest.Uri.ToString ())));
 							return true;
 						}
-
-						httpRequest.SetTriggerHtml (Html.Escape(pair.ToString()));
+						
+						httpRequest.SetTriggerHtml (Html.Escape (pair.ToString ()));
 						return true;
 					}
 				}
 			} finally {
 				listLock.ExitReadLock ();
 			}
-
+			
 			//Already blocked, don't add to blocked list
-			if(httpRequest.TestFlags("block"))
+			if (httpRequest.Flags["block"])
 				return true;
-						
+			
 			try {
 				listLock.EnterUpgradeableReadLock ();
 				if (blocked.Contains (requestPair) == false) {
@@ -146,12 +133,12 @@ namespace HitProxy.Triggers
 			
 			if (requestPair.FromHost == "")
 				return false;
-
-			httpRequest.SetFlags ("block");
+			
+			httpRequest.Flags.Set ("block");
 			httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p style=""text-align:center""><a href=""{0}"">{2}</a></p>", httpRequest.Uri, httpRequest.Uri.Host, httpRequest.Uri.PathAndQuery));
-			httpRequest.SetTriggerHtml (Form(requestPair, httpRequest.Uri.ToString()));
+			httpRequest.SetTriggerHtml (Form (requestPair, httpRequest.Uri.ToString ()));
 			return true;
 		}
 
@@ -169,18 +156,22 @@ namespace HitProxy.Triggers
 		{
 			return Form (fromHost, toHost, null);
 		}
-		
+
 		private Html Form (string fromHost, string toHost, string returnUrl)
 		{
 			Html returnHtml = new Html ();
-			if(returnUrl != null)
-				returnHtml = Html.Format(@"<input type=""hidden"" name=""return"" value=""{0}"" />", returnUrl);
+			if (returnUrl != null)
+				returnHtml = Html.Format (@"<input type=""hidden"" name=""return"" value=""{0}"" />", returnUrl);
 			
 			return Html.Format (@"
 <form action=""{0}"" method=""get"">
 	{1}
 	<input type=""text"" name=""from"" value=""{2}"" />
 	<input type=""text"" name=""to"" value=""{3}"" />
+	<nobr>
+		<input type=""text"" name=""flags"" value="""" />
+		<input type=""submit"" name=""action"" value=""Flags"" />
+	</nobr>
 	<nobr>
 		<input type=""submit"" name=""action"" value=""Pass"" />
 		<input type=""submit"" name=""action"" value=""Fake"" />
@@ -190,10 +181,10 @@ namespace HitProxy.Triggers
 	</nobr>
 </form>", Filters.WebUI.FilterUrl (this), returnHtml, fromHost, toHost);
 		}
-		
+
 		public override Html Status (NameValueCollection httpGet, Request request)
 		{
-			Html html = Html.Format(@"
+			Html html = Html.Format (@"
 			<div style=""float:right; max-width: 40%;"">
 				<ul>
 					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
@@ -235,18 +226,13 @@ namespace HitProxy.Triggers
 				}
 			}
 			
-			if (httpGet["action"] != null) {
+			if (httpGet["action"] != null || httpGet["flags"] != null && httpGet["flags"] != "") {
 				RefererPair p = new RefererPair (httpGet["from"], httpGet["to"]);
-				if (httpGet["action"] == "Pass")
-					p.Filter = RefererOperation.Pass;
-				if (httpGet["action"] == "Fake")
-					p.Filter = RefererOperation.Fake;
-				if (httpGet["action"] == "Clean")
-					p.Filter = RefererOperation.Clean;
-				if (httpGet["action"] == "Remove")
-					p.Filter = RefererOperation.Remove;
-				if (httpGet["action"] == "Block")
-					p.Filter = RefererOperation.Block;
+				
+				if (httpGet["action"] == "Flags")
+					p.Flags.Set (httpGet["flags"]);
+				else
+					p.Flags.Set (httpGet["action"]);
 				
 				try {
 					listLock.EnterWriteLock ();
@@ -262,18 +248,18 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			html += Html.Format(@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>");
-			html += Form("", "");
+			html += Html.Format (@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>");
+			html += Form ("", "");
 			try {
 				listLock.EnterReadLock ();
 				
 				foreach (RefererPair pair in blocked) {
-					html += Form(pair);
+					html += Form (pair);
 				}
 				
-				html += Html.Format("<h1>Watchlist</h1>");
+				html += Html.Format ("<h1>Watchlist</h1>");
 				foreach (RefererPair pair in watchlist) {
-					html += Html.Format("<p>{0} <a href=\"?delete={1}\">delete</a></p>", pair, pair.GetHashCode ());
+					html += Html.Format ("<p>{0} <a href=\"?delete={1}\">delete</a></p>", pair, pair.GetHashCode ());
 				}
 			} finally {
 				listLock.ExitReadLock ();
@@ -283,35 +269,14 @@ namespace HitProxy.Triggers
 		}
 	}
 
-	public enum RefererOperation
-	{
-		/// <summary>
-		/// Pass the referer unmodified.
-		/// </summary>
-		Pass,
-		/// <summary>
-		/// Remove the Referer header completely.
-		/// </summary>
-		Remove,
-		/// <summary>
-		/// Set the referer to the root of the target page.
-		/// </summary>
-		Fake,
-		/// <summary>
-		/// Set the referer to the root of the source page
-		/// </summary>
-		Clean,
-		/// <summary>
-		/// Block the entire request.
-		/// </summary>
-		Block
-	}
-
 	class RefererPair
 	{
 		public string FromHost;
 		public string ToHost;
-		public RefererOperation Filter = RefererOperation.Remove;
+		/// <summary>
+		/// Flags set to matching requests
+		/// </summary>
+		public readonly Flags Flags = new Flags ();
 
 		public RefererPair (string fromHost, string toHost)
 		{
@@ -355,7 +320,7 @@ namespace HitProxy.Triggers
 
 		public override string ToString ()
 		{
-			return "[" + Filter + " " + FromHost + " => " + ToHost + " ]";
+			return "[" + Flags + " " + FromHost + " => " + ToHost + " ]";
 		}
 		public override int GetHashCode ()
 		{

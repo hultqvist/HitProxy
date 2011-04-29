@@ -137,8 +137,11 @@ namespace HitProxy.Connection
 			int total = 0;
 			byte[] buffer = new byte[0x10000];
 			while (true) {
-				socket.Poll (5000000, SelectMode.SelectRead);
-				if (socket.IsConnected () == false)
+				//Timeout, try again
+				if (socket.Poll (5000000, SelectMode.SelectRead) == false)
+					continue;
+				//No socket polled without data = connection closed
+				if (socket.Available == 0)
 					return total;
 				int read = socket.Receive (buffer);
 				output.Send (buffer, 0, read);

@@ -18,9 +18,11 @@ namespace HitProxy.Connection
 		public static bool IsConnected (this Socket socket)
 		{
 			try {
-				bool read = socket.Poll (1, SelectMode.SelectRead);
-				bool avail = socket.Available == 0;
-				return !(read && avail);
+				//Timeout = no data but connection
+				if (socket.Poll (1, SelectMode.SelectRead) == false)
+					return true;
+				//No data = end of connection
+				return socket.Available > 0;
 			} catch (SocketException) {
 				return false;
 			} catch (ObjectDisposedException) {

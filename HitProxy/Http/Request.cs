@@ -85,6 +85,8 @@ namespace HitProxy.Http
 
 		protected override void ParseFirstLine (string firstLine)
 		{
+			if(firstLine == null)
+				throw new HeaderException ("No data", HttpStatusCode.BadRequest);
 			//Console.Error.WriteLine ("First: " + firstLine);
 			string[] parts = firstLine.Split (' ');
 			if (parts.Length != 3)

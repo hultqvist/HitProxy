@@ -181,14 +181,18 @@ namespace HitProxy.Connection
 		public void Send (byte[] buffer, int start, int length)
 		{
 			int sent = 0;
-			while (sent < length) {
+			while (true) {
 				int delta = socket.Send (buffer, start + sent, length - sent, SocketFlags.None);
 				if (delta < 0)
 					throw new InvalidOperationException ("Send less than zero bytes");
 				sent += delta;
+				if (sent == length)
+					return;
+				if (sent < length)
+					continue;
+				if (sent > length)
+					throw new InvalidOperationException ("Sent more data than received");
 			}
-			if (sent > length)
-				throw new InvalidOperationException ("Sent more data than received");
 		}
 
 		public void EndOfData ()

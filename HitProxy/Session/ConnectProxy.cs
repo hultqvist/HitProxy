@@ -31,10 +31,10 @@ namespace HitProxy.Session
 			request.Response.Add ("Proxy-Agent: HitProxy");
 			request.Response.SendHeaders (request.DataSocket);
 			
-			
 			Thread t = new Thread (InputThread);
 			t.Name = Thread.CurrentThread.Name + "ConnectInput";
 			t.Start ();
+			Status = "Connected";
 			try {
 				request.DataFiltered.PipeTo (request.Response.DataFiltered);
 			} catch (Exception) {

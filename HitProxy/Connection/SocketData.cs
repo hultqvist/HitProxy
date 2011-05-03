@@ -137,13 +137,9 @@ namespace HitProxy.Connection
 			int total = 0;
 			byte[] buffer = new byte[0x10000];
 			while (true) {
-				//Timeout, try again
-				if (socket.Poll (5000000, SelectMode.SelectRead) == false)
-					continue;
-				//No socket polled without data = connection closed
-				if (socket.Available == 0)
-					return total;
 				int read = socket.Receive (buffer);
+				if (read == 0)
+					return total;
 				output.Send (buffer, 0, read);
 				Received += read;
 				total += read;
@@ -165,17 +161,10 @@ namespace HitProxy.Connection
 				int toread = buffer.Length;
 				if (totalRead + buffer.Length > length)
 					toread = (int)length - totalRead;
-				bool stat = socket.Poll (5000000, SelectMode.SelectRead);
-				if (stat == false)
-					continue;
-				if (socket.IsConnected () == false)
-					return;
 				int read = socket.Receive (buffer, 0, toread, SocketFlags.None);
-				if (read <= 0) {
-					if (totalRead == length)
-						return;
-					continue;
-				}
+				if (read == 0)
+					throw new SocketException ((int)SocketError.ConnectionReset);
+				
 				output.Send (buffer, 0, read);
 				
 				Received += read;

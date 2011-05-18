@@ -132,19 +132,25 @@ namespace HitProxy.Filters
 				if (staticAgent.ContainsKey (request.Uri.Host)) {
 					UserAgentRule r = staticAgent[request.Uri.Host];
 					
-					if (r.UserAgent == "")
-						request.RemoveHeader ("User-Agent"); else if (r.UserAgent.ToLowerInvariant () == "random")
-						request.ReplaceHeader ("User-Agent", RandomUserAgent ()); else if (r.UserAgent.ToLowerInvariant () != "pass")
+					if (r.UserAgent == "") {
+						request.RemoveHeader ("User-Agent");
+					} else if (r.UserAgent.ToLowerInvariant () == "random") {
+						request.ReplaceHeader ("User-Agent", RandomUserAgent ());
+					} else if (r.UserAgent.ToLowerInvariant () != "pass") {
 						request.ReplaceHeader ("User-Agent", r.UserAgent);
+					}
 					
-					if (r.Lang == "")
-						request.RemoveHeader ("Accept-Language"); else if (r.Lang.ToLowerInvariant () == "random")
-						request.ReplaceHeader ("Accept-Language", GetRandom (lang)); else if (r.Lang.ToLowerInvariant () != "pass")
+					if (r.Lang == "") {
+						request.RemoveHeader ("Accept-Language");
+					} else if (r.Lang.ToLowerInvariant () == "random") {
+						request.ReplaceHeader ("Accept-Language", GetRandom (lang));
+					} else if (r.Lang.ToLowerInvariant () != "pass") {
 						request.ReplaceHeader ("Accept-Language", r.Lang);
+					}
 					
 				} else {
-					request.ReplaceHeader ("User-Agent", RandomUserAgent ());
-					request.ReplaceHeader ("Accept-Language", GetRandom (lang));
+					request.RemoveHeader ("User-Agent");
+					request.RemoveHeader ("Accept-Language");
 				}
 			} finally {
 				listLock.TryExitReadLock ();
@@ -156,7 +162,7 @@ namespace HitProxy.Filters
 		{
 			Html html = Html.Format ("<p>Replaces the User-Agent and Accept-Language headers with random ones</p>");
 			html += Html.Format ("<p><strong>Your: </strong> {0}</p>", request.GetHeader ("User-Agent"));
-			html += Html.Format("<p><strong>Random: </strong> {0}</p>", RandomUserAgent ());
+			html += Html.Format ("<p><strong>Random: </strong> {0}</p>", RandomUserAgent ());
 			
 			if (httpGet["delete"] != null) {
 				try {
@@ -192,7 +198,7 @@ namespace HitProxy.Filters
 					saveSettings ();
 			}
 			
-			html += Html.Format(@"<form action=""?"" method=""get"">
+			html += Html.Format (@"<form action=""?"" method=""get"">
 								<p><label for=""domain"">Domain</label>: <input type=""text"" name=""domain"" value="""" /></p>
 								<p><label for=""lang"">Language</label>: <input type=""text"" name=""lang"" value="""" /></p>
 								<p><label for=""agent"">User-Agent</label>: <input type=""text"" name=""agent"" value="""" />
@@ -205,7 +211,7 @@ namespace HitProxy.Filters
 				listLock.EnterReadLock ();
 				
 				foreach (UserAgentRule rule in staticAgent.Values) {
-					html += Html.Format("<p>{0} <a href=\"?delete={1}\">delete</a></p>", rule, rule.Domain);
+					html += Html.Format ("<p>{0} <a href=\"?delete={1}\">delete</a></p>", rule, rule.Domain);
 				}
 			} finally {
 				listLock.ExitReadLock ();

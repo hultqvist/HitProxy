@@ -63,6 +63,7 @@ namespace HitProxy
 			proxy.RequestFilters.Add (new Filters.Referer ());
 			proxy.RequestFilters.Add (new Filters.Rewrite ());
 			proxy.RequestFilters.Add (new Filters.UserAgent ());
+			proxy.RequestFilters.Add (new Filters.NoAccept ());
 			//proxy.RequestFilters.Add (new Filters.Cookies ());
 			proxy.RequestFilters.Add (new Filters.ProxyHeaders ());
 			proxy.RequestFilters.Add (new Filters.I2PProxy ());

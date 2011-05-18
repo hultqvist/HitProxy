@@ -102,6 +102,7 @@
     <Compile Include="Connection\HtmlData.cs" />
     <Compile Include="Connection\IDataFilter.cs" />
     <Compile Include="Http\Flags.cs" />
+    <Compile Include="Filters\NoAccept.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -85,7 +85,7 @@ namespace HitProxy.Session
 				SendResponse ();
 				
 				int code = (int)request.Response.HttpCode;
-				if (code < 100 || code > 199)
+				if (code < 100 || 200 <= code)
 					break;
 			}
 		}

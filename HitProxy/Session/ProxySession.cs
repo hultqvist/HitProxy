@@ -110,8 +110,7 @@ namespace HitProxy.Session
 					bool keepAlive = RunRequest ();
 					
 					//Flush the TCP connection, temporarily disable Nagle's algorithm
-					if (keepAlive)
-					{
+					if (keepAlive) {
 						clientSocket.NoDelay = true;
 						clientSocket.NoDelay = false;
 					}
@@ -154,30 +153,20 @@ namespace HitProxy.Session
 			Status = "Got request, filtering";
 			FilterRequest (request);
 			
-			//Send filter generated responses
-			//Duplicate code: do changes here below too
-			if (request.Response != null) {
-				//Fix response keep alive header
-				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
-					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
-				
-				Status = "Sending filter response";
-				SendResponse ();
-				return request.KeepAlive;
-			}
-			
-			//Make connection
+			//If there is no error generated response, make connection to remote server
 			CachedConnection remoteConnection = null;
-			try {
-				remoteConnection = ConnectRequest ();
-			} catch (TimeoutException e) {
-				request.Response = new Response (e, Html.Escape ("Connection Timeout"));
-			} catch (HeaderException e) {
-				request.Response = new Response (e, new Html ());
+			if (request.Response == null) {
+				
+				try {
+					remoteConnection = ConnectRequest ();
+				} catch (TimeoutException e) {
+					request.Response = new Response (e, Html.Escape ("Connection Timeout"));
+				} catch (HeaderException e) {
+					request.Response = new Response (e, new Html ());
+				}
+				
 			}
 			
-			//So far all responses are generated from errors
-			//Duplicate code: do changes here above too
 			if (request.Response != null) {
 				//Fix response keep alive header
 				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
@@ -189,7 +178,7 @@ namespace HitProxy.Session
 			}
 			
 			try {
-				//Begin connection
+				//Begin connection communication
 				
 				//Prepare socks connection
 				if (request.Proxy != null && request.Proxy.Scheme == "socks")

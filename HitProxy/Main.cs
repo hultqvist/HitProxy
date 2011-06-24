@@ -75,7 +75,7 @@ namespace HitProxy
 			#region Response
 			
 			//Triggers
-			proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
+			//proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
 			
 			//Filters
 			//proxy.ResponseFilters.Add (new Filters.Cookies ());

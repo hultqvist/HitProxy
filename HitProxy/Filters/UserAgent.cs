@@ -149,7 +149,8 @@ namespace HitProxy.Filters
 					}
 					
 				} else {
-					request.RemoveHeader ("User-Agent");
+					//Default
+					request.ReplaceHeader ("User-Agent", RandomUserAgent ());
 					request.RemoveHeader ("Accept-Language");
 				}
 			} finally {

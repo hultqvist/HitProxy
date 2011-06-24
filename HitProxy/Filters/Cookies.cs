@@ -59,9 +59,15 @@ namespace HitProxy.Filters
 
 		void FilterCookie (Request request, List<CookieHeader> list)
 		{
+			if (request.Flags["clean"] || request.Flags["fake"] || request.Flags["remove"] || request.Flags["block"]) {
+				foreach (var ch in list)
+					blockedJar.Add (ch);
+				list.Clear ();
+				return;
+			}
+			
 			foreach (CookieHeader cr in list.ToArray ()) {
 				//Block third party cookies
-				//TODO: Too aggressive, need finer UI control before activating this
 				if (cr.ContainsKey ("domain") && (("." + request.Uri.Host).EndsWith (cr["domain"]) == false)) {
 					list.Remove (cr);
 					blockedJar.Add (cr);
@@ -123,10 +129,10 @@ namespace HitProxy.Filters
 
 		public override Html Status ()
 		{
-			Html html = Html.Format( "<h1>Blocked</h1>");
+			Html html = Html.Format ("<h1>Blocked</h1>");
 			foreach (CookieHeader request in blockedJar)
-				html += Html.Format( "<p>{0}</p>", request);
-			html += Html.Format("<h1>All</h1>");
+				html += Html.Format ("<p>{0}</p>", request);
+			html += Html.Format ("<h1>All</h1>");
 			foreach (CookieHeader request in cookieJar)
 				html += Html.Format ("<p>{0}</p>", request);
 			return html;

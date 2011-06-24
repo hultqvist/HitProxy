@@ -13,6 +13,11 @@ namespace HitProxy.Http
 		{
 		}
 
+		public Flags (List<string> flagStorage)
+		{
+			this.flags = flagStorage;
+		}
+
 		public Flags (string flags)
 		{
 			Set (flags);

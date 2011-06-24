@@ -6,6 +6,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Threading;
 using HitProxy.Http;
+using ProtoBuf;
 
 namespace HitProxy.Triggers
 {
@@ -34,29 +35,19 @@ namespace HitProxy.Triggers
 		public CrossDomain ()
 		{
 			LoadFilters ();
-			SaveFilters ();
+			//SaveFilters ();
 		}
 
 		void LoadFilters ()
 		{
 			try {
 				listLock.EnterWriteLock ();
-				string configPath = ConfigPath ("Referer");
-				
+				string configPath = ConfigPath ("Referer.settings");
 				if (File.Exists (configPath) == false)
 					return;
 				
-				using (TextReader reader = new StreamReader (new FileStream (configPath, FileMode.Open, FileAccess.Read))) {
-					string pattern;
-					while ((pattern = reader.ReadLine ()) != null) {
-						string[] parts = pattern.Split (' ');
-						if (parts.Length != 3)
-							continue;
-						
-						RefererPair p = new RefererPair (parts[1], parts[2]);
-						p.Flags.Set (parts[0]);
-						watchlist.Add (p);
-					}
+				using (Stream s = new FileStream (ConfigPath ("Referer.settings"), FileMode.Open)) {
+					watchlist = Serializer.Deserialize<List<RefererPair>>(s);
 				}
 			} finally {
 				listLock.ExitWriteLock ();
@@ -65,16 +56,13 @@ namespace HitProxy.Triggers
 
 		void SaveFilters ()
 		{
-			TextWriter writer = null;
 			try {
 				listLock.EnterReadLock ();
-				writer = new StreamWriter (new FileStream (ConfigPath ("Referer"), FileMode.Create, FileAccess.Write));
-				foreach (RefererPair pair in watchlist) {
-					writer.WriteLine (pair.Flags.Serialize () + " " + pair.FromHost + " " + pair.ToHost);
+				using (Stream writer = new FileStream (ConfigPath ("Referer.settings"), FileMode.Create, FileAccess.Write)) {
+					ProtoBuf.Serializer.Serialize(writer, watchlist);
 				}
 			} finally {
 				listLock.ExitReadLock ();
-				writer.NullSafeDispose ();
 			}
 		}
 
@@ -141,7 +129,7 @@ namespace HitProxy.Triggers
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p style=""text-align:center""><a href=""{0}"">{2}</a></p>", httpRequest.Uri, httpRequest.Uri.Host, httpRequest.Uri.PathAndQuery));
 			httpRequest.SetTriggerHtml (Form (requestPair, httpRequest.Uri.ToString ()));
-
+			
 			return true;
 		}
 
@@ -272,16 +260,28 @@ namespace HitProxy.Triggers
 		}
 	}
 
+	[ProtoContract]
 	class RefererPair
 	{
-		public string FromHost;
-		public string ToHost;
+		[ProtoMember(1)]
+		public string FromHost { get; set; }
+		[ProtoMember(2)]
+		public string ToHost { get; set; }
+
+		[ProtoMember(3)]
+		List<string> flags = new List<string> ();
+
 		/// <summary>
 		/// Flags set to matching requests
 		/// </summary>
-		public readonly Flags Flags = new Flags ();
+		public readonly Flags Flags;
 
-		public RefererPair (string fromHost, string toHost)
+		public RefererPair ()
+		{
+			this.Flags = new Flags (flags);
+		}
+
+		public RefererPair (string fromHost, string toHost) : this()
 		{
 			this.FromHost = fromHost;
 			this.ToHost = toHost;

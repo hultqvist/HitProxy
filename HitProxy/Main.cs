@@ -2,8 +2,11 @@ using System;
 using System.IO;
 using System.Net;
 using System.Collections.Generic;
+using ProtoBuf;
 using Mono.Options;
 using HitProxy.Connection;
+using System.Threading;
+using HitProxy.Http;
 
 namespace HitProxy
 {
@@ -42,12 +45,10 @@ namespace HitProxy
 			//Prepare config folder
 			string configPath = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy");
 			Directory.CreateDirectory (configPath);
-			
+
+			//Prepare proxy			
 			Proxy proxy = new Proxy (listenIP, port);
-			System.Threading.Thread.CurrentThread.Name = "Main";
-			
-			//TODO: Read filter configuration from Filters.conf
-			//TODO: Separate List, Trigger, Modify and Block-Filters.
+			Thread.CurrentThread.Name = "Main";
 			
 			#region Request
 			
@@ -58,44 +59,40 @@ namespace HitProxy
 			//Filters
 			proxy.RequestFilters.Add (new Filters.Block ());
 			proxy.RequestFilters.Add (new Filters.BlockBreak ());
-			//proxy.FilterRequest.Add (new Tamper ("Before filtering"));
-			//proxy.FilterRequest.Add (new TransparentSSL ());
+			proxy.RequestFilters.Add (new Filters.Tamper ("Before filtering"));
+			proxy.RequestFilters.Add (new Filters.TransparentSSL ());
 			proxy.RequestFilters.Add (new Filters.Referer ());
 			proxy.RequestFilters.Add (new Filters.Rewrite ());
 			proxy.RequestFilters.Add (new Filters.UserAgent ());
 			proxy.RequestFilters.Add (new Filters.NoAccept ());
-			//proxy.RequestFilters.Add (new Filters.Cookies ());
+			proxy.RequestFilters.Add (new Filters.Cookies ());
 			proxy.RequestFilters.Add (new Filters.ProxyHeaders ());
 			proxy.RequestFilters.Add (new Filters.I2PProxy ());
 			proxy.RequestFilters.Add (new Filters.Onion ());
-			//proxy.RequestFilters.Add (new Tamper ("After filtering"));
+			proxy.RequestFilters.Add (new Filters.Tamper ("After filtering"));
 			
 			#endregion
 			
 			#region Response
 			
 			//Triggers
-			//proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
+			proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
 			
 			//Filters
-			//proxy.ResponseFilters.Add (new Filters.Cookies ());
+			proxy.ResponseFilters.Add (new Filters.Cookies ());
 			proxy.ResponseFilters.Add (new Filters.Saver ());
 			proxy.ResponseFilters.Add (new Filters.Slow ());
-			//proxy.FilterResponse.Add (new Tamper ("Response"));
-			//proxy.FilterResponse.Add (new CustomError ());
+			proxy.ResponseFilters.Add (new Filters.Tamper ("Response"));
+			proxy.ResponseFilters.Add (new Filters.CustomError ());
 			
 			#endregion
 			
 			proxy.Start ();
-			if (startBrowser)
-			{
-				try
-				{
+			if (startBrowser) {
+				try {
 					System.Threading.Thread.Sleep (3000);
 					System.Diagnostics.Process.Start ("http://localhost:" + proxy.Port + "/");
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					Console.Error.WriteLine ("Failed to launch browser: " + e.Message);
 				}
 			}

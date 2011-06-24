@@ -12,6 +12,14 @@ namespace HitProxy.Http
 	public abstract class Filter
 	{
 		/// <summary>
+		/// Filter Codename
+		/// </summary>
+		public string Name {
+			get { return this.GetType ().Name; }
+		}
+		public bool Active { get; set; }
+
+		/// <summary>
 		/// Can be used to filter both requests and responses
 		/// For response filtering the request.Response is set
 		/// </summary>
@@ -25,14 +33,14 @@ namespace HitProxy.Http
 
 		public virtual Html Status ()
 		{
-			return Html.Format("<p>(no description)</p>");
+			return Html.Format ("<p>(no description)</p>");
 		}
 
 		protected static string ConfigPath (string filterName)
 		{
 			string suffix = ".txt";
 			if (filterName.Contains ("."))
-					suffix = "";				
+				suffix = "";
 			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filterName + suffix);
 		}
 

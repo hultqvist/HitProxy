@@ -15,7 +15,6 @@ namespace HitProxy.Connection
 		/// <param name="timeout">
 		/// Timeout in microseconds
 		/// </param>
-		[Obsolete]
 		public static bool IsConnected (this Socket socket)
 		{
 			try {

@@ -38,6 +38,10 @@
     <Reference Include="System" />
     <Reference Include="System.Web" />
     <Reference Include="System.Core" />
+    <Reference Include="protobuf-net, Version=2.0.0.404, Culture=neutral, PublicKeyToken=null">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Library\ProtocolBuffers\protobuf-net.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Main.cs" />
@@ -103,6 +107,7 @@
     <Compile Include="Connection\IDataFilter.cs" />
     <Compile Include="Http\Flags.cs" />
     <Compile Include="Filters\NoAccept.cs" />
+    <Compile Include="Settings.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

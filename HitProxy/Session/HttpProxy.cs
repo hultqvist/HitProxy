@@ -73,9 +73,11 @@ namespace HitProxy.Session
 				Status = "Filtering response";
 				try {
 					foreach (Trigger t in proxy.ResponseTriggers.ToArray ())
-						t.Apply (request);
+						if (t.Active)
+							t.Apply (request);
 					foreach (Filter f in proxy.ResponseFilters.ToArray ())
-						f.Apply (request);
+						if (f.Active)
+							f.Apply (request);
 				} catch (Exception e) {
 					request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
 				}

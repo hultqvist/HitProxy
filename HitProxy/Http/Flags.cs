@@ -102,6 +102,8 @@ namespace HitProxy.Http
 				else
 					text = "," + f;
 			}
+			if(text == null)
+				return "";
 			return text;
 		}
 		

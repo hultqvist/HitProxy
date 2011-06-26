@@ -84,7 +84,7 @@ namespace HitProxy
 		{
 			this.Settings.Active.Clear();
 			foreach (Filter f in allFilters)
-				 if(f.Active || Settings.Active.Contains(f.Name) == false)
+				 if(f.Active && Settings.Active.Contains(f.Name) == false)
 					Settings.Active.Add (f.Name);
 			
 			using (Stream s = new FileStream (SettingsPath, FileMode.Create)) {

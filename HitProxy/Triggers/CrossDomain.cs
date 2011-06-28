@@ -1,4 +1,3 @@
-
 using System;
 using System.Net;
 using System.Collections.Generic;
@@ -42,12 +41,12 @@ namespace HitProxy.Triggers
 		{
 			try {
 				listLock.EnterWriteLock ();
-				string configPath = ConfigPath ("Referer.settings");
+				string configPath = ConfigPath ();
 				if (File.Exists (configPath) == false)
 					return;
 				
-				using (Stream s = new FileStream (ConfigPath ("Referer.settings"), FileMode.Open)) {
-					watchlist = Serializer.Deserialize<List<RefererPair>>(s);
+				using (Stream s = new FileStream (configPath, FileMode.Open)) {
+					watchlist = Serializer.Deserialize<List<RefererPair>> (s);
 				}
 			} finally {
 				listLock.ExitWriteLock ();
@@ -58,8 +57,8 @@ namespace HitProxy.Triggers
 		{
 			try {
 				listLock.EnterReadLock ();
-				using (Stream writer = new FileStream (ConfigPath ("Referer.settings"), FileMode.Create, FileAccess.Write)) {
-					ProtoBuf.Serializer.Serialize(writer, watchlist);
+				using (Stream writer = new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write)) {
+					ProtoBuf.Serializer.Serialize (writer, watchlist);
 				}
 			} finally {
 				listLock.ExitReadLock ();
@@ -88,7 +87,7 @@ namespace HitProxy.Triggers
 					if (pair.Match (requestPair)) {
 						httpRequest.Flags.Set (pair.Flags);
 						
-						if (pair.Flags["block"]) {
+						if (pair.Flags ["block"]) {
 							httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p>Blocked by: {2} <a href=""{3}?delete={4}&amp;return={5}"">delete</a></p>", httpRequest.Uri, httpRequest.Uri.Host, pair, Filters.WebUI.FilterUrl (this), pair.GetHashCode (), Uri.EscapeUriString (httpRequest.Uri.ToString ())));
@@ -104,7 +103,7 @@ namespace HitProxy.Triggers
 			}
 			
 			//Already blocked, don't add to blocked list
-			if (httpRequest.Flags["block"])
+			if (httpRequest.Flags ["block"])
 				return true;
 			
 			try {
@@ -188,13 +187,13 @@ namespace HitProxy.Triggers
 				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
 			</div>");
 			
-			if (httpGet["return"] != null) {
-				request.Response.ReplaceHeader ("Location", httpGet["return"]);
+			if (httpGet ["return"] != null) {
+				request.Response.ReplaceHeader ("Location", httpGet ["return"]);
 				request.Response.HttpCode = HttpStatusCode.Redirect;
 			}
 			
-			if (httpGet["delete"] != null) {
-				int item = int.Parse (httpGet["delete"]);
+			if (httpGet ["delete"] != null) {
+				int item = int.Parse (httpGet ["delete"]);
 				try {
 					listLock.EnterWriteLock ();
 					foreach (RefererPair rp in watchlist.ToArray ()) {
@@ -208,7 +207,7 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			if (httpGet["clear"] != null) {
+			if (httpGet ["clear"] != null) {
 				try {
 					listLock.EnterWriteLock ();
 					blocked.Clear ();
@@ -217,13 +216,13 @@ namespace HitProxy.Triggers
 				}
 			}
 			
-			if (httpGet["action"] != null || httpGet["flags"] != null && httpGet["flags"] != "") {
-				RefererPair p = new RefererPair (httpGet["from"], httpGet["to"]);
+			if (httpGet ["action"] != null || httpGet ["flags"] != null && httpGet ["flags"] != "") {
+				RefererPair p = new RefererPair (httpGet ["from"], httpGet ["to"]);
 				
-				if (httpGet["action"] == "Flags")
-					p.Flags.Set (httpGet["flags"]);
+				if (httpGet ["action"] == "Flags")
+					p.Flags.Set (httpGet ["flags"]);
 				else
-					p.Flags.Set (httpGet["action"]);
+					p.Flags.Set (httpGet ["action"]);
 				
 				try {
 					listLock.EnterWriteLock ();
@@ -265,11 +264,12 @@ namespace HitProxy.Triggers
 	{
 		[ProtoMember(1)]
 		public string FromHost { get; set; }
+
 		[ProtoMember(2)]
 		public string ToHost { get; set; }
 
 		[ProtoMember(3)]
-		List<string> flags = new List<string> ();
+		public List<string> flags = new List<string> ();
 
 		/// <summary>
 		/// Flags set to matching requests
@@ -325,6 +325,7 @@ namespace HitProxy.Triggers
 		{
 			return "[" + Flags + " " + FromHost + " => " + ToHost + " ]";
 		}
+
 		public override int GetHashCode ()
 		{
 			return (FromHost + ":" + ToHost).GetHashCode ();

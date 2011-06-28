@@ -35,7 +35,6 @@ namespace HitProxy.Triggers
 
 		readonly char[] wildcards = new char[] { '?', '*', '^' };
 
-		private static readonly string configPath = ConfigPath ("AdBlock");
 
 		public AdBlock ()
 		{
@@ -48,7 +47,7 @@ namespace HitProxy.Triggers
 		{
 			try {
 				listLock.EnterWriteLock ();
-				
+				string configPath = ConfigPath ();
 				if (File.Exists (configPath) == false)
 					return;
 				
@@ -75,7 +74,7 @@ namespace HitProxy.Triggers
 			TextWriter writer = null;
 			try {
 				listLock.EnterReadLock ();
-				writer = new StreamWriter (new FileStream (configPath, FileMode.Create, FileAccess.Write));
+				writer = new StreamWriter (new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write));
 				foreach (RegexFilter rf in filterList) {
 					writer.WriteLine (rf.Pattern + "\t" + rf.Flags.Serialize ());
 				}

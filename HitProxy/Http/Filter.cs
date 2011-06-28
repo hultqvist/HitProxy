@@ -36,12 +36,16 @@ namespace HitProxy.Http
 			return Html.Format ("<p>(no description)</p>");
 		}
 
-		protected static string ConfigPath (string filterName)
+		protected string ConfigPath (string filename)
 		{
-			string suffix = ".txt";
-			if (filterName.Contains ("."))
-				suffix = "";
-			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filterName + suffix);
+			if (filename.Contains (".") == false)
+				filename += ".txt";
+			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), filename);
+		}
+
+		protected string ConfigPath ()
+		{
+			return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), Name + ".settings");
 		}
 
 		public override string ToString ()

@@ -70,9 +70,6 @@
     <Compile Include="Filters\Onion.cs" />
     <Compile Include="Filters\ProxyTld.cs" />
     <Compile Include="BrowserProxy.cs" />
-    <Compile Include="..\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
-      <Link>Options.cs</Link>
-    </Compile>
     <Compile Include="Session\ProxySession.cs" />
     <Compile Include="Session\HttpProxy.cs" />
     <Compile Include="Session\ConnectProxy.cs" />
@@ -107,6 +104,9 @@
     <Compile Include="Http\Flags.cs" />
     <Compile Include="Filters\NoAccept.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="..\Library\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
+      <Link>Options.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

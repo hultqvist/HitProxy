@@ -40,7 +40,7 @@
     <Reference Include="System.Core" />
     <Reference Include="protobuf-net, Version=2.0.0.404, Culture=neutral, PublicKeyToken=null">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Library\ProtocolBuffers\protobuf-net.dll</HintPath>
+      <HintPath>..\Libraries\ProtocolBuffers\protobuf-net.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -104,9 +104,6 @@
     <Compile Include="Http\Flags.cs" />
     <Compile Include="Filters\NoAccept.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="..\Library\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
-      <Link>Options.cs</Link>
-    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -84,6 +84,9 @@ namespace HitProxy.Filters
 			if ((request.Flags ["slow"] || request.Response.Flags ["slow"]) == false)
 				return false;
 			
+			//Added delay
+			Thread.Sleep (delay);
+			
 			//Intercept data connection
 			request.Response.FilterData (new SlowOutput (this));
 			
@@ -105,7 +108,6 @@ namespace HitProxy.Filters
 			public void Send (byte[] inBuffer, int start, int inLength, IDataOutput output)
 			{
 				if (totalSent == 0) {
-					Thread.Sleep (settings.delay);
 					starttime = DateTime.Now;
 				}
 				

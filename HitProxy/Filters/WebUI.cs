@@ -18,7 +18,7 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class WebUI : Filter
 	{
-		public static readonly string ConfigHost = "hit.endnode.se";
+		public static readonly string ConfigHost = "hit.silentorbit.com";
 		public static WebUI webUI;
 
 		Proxy proxy;

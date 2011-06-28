@@ -422,6 +422,7 @@ namespace HitProxy.Filters
 					data += Html.Format (" inactive ");
 				
 				data += Html.Format (" (<a href=\"{0}?active={1}\">change</a>)", FilterUrl (), f.Name);
+				data += Html.Format ("</li>");
 			}
 			data += Html.Format ("</ul>");
 			return data;
@@ -437,6 +438,7 @@ namespace HitProxy.Filters
 					data += Html.Format (" inactive ");
 				
 				data += Html.Format (" (<a href=\"{0}?active={1}\">change</a>)", FilterUrl (), f.Name);
+				data += Html.Format ("</li>");
 			}
 			data += Html.Format ("</ul>");
 			return data;

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 namespace HitProxy.Http
 {
 	public class Flags
@@ -23,7 +24,7 @@ namespace HitProxy.Http
 			Set (flags);
 		}
 
-		public bool this[string flag] {
+		public bool this [string flag] {
 			get {
 				flag = flag.ToLowerInvariant ();
 				return flags.Contains (flag);
@@ -52,7 +53,7 @@ namespace HitProxy.Http
 		/// </param>
 		public void Set (string flagNames)
 		{
-			string[] fa = flagNames.ToLowerInvariant ().Split (',');
+			string[] fa = flagNames.ToLowerInvariant ().Split (new char[]{',', ' '});
 			foreach (string f in fa) {
 				string fl = f.Trim ();
 				if (fl == "")
@@ -100,9 +101,9 @@ namespace HitProxy.Http
 				if (text == null)
 					text = f;
 				else
-					text = "," + f;
+					text += "," + f;
 			}
-			if(text == null)
+			if (text == null)
 				return "";
 			return text;
 		}

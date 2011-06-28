@@ -35,7 +35,6 @@ namespace HitProxy.Triggers
 
 		readonly char[] wildcards = new char[] { '?', '*', '^' };
 
-
 		public AdBlock ()
 		{
 			hashList.Add ("", new List<RegexFilter> ());
@@ -59,7 +58,7 @@ namespace HitProxy.Triggers
 						if (parts.Length < 2)
 							regex = RegexFilter.Parse (pattern, new Flags ("block"));
 						else
-							regex = RegexFilter.Parse (parts[0], new Flags (parts[1]));
+							regex = RegexFilter.Parse (parts [0], new Flags (parts [1]));
 						if (regex != null)
 							AddFilter (regex);
 					}
@@ -71,16 +70,15 @@ namespace HitProxy.Triggers
 
 		void SaveFilters ()
 		{
-			TextWriter writer = null;
 			try {
 				listLock.EnterReadLock ();
-				writer = new StreamWriter (new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write));
-				foreach (RegexFilter rf in filterList) {
-					writer.WriteLine (rf.Pattern + "\t" + rf.Flags.Serialize ());
+				using (TextWriter writer = new StreamWriter (new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write))) {
+					foreach (RegexFilter rf in filterList) {
+						writer.WriteLine (rf.Pattern + "\t" + rf.Flags.Serialize ());
+					}
 				}
 			} finally {
 				listLock.ExitReadLock ();
-				writer.NullSafeDispose ();
 			}
 		}
 
@@ -98,9 +96,9 @@ namespace HitProxy.Triggers
 				
 				if (part.Length > 8) {
 					try {
-						hashList[part].Add (regex);
+						hashList [part].Add (regex);
 					} catch (KeyNotFoundException) {
-						List<RegexFilter> list = new List<RegexFilter> ();
+						List<RegexFilter > list = new List<RegexFilter> ();
 						list.Add (regex);
 						hashList.Add (part, list);
 					}
@@ -108,7 +106,7 @@ namespace HitProxy.Triggers
 				}
 			}
 			if (added == false)
-				hashList[""].Add (regex);
+				hashList [""].Add (regex);
 		}
 
 		public override bool Apply (Request request)
@@ -142,13 +140,13 @@ namespace HitProxy.Triggers
 		{
 			Html html = new Html ();
 			
-			if (httpGet["return"] != null) {
-				request.Response.ReplaceHeader ("Location", httpGet["return"]);
+			if (httpGet ["return"] != null) {
+				request.Response.ReplaceHeader ("Location", httpGet ["return"]);
 				request.Response.HttpCode = HttpStatusCode.Redirect;
 			}
 			
-			if (httpGet["delete"] != null) {
-				int item = int.Parse (httpGet["delete"]);
+			if (httpGet ["delete"] != null) {
+				int item = int.Parse (httpGet ["delete"]);
 				try {
 					listLock.EnterWriteLock ();
 					foreach (RegexFilter rf in filterList.ToArray ()) {
@@ -166,16 +164,17 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			if (httpGet["action"] != null) {
-				RegexFilter filter = RegexFilter.Parse (httpGet["pattern"], new Flags (httpGet["flags"]));
-				
-				try {
-					listLock.EnterWriteLock ();
-					AddFilter (filter);
-				} finally {
-					listLock.ExitWriteLock ();
+			if (httpGet ["action"] != null) {
+				RegexFilter filter = RegexFilter.Parse (httpGet ["pattern"], new Flags (httpGet ["flags"]));
+				if (filter != null) {				
+					try {
+						listLock.EnterWriteLock ();
+						AddFilter (filter);
+					} finally {
+						listLock.ExitWriteLock ();
+					}
+					SaveFilters ();
 				}
-				SaveFilters ();
 			}
 			
 			html += Html.Format (@"

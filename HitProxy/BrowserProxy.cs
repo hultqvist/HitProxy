@@ -20,8 +20,11 @@ namespace HitProxy
 			this.proxy = proxy;
 			try {
 				RegistryKey registry = Registry.CurrentUser.OpenSubKey ("Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", true);
-				defaultProxyEnabled = (int)registry.GetValue ("ProxyEnable");
-				defaultProxyServer = (string)registry.GetValue ("ProxyServer");
+				if(registry != null)
+				{
+					defaultProxyEnabled = (int)registry.GetValue ("ProxyEnable");
+					defaultProxyServer = (string)registry.GetValue ("ProxyServer");
+				}
 			} catch (Exception) {
 				defaultProxyEnabled = 0;
 				defaultProxyServer = null;

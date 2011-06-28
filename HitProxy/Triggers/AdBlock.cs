@@ -130,7 +130,7 @@ namespace HitProxy.Triggers
 						continue;
 					
 					request.Flags.Set (regex.Flags);
-					request.SetTriggerHtml (Html.Escape ("Adblock filter: " + regex.ToString () + "\n" + url));
+					request.SetTriggerHtml (Html.Escape ("Adblock filter: " + regex.Pattern + "\n" + url));
 					return true;
 				}
 			}
@@ -179,6 +179,8 @@ namespace HitProxy.Triggers
 			}
 			
 			html += Html.Format (@"
+				<p>Patterns are in a subset of the AdBlock pattern.</p>
+				<p>Example: http://example.com, http://*.example.com, *example.com* or ||example.com</p>
 				<table>
 					<tr><th>Pattern</th><th>Flags</th><th></th></th>
 				<form action=""?"" method=""get"">

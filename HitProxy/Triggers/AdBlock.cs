@@ -179,27 +179,29 @@ namespace HitProxy.Triggers
 			}
 			
 			html += Html.Format (@"
-				<h1>Add new filter</h1>
+				<table>
+					<tr><th>Pattern</th><th>Flags</th><th></th></th>
 				<form action=""?"" method=""get"">
-						<input type=""text"" name=""pattern"" value="""" />
-						<input type=""text"" name=""flags"" value=""block"" />
-						<input type=""submit"" name=""action"" value=""Set"" />
+					<tr>
+						<td><input type=""text"" name=""pattern"" value="""" /></td>
+						<td><input type=""text"" name=""flags"" value=""block"" /></td>
+						<td><input type=""submit"" name=""action"" value=""Add"" /></td>
+					</tr>
 				</form>");
 			
 			try {
 				listLock.EnterReadLock ();
 				
 				html += Html.Format ("<h1>Block List</h1>");
-				html += Html.Format ("<table>" +
-					"<tr><th>Pattern</th><th>Flags</th><th></th></th>");
 				foreach (RegexFilter regex in filterList) {
-					html += Html.Format ("<tr><td>{1}</td><td><a href=\"?delete={2}\">delete</a></td><td>{0}</td></tr>", regex.Pattern, regex.Flags, regex.GetHashCode ());
+					html += Html.Format ("<tr><td>{0}</td><td>{1}</td><td><a href=\"?delete={2}\">delete</a></td></tr>", regex.Pattern, regex.Flags, regex.GetHashCode ());
 				}
-				html += Html.Format ("</table>");
 			} finally {
 				listLock.ExitReadLock ();
 			}
-			
+
+			html += Html.Format ("</table>");
+
 			return html;
 		}
 

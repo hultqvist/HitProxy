@@ -19,11 +19,14 @@ namespace HitProxy
 			IPAddress listenIP = IPAddress.Loopback;
 			int port = ProxyPort;
 			bool startBrowser = true;
+			bool ipv6 = false;
 			
 			OptionSet options = new OptionSet ();
 			options.Add ("l|listen=", "Listen on IP\nuse 0.0.0.0 for any, default(localhost)", v => listenIP = IPAddress.Parse (v));
 			options.Add ("p|port=", "Listen on port", v => port = int.Parse (v));
 			options.Add ("s|server|no-browser", "Server mode, do not invoke the browser", v => startBrowser = false);
+			options.Add ("6|ipv6", "Enable IPv6 DNS lookups", v => ipv6 = true);
+			
 			List<string> extra;
 			try {
 				extra = options.Parse (args);
@@ -48,6 +51,7 @@ namespace HitProxy
 
 			//Prepare proxy			
 			Proxy proxy = new Proxy (listenIP, port);
+			proxy.IPv6 = ipv6;
 			Thread.CurrentThread.Name = "Main";
 			
 			#region Request

@@ -14,7 +14,8 @@ namespace HitProxy.Connection
 	/// </summary>
 	public class ConnectionManager
 	{
-		private Dictionary<string, IPAddress[]> dnsCache = new Dictionary<string, IPAddress[]> ();
+		private Proxy proxy;
+		private Dictionary<string, List<IPAddress>> dnsCache = new Dictionary<string, List<IPAddress>> ();
 		private Dictionary<IPEndPoint, CachedServer> serverCache = new Dictionary<IPEndPoint, CachedServer> ();
 		/// <summary>
 		/// This event is triggered to let pending connections start.
@@ -35,6 +36,11 @@ namespace HitProxy.Connection
 			}
 		}
 
+		public ConnectionManager (Proxy proxy)
+		{
+			this.proxy = proxy;
+		}
+		
 		/// <summary>
 		/// Get or create a new connection from cache.
 		/// This call will hold until there is a connection available
@@ -43,7 +49,7 @@ namespace HitProxy.Connection
 		public CachedConnection Connect (Uri uri)
 		{
 			//DNS lookup caching
-			IPAddress[] 	dns = GetCachedDns (uri.Host);
+			List<IPAddress> 	dns = GetCachedDns (uri.Host);
 			
 			if (dns == null)
 				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
@@ -60,7 +66,7 @@ namespace HitProxy.Connection
 		public CachedConnection ConnectNew (Uri uri, bool hold)
 		{
 			//DNS lookup caching
-			IPAddress[] dns = GetCachedDns (uri.Host);
+			List<IPAddress> dns = GetCachedDns (uri.Host);
 			if (dns == null)
 				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
 			
@@ -72,7 +78,7 @@ namespace HitProxy.Connection
 		/// <summary>
 		/// Get cached or create a new connection to specific ip-addresses.
 		/// </summary>
-		private CachedConnection GetCachedConnection (IPAddress[] ipaddress, int port, bool reuse, bool hold)
+		private CachedConnection GetCachedConnection (List<IPAddress> ipaddress, int port, bool reuse, bool hold)
 		{
 			CachedConnection c = null;
 			while (true) {
@@ -125,20 +131,27 @@ namespace HitProxy.Connection
 		/// <summary>
 		/// Get a new dns cache from hostname
 		/// </summary>
-		private IPAddress[] GetCachedDns (string host)
+		private List<IPAddress> GetCachedDns (string host)
 		{
 			lock (dnsCache) {
 				if (dnsCache.ContainsKey (host))
 					return dnsCache [host];
 				else {
 					IPAddress[] address = Dns.GetHostAddresses (host);
+					List<IPAddress> iplist = new List<IPAddress>();
+					foreach(IPAddress ip in address)
+					{
+						if(ip.AddressFamily == AddressFamily.InterNetworkV6 && proxy.IPv6 == false)
+							continue;
+						iplist.Add(ip);
+					}
 					
-					if (address.Length == 0)
+					if (iplist.Count == 0)
 						return null;
 					
-					dnsCache.Add (host, address);
+					dnsCache.Add (host, iplist);
 					
-					return address;
+					return iplist;
 				}
 			}
 		}

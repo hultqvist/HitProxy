@@ -15,6 +15,11 @@ namespace HitProxy
 	{
 		private IPAddress address;
 		private int port;
+		
+		/// <summary>
+		/// True to enable IPv6 lookups and connections
+		/// </summary>
+		public bool IPv6 { get; set; }
 
 		public int Port {
 			get { return port; }
@@ -23,7 +28,6 @@ namespace HitProxy
 		public Settings Settings { get; private set; }
 
 		public readonly Filters.WebUI WebUI;
-
 		Thread thread;
 		public readonly BrowserProxy Browser;
 
@@ -31,7 +35,7 @@ namespace HitProxy
 		/// List of active ProxySessions.
 		/// </summary>
 		private List<ProxySession> proxyList = new List<ProxySession> ();
-		private ConnectionManager connectionManager = new ConnectionManager ();
+		private readonly ConnectionManager connectionManager;
 
 		public ConnectionManager ConnectionManager {
 			get { return connectionManager; }
@@ -39,7 +43,6 @@ namespace HitProxy
 
 		public readonly List<Trigger> RequestTriggers = new List<Trigger> ();
 		public readonly List<Filter> RequestFilters = new List<Filter> ();
-
 		public readonly List<Trigger> ResponseTriggers = new List<Trigger> ();
 		public readonly List<Filter> ResponseFilters = new List<Filter> ();
 
@@ -49,7 +52,8 @@ namespace HitProxy
 			this.port = port;
 			this.Browser = new BrowserProxy (this);
 			this.WebUI = new Filters.WebUI (this);
-			
+			this.connectionManager = new ConnectionManager (this);
+				
 			//Read Settings
 			if (File.Exists (SettingsPath)) {
 				using (Stream s = new FileStream (SettingsPath, FileMode.Open)) {
@@ -63,28 +67,28 @@ namespace HitProxy
 			get { return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), "HitProxy.settings"); }
 		}
 
-		private List<Filter> allFilters = new List<Filter>();
+		private List<Filter> allFilters = new List<Filter> ();
 		
 		private void ApplyFilterSettings ()
 		{
 			foreach (Trigger rqt in RequestTriggers)
-				allFilters.Add(rqt);
+				allFilters.Add (rqt);
 			foreach (Filter rsf in RequestFilters)
-				allFilters.Add(rsf);
+				allFilters.Add (rsf);
 			foreach (Trigger rst in ResponseTriggers)
-				allFilters.Add(rst);
+				allFilters.Add (rst);
 			foreach (Filter rsf in ResponseFilters)
-				allFilters.Add(rsf);
+				allFilters.Add (rsf);
 			
-			foreach(Filter f in allFilters)
+			foreach (Filter f in allFilters)
 				f.Active = Settings.Active.Contains (f.Name);
 		}
 
 		public void WriteSettings ()
 		{
-			this.Settings.Active.Clear();
+			this.Settings.Active.Clear ();
 			foreach (Filter f in allFilters)
-				 if(f.Active && Settings.Active.Contains(f.Name) == false)
+				if (f.Active && Settings.Active.Contains (f.Name) == false)
 					Settings.Active.Add (f.Name);
 			
 			using (Stream s = new FileStream (SettingsPath, FileMode.Create)) {

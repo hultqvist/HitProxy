@@ -56,7 +56,7 @@ namespace HitProxy.Http
 			foreach (string f in fa) {
 				string fl = f.Trim ();
 				if (fl == "")
-					throw new ArgumentException ("Flag cannot be empty string.");
+					continue;
 				if (flags.Contains (fl) == false)
 					flags.Add (fl);
 			}

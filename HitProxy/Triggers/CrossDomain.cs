@@ -156,19 +156,20 @@ namespace HitProxy.Triggers
 			return Html.Format (@"
 <form action=""{0}"" method=""get"">
 	{1}
-	<input type=""text"" name=""from"" value=""{2}"" />
-	<input type=""text"" name=""to"" value=""{3}"" />
-	<nobr>
+	<tr>
+	<td><input type=""text"" name=""from"" value=""{2}"" /></td>
+	<td><input type=""text"" name=""to"" value=""{3}"" /></td>
+	<td>
 		<input type=""text"" name=""flags"" value="""" />
-		<input type=""submit"" name=""action"" value=""Flags"" />
-	</nobr>
-	<nobr>
+		<input type=""submit"" name=""action"" value=""Add custom flags"" />
+		<br/>
 		<input type=""submit"" name=""action"" value=""Pass"" />
 		<input type=""submit"" name=""action"" value=""Fake"" />
 		<input type=""submit"" name=""action"" value=""Clean"" />
 		<input type=""submit"" name=""action"" value=""Remove"" />
 		<input type=""submit"" name=""action"" value=""Block"" />
-	</nobr>
+	</td>
+	</tr>
 </form>", Filters.WebUI.FilterUrl (this), returnHtml, fromHost, toHost);
 		}
 
@@ -181,9 +182,10 @@ namespace HitProxy.Triggers
 					<li><strong>Fake</strong> Change referer to the root of the target host</li>
 					<li><strong>Clean</strong> Change referer to the root of the source host</li>
 					<li><strong>Remove</strong> Remove the referer header</li>
+					<li><strong>Slow</strong> Do not modify the request but slow down the transfer speed</li>
 					<li><strong>Block</strong> Block the entire request</li>
 				</ul>
-				<p>From/To: Wildcard(*) allowed in start only, applies to subdomains only</p>
+				<p>From/To: Wildcard(*) allowed in start of domains, applies to subdomains only</p>
 				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
 			</div>");
 			
@@ -216,12 +218,11 @@ namespace HitProxy.Triggers
 				}
 			}
 			
-			if (httpGet ["action"] != null || httpGet ["flags"] != null && httpGet ["flags"] != "") {
+			if (httpGet ["action"] != null || httpGet ["flags"] != null) {
 				RefererPair p = new RefererPair (httpGet ["from"], httpGet ["to"]);
 				
-				if (httpGet ["action"] == "Flags")
-					p.Flags.Set (httpGet ["flags"]);
-				else
+				p.Flags.Set (httpGet ["flags"]);
+				if (httpGet ["action"].Contains(" ") == false)
 					p.Flags.Set (httpGet ["action"]);
 				
 				try {
@@ -239,6 +240,7 @@ namespace HitProxy.Triggers
 			}
 			
 			html += Html.Format (@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>");
+			html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
 			html += Form ("", "");
 			try {
 				listLock.EnterReadLock ();
@@ -246,11 +248,15 @@ namespace HitProxy.Triggers
 				foreach (RefererPair pair in blocked) {
 					html += Form (pair);
 				}
+				html += Html.Format("</table>");
 				
 				html += Html.Format ("<h1>Watchlist</h1>");
+				
+				html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th><th>Delete</th></tr>");
 				foreach (RefererPair pair in watchlist) {
-					html += Html.Format ("<p>{0} <a href=\"?delete={1}\">delete</a></p>", pair, pair.GetHashCode ());
+					html += Html.Format ("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td><a href=\"?delete={3}\">delete</a></td></tr>", pair.FromHost, pair.ToHost, pair.Flags, pair.GetHashCode ());
 				}
+				html += Html.Format("</table>");
 			} finally {
 				listLock.ExitReadLock ();
 			}

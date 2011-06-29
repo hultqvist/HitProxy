@@ -20,13 +20,13 @@ namespace HitProxy.Filters
 	{
 		public static readonly string ConfigHost = "hit.silentorbit.com";
 		public static WebUI webUI;
-		Proxy proxy;
-		ConnectionManager connectionManager;
+		readonly Proxy proxy;
+		readonly ConnectionManager connectionManager;
 
-		public WebUI (Proxy proxy)
+		public WebUI (Proxy proxy, ConnectionManager connectionManager)
 		{
 			this.proxy = proxy;
-			this.connectionManager = proxy.ConnectionManager;
+			this.connectionManager = connectionManager;
 			
 			if (webUI != null)
 				throw new InvalidOperationException ("There can only be one WebUI");

@@ -51,8 +51,8 @@ namespace HitProxy
 			this.address = address;
 			this.port = port;
 			this.Browser = new BrowserProxy (this);
-			this.WebUI = new Filters.WebUI (this);
 			this.connectionManager = new ConnectionManager (this);
+			this.WebUI = new Filters.WebUI (this, this.connectionManager);
 			
 			//Read Settings
 			if (File.Exists (SettingsPath)) {

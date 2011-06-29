@@ -37,7 +37,9 @@ namespace HitProxy.Filters
 		public override bool Apply (Request request)
 		{
 			bool direct = request.Uri.IsLoopback && request.Uri.Port == proxy.Port;
-			bool webUI = request.Uri.Host == ConfigHost;
+			//New default address and Legacy address
+			bool webUI = (request.Uri.Host == ConfigHost || request.Uri.Host == "hit.endnode.se");
+			
 			if ((request.Uri.IsAbsoluteUri == true) && (webUI == false) && (direct == false))
 				return false;
 			

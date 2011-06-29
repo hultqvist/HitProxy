@@ -17,7 +17,6 @@ namespace HitProxy.Http
 		public string Name {
 			get { return this.GetType ().Name; }
 		}
-		public bool Active { get; set; }
 
 		/// <summary>
 		/// Can be used to filter both requests and responses

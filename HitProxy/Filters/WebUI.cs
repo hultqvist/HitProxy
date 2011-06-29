@@ -20,7 +20,6 @@ namespace HitProxy.Filters
 	{
 		public static readonly string ConfigHost = "hit.silentorbit.com";
 		public static WebUI webUI;
-
 		Proxy proxy;
 		ConnectionManager connectionManager;
 
@@ -49,7 +48,7 @@ namespace HitProxy.Filters
 			
 			NameValueCollection httpGet = HttpUtility.ParseQueryString (request.Uri.Query);
 			
-			switch (path[1]) {
+			switch (path [1]) {
 			case "Session":
 				request.Response = SessionPage (path, httpGet);
 				break;
@@ -122,9 +121,9 @@ namespace HitProxy.Filters
 			}
 			
 			if (proxy.Browser.CanSetProxy) {
-				if (httpGet["active"] == "true")
+				if (httpGet ["active"] == "true")
 					proxy.Browser.Enabled = true;
-				if (httpGet["active"] == "false")
+				if (httpGet ["active"] == "false")
 					proxy.Browser.Enabled = false;
 				
 				data += Html.Format ("<h1>Browser Proxy Status</h1>");
@@ -143,10 +142,10 @@ namespace HitProxy.Filters
 			Response response = new Response (HttpStatusCode.OK);
 			
 			int closeID;
-			int.TryParse (httpGet["close"], out closeID);
+			int.TryParse (httpGet ["close"], out closeID);
 			
 			int showID;
-			int.TryParse (httpGet["show"], out showID);
+			int.TryParse (httpGet ["show"], out showID);
 			
 			ProxySession[] sessionList = proxy.ToArray ();
 			
@@ -219,6 +218,7 @@ namespace HitProxy.Filters
 			
 			return "<div>" + data + "</div>";
 		}
+
 		private Html HeaderData (Header header)
 		{
 			Html data = new Html ();
@@ -253,7 +253,8 @@ namespace HitProxy.Filters
 						if (resp.DataSocket.Received > 0)
 							data += " Recv: " + (resp.DataSocket.Received / 1000) + " Kbytes";
 						if (resp.HasBody)
-							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes"; else if (resp.Chunked)
+							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes";
+						else if (resp.Chunked)
 							data += " Total: chunked";
 						else
 							data += " Total: unknown";
@@ -317,17 +318,9 @@ namespace HitProxy.Filters
 		{
 			Response response = request.Response;
 			Html data = new Html ();
-			string page = path[1].ToLowerInvariant ();
+			string page = path [1].ToLowerInvariant ();
 			
 			if (page == "filters" || path.Length < 3) {
-				//Add and remove commands
-				try {
-					ActivateFilter (httpGet);
-				} catch (Exception e) {
-					data += Html.Format ("<p><strong>Error:</strong> ") + e.Message + Html.Format ("</p>");
-					Console.Error.WriteLine ("WebUI, Filter error: " + e.Message);
-				}
-				
 				data += Html.Format ("<h2>Request Triggers</h2>");
 				data += ListFilters (proxy.RequestTriggers);
 				data += Html.Format ("<h2>Request Filters</h2>");
@@ -344,13 +337,13 @@ namespace HitProxy.Filters
 			
 			Filter f = null;
 			if (page == "requesttrigger")
-				f = Find (proxy.RequestTriggers, path[2]);
+				f = Find (proxy.RequestTriggers, path [2]);
 			if (page == "requestfilter")
-				f = Find (proxy.RequestFilters, path[2]);
+				f = Find (proxy.RequestFilters, path [2]);
 			if (page == "responsetrigger")
-				f = Find (proxy.ResponseTriggers, path[2]);
+				f = Find (proxy.ResponseTriggers, path [2]);
 			if (page == "responsefilter")
-				f = Find (proxy.ResponseFilters, path[2]);
+				f = Find (proxy.ResponseFilters, path [2]);
 			
 			if (f == null) {
 				response.HttpCode = HttpStatusCode.Found;
@@ -363,28 +356,6 @@ namespace HitProxy.Filters
 		}
 
 		#region Filter Management
-
-		private void ActivateFilter (NameValueCollection keys)
-		{
-			string args = keys["active"];
-			if (args == null)
-				return;
-			
-			foreach (Filter f in proxy.RequestTriggers)
-				if (f.Name == args)
-					f.Active = !f.Active;
-			foreach (Filter f in proxy.RequestFilters)
-				if (f.Name == args)
-					f.Active = !f.Active;
-			foreach (Filter f in proxy.ResponseTriggers)
-				if (f.Name == args)
-					f.Active = !f.Active;
-			foreach (Filter f in proxy.ResponseFilters)
-				if (f.Name == args)
-					f.Active = !f.Active;
-			
-			proxy.WriteSettings ();
-		}
 
 		Filter Find (List<Filter> filters, string path)
 		{
@@ -417,30 +388,17 @@ namespace HitProxy.Filters
 		{
 			Html data = Html.Format ("<ul>");
 			foreach (Filter f in filters.ToArray ()) {
-				data += Html.Format ("<li><a href=\"{0}\">{1}</a>", FilterUrl (f), f.Name);
-				if (f.Active)
-					data += Html.Format (" active ");
-				else
-					data += Html.Format (" inactive ");
-				
-				data += Html.Format (" (<a href=\"{0}?active={1}\">change</a>)", FilterUrl (), f.Name);
-				data += Html.Format ("</li>");
+				data += Html.Format ("<li><a href=\"{0}\">{1}</a></li>", FilterUrl (f), f.Name);
 			}
 			data += Html.Format ("</ul>");
 			return data;
 		}
+
 		private Html ListFilters (List<Trigger> filters)
 		{
 			Html data = Html.Format ("<ul>");
 			foreach (Filter f in filters.ToArray ()) {
-				data += Html.Format ("<li><a href=\"{0}\">{1}</a>", FilterUrl (f), f.Name);
-				if (f.Active)
-					data += Html.Format (" active ");
-				else
-					data += Html.Format (" inactive ");
-				
-				data += Html.Format (" (<a href=\"{0}?active={1}\">change</a>)", FilterUrl (), f.Name);
-				data += Html.Format ("</li>");
+				data += Html.Format ("<li><a href=\"{0}\">{1}</a></li>", FilterUrl (f), f.Name);
 			}
 			data += Html.Format ("</ul>");
 			return data;

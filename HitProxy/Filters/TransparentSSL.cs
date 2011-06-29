@@ -21,7 +21,6 @@ namespace HitProxy.Filters
 		
 		public override bool Apply (Request request)
 		{
-			Active = false;
 			throw new NotImplementedException ();
 		}
 	}

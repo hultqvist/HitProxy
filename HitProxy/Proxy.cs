@@ -67,39 +67,8 @@ namespace HitProxy
 			get { return Path.Combine (Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.ApplicationData), "HitProxy"), "HitProxy.settings"); }
 		}
 
-		private List<Filter> allFilters = new List<Filter> ();
-
-		private void ApplyFilterSettings ()
-		{
-			foreach (Trigger rqt in RequestTriggers)
-				allFilters.Add (rqt);
-			foreach (Filter rsf in RequestFilters)
-				allFilters.Add (rsf);
-			foreach (Trigger rst in ResponseTriggers)
-				allFilters.Add (rst);
-			foreach (Filter rsf in ResponseFilters)
-				allFilters.Add (rsf);
-			
-			foreach (Filter f in allFilters)
-				f.Active = Settings.Active.Contains (f.Name);
-		}
-
-		public void WriteSettings ()
-		{
-			this.Settings.Active.Clear ();
-			foreach (Filter f in allFilters)
-				if (f.Active && Settings.Active.Contains (f.Name) == false)
-					Settings.Active.Add (f.Name);
-			
-			using (Stream s = new FileStream (SettingsPath, FileMode.Create)) {
-				Serializer.Serialize<Settings> (s, this.Settings);
-			}
-		}
-
 		public void Start ()
 		{
-			ApplyFilterSettings ();
-			
 			thread = new Thread (Run);
 			thread.Name = "Proxy Listener";
 			thread.Start ();

@@ -289,11 +289,9 @@ namespace HitProxy.Session
 				if (proxy.WebUI.Apply (request))
 					return;
 				foreach (Trigger t in proxy.RequestTriggers.ToArray ())
-					if (t.Active)
-						t.Apply (request);
+					t.Apply (request);
 				foreach (Filter f in proxy.RequestFilters.ToArray ())
-					if (f.Active)
-						f.Apply (request);
+					f.Apply (request);
 			} catch (Exception e) {
 				request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
 			}

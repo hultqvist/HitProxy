@@ -15,7 +15,7 @@ namespace HitProxy
 	{
 		private IPAddress address;
 		private int port;
-		
+
 		/// <summary>
 		/// True to enable IPv6 lookups and connections
 		/// </summary>
@@ -53,7 +53,7 @@ namespace HitProxy
 			this.Browser = new BrowserProxy (this);
 			this.WebUI = new Filters.WebUI (this);
 			this.connectionManager = new ConnectionManager (this);
-				
+			
 			//Read Settings
 			if (File.Exists (SettingsPath)) {
 				using (Stream s = new FileStream (SettingsPath, FileMode.Open)) {
@@ -68,7 +68,7 @@ namespace HitProxy
 		}
 
 		private List<Filter> allFilters = new List<Filter> ();
-		
+
 		private void ApplyFilterSettings ()
 		{
 			foreach (Trigger rqt in RequestTriggers)
@@ -155,14 +155,18 @@ namespace HitProxy
 						TcpClient c = listener.AcceptTcpClient ();
 						
 						//Limit proxy connections
-						if (proxyList.Count > 1000) {
-							Console.WriteLine ("Proxy limit reached, denying");
-							c.Close ();
-							continue;
+						lock (proxyList) {
+							if (proxyList.Count > 1000) {
+								Console.WriteLine ("Proxy limit reached, denying");
+								c.Close ();
+								continue;
+							}
 						}
 						
 						ProxySession ps = new ProxySession (c.Client, this, connectionManager);
-						proxyList.Add (ps);
+						lock (proxyList) {
+							proxyList.Add (ps);
+						}
 						ps.Start ();
 					}
 				} catch (SocketException e) {

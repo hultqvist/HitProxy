@@ -25,7 +25,6 @@ namespace HitProxy.Session
 		/// Current request being served
 		/// </summary>
 		public Request request;
-
 		string name;
 		public int served = 0;
 		public string Status = "Initialized";
@@ -43,6 +42,7 @@ namespace HitProxy.Session
 			name = "[Session " + (socket.RemoteEndPoint as IPEndPoint).Port + "]";
 			thread.Name = name;
 		}
+
 		public void Dispose ()
 		{
 			proxy.Remove (this);
@@ -59,7 +59,8 @@ namespace HitProxy.Session
 		{
 			active = false;
 			try {
-				request.Response.Dispose ();
+				if (request.Response != null)
+					request.Response.Dispose ();
 			} catch (NullReferenceException) {
 			}
 		}

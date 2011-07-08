@@ -8,12 +8,13 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Attributes set by triggers and used by filters.
 		/// </summary>
-		private readonly List<string> flags = new List<string> ();
-
+		private readonly List<string> flags;
+		
 		public Flags ()
 		{
+			this.flags = new List<string> ();
 		}
-
+		
 		public Flags (List<string> flagStorage)
 		{
 			this.flags = flagStorage;
@@ -21,6 +22,7 @@ namespace HitProxy.Http
 
 		public Flags (string flags)
 		{
+			this.flags = new List<string> ();
 			Set (flags);
 		}
 
@@ -90,11 +92,8 @@ namespace HitProxy.Http
 			}
 			return true;
 		}
-
-		/// <summary>
-		/// Return string to save and use in Flags constructor.
-		/// </summary>
-		public string Serialize ()
+		
+		public override string ToString ()
 		{
 			string text = null;
 			foreach (string f in flags) {
@@ -106,11 +105,6 @@ namespace HitProxy.Http
 			if (text == null)
 				return "";
 			return text;
-		}
-		
-		public override string ToString ()
-		{
-			return Serialize ();
 		}
 	}
 }

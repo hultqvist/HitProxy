@@ -74,7 +74,7 @@ namespace HitProxy.Triggers
 				listLock.EnterReadLock ();
 				using (TextWriter writer = new StreamWriter (new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write))) {
 					foreach (RegexFilter rf in filterList) {
-						writer.WriteLine (rf.Pattern + "\t" + rf.Flags.Serialize ());
+						writer.WriteLine (rf.Pattern + "\t" + rf.Flags.ToString ());
 					}
 				}
 			} finally {

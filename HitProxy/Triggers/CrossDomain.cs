@@ -210,7 +210,7 @@ namespace HitProxy.Triggers
 				RefererPair p = new RefererPair (httpGet ["from"], httpGet ["to"]);
 				
 				p.Flags.Set (httpGet ["flags"]);
-				if (httpGet ["action"].Contains(" ") == false)
+				if (httpGet ["action"].Contains (" ") == false)
 					p.Flags.Set (httpGet ["action"]);
 				
 				try {
@@ -228,7 +228,7 @@ namespace HitProxy.Triggers
 			}
 			
 			html += Html.Format (@"<h2>Blocked <a href=""?clear=yes"">clear</a></h2>");
-			html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
+			html += Html.Format ("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
 			html += Form ("", "");
 			try {
 				listLock.EnterReadLock ();
@@ -236,15 +236,15 @@ namespace HitProxy.Triggers
 				foreach (RefererPair pair in blocked) {
 					html += Form (pair);
 				}
-				html += Html.Format("</table>");
+				html += Html.Format ("</table>");
 				
 				html += Html.Format ("<h2>Watchlist</h2>");
 				
-				html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th><th>Delete</th></tr>");
+				html += Html.Format ("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th><th>Delete</th></tr>");
 				foreach (RefererPair pair in watchlist) {
 					html += Html.Format ("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td><a href=\"?delete={3}\">delete</a></td></tr>", pair.FromHost, pair.ToHost, pair.Flags, pair.GetHashCode ());
 				}
-				html += Html.Format("</table>");
+				html += Html.Format ("</table>");
 			} finally {
 				listLock.ExitReadLock ();
 			}
@@ -277,16 +277,16 @@ namespace HitProxy.Triggers
 		public string ToHost { get; set; }
 
 		[ProtoMember(3)]
-		public List<string> flags = new List<string> ();
+		public List<string> flags { get; set; }
 
 		/// <summary>
 		/// Flags set to matching requests
 		/// </summary>
-		public readonly Flags Flags;
+		public Flags Flags { get { return new Flags (flags); } }
 
 		public RefererPair ()
 		{
-			this.Flags = new Flags (flags);
+			this.flags = new List<string> ();
 		}
 
 		public RefererPair (string fromHost, string toHost) : this()

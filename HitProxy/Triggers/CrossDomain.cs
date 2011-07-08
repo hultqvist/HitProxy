@@ -175,19 +175,7 @@ namespace HitProxy.Triggers
 
 		public override Html Status (NameValueCollection httpGet, Request request)
 		{
-			Html html = Html.Format (@"
-			<div style=""float:right; max-width: 40%;"">
-				<ul>
-					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
-					<li><strong>Fake</strong> Change referer to the root of the target host</li>
-					<li><strong>Clean</strong> Change referer to the root of the source host</li>
-					<li><strong>Remove</strong> Remove the referer header</li>
-					<li><strong>Slow</strong> Do not modify the request but slow down the transfer speed</li>
-					<li><strong>Block</strong> Block the entire request</li>
-				</ul>
-				<p>From/To: Wildcard(*) allowed in start of domains, applies to subdomains only</p>
-				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
-			</div>");
+			Html html = new Html ();
 			
 			if (httpGet ["return"] != null) {
 				request.Response.ReplaceHeader ("Location", httpGet ["return"]);
@@ -239,7 +227,7 @@ namespace HitProxy.Triggers
 				SaveFilters ();
 			}
 			
-			html += Html.Format (@"<h1>Blocked <a href=""?clear=yes"">clear</a></h1>");
+			html += Html.Format (@"<h2>Blocked <a href=""?clear=yes"">clear</a></h2>");
 			html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
 			html += Form ("", "");
 			try {
@@ -250,7 +238,7 @@ namespace HitProxy.Triggers
 				}
 				html += Html.Format("</table>");
 				
-				html += Html.Format ("<h1>Watchlist</h1>");
+				html += Html.Format ("<h2>Watchlist</h2>");
 				
 				html += Html.Format("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th><th>Delete</th></tr>");
 				foreach (RefererPair pair in watchlist) {
@@ -260,6 +248,20 @@ namespace HitProxy.Triggers
 			} finally {
 				listLock.ExitReadLock ();
 			}
+			
+			html += Html.Format (@"
+			<div>
+				<ul>
+					<li><strong>Pass</strong> Allow request to pass through unmodified</li>
+					<li><strong>Fake</strong> Change referer to the root of the target host</li>
+					<li><strong>Clean</strong> Change referer to the root of the source host</li>
+					<li><strong>Remove</strong> Remove the referer header</li>
+					<li><strong>Slow</strong> Do not modify the request but slow down the transfer speed</li>
+					<li><strong>Block</strong> Block the entire request</li>
+				</ul>
+				<p>From/To: Wildcard(*) allowed in start of domains, applies to subdomains only</p>
+				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
+			</div>");
 			
 			return html;
 		}

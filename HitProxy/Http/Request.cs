@@ -12,7 +12,6 @@ namespace HitProxy.Http
 		public string Method;
 		public Uri Uri;
 		public string HttpVersion;
-
 		public string Accept;
 		public string AcceptCharset;
 		public string AcceptEncoding;
@@ -33,7 +32,6 @@ namespace HitProxy.Http
 		public string Referer;
 		public string TE;
 		public string UserAgent;
-
 		public bool KeepAlive = false;
 
 		/// <summary>
@@ -46,15 +44,15 @@ namespace HitProxy.Http
 		/// Start time of request
 		/// </summary>
 		public DateTime Start = DateTime.Now;
-
 		private Response response = null;
+
 		public Response Response {
 			get { return response; }
 			set {
 				if (response != null) {
-					if(response.DataSocket != null)
-						if (value == null || response.DataSocket.Equals(value.DataSocket) == false)
-							response.Dispose ();
+					if (response.DataSocket != null)
+					if (value == null || response.DataSocket.Equals (value.DataSocket) == false)
+						response.Dispose ();
 				}
 				response = value;
 			}
@@ -77,6 +75,7 @@ namespace HitProxy.Http
 			Method = "NULL";
 			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);
 		}
+
 		public override void Dispose ()
 		{
 			base.Dispose ();
@@ -92,13 +91,18 @@ namespace HitProxy.Http
 			if (parts.Length != 3)
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadRequest);
 			
-			Method = parts[0].ToUpperInvariant ();
-			HttpVersion = parts[2];
-			if (System.Uri.TryCreate (parts[1], UriKind.Absolute, out this.Uri))
-				return;
-			if (System.Uri.TryCreate (parts[1], UriKind.Relative, out this.Uri))
-				return;
-			Console.Error.WriteLine ("Invalid URL: " + parts[1]);
+			Method = parts [0].ToUpperInvariant ();
+			HttpVersion = parts [2];
+			if (parts [1] [0] == '/') {
+				if (System.Uri.TryCreate (parts [1], UriKind.Relative, out this.Uri))
+					return;
+			} else {
+				if (System.Uri.TryCreate (parts [1], UriKind.Absolute, out this.Uri))
+					return;
+				if (System.Uri.TryCreate ("http://" + parts [1], UriKind.Absolute, out this.Uri))
+					return;
+			}
+			Console.Error.WriteLine ("Invalid URL: " + parts [1]);
 			throw new InvalidDataException ("Invalid URL");
 		}
 

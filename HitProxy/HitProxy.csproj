@@ -107,6 +107,7 @@
     <Compile Include="..\Libraries\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
       <Link>Options.cs</Link>
     </Compile>
+    <Compile Include="Triggers\ShortDate.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -81,6 +81,7 @@ namespace HitProxy
 			
 			//Triggers
 			proxy.ResponseTriggers.Add (new Triggers.MediaTrigger ());
+			proxy.ResponseTriggers.Add (new Triggers.ShortDate ());
 			
 			//Filters
 			proxy.ResponseFilters.Add (new Filters.Cookies ());

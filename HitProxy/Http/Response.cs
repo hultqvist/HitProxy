@@ -13,7 +13,7 @@ namespace HitProxy.Http
 		//HTTP Headers
 		public string HttpVersion;
 		public HttpStatusCode HttpCode;
-		public string Message;
+		public string HTTPMessage;
 
 		public string AcceptRanges;
 		public string Age;
@@ -38,7 +38,7 @@ namespace HitProxy.Http
 		public bool HasBody { get; set; }
 
 		public override string FirstLine {
-			get { return HttpVersion + " " + ((int)HttpCode) + " " + Message; }
+			get { return HttpVersion + " " + ((int)HttpCode) + " " + HTTPMessage; }
 		}
 
 		/// <summary>
@@ -49,7 +49,7 @@ namespace HitProxy.Http
 		{
 			this.HttpVersion = "HTTP/1.1";
 			this.HttpCode = code;
-			this.Message = code.ToString ();
+			this.HTTPMessage = code.ToString ();
 			this.KeepAlive = true;
 			this.HasBody = true;
 		}
@@ -95,8 +95,8 @@ namespace HitProxy.Http
 		{
 			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
 			if (parts.Length == 3)
-				Message = parts[2]; else if (parts.Length == 2)
-				Message = "";
+				HTTPMessage = parts[2]; else if (parts.Length == 2)
+				HTTPMessage = "";
 			else
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadGateway);
 			

@@ -17,9 +17,9 @@ namespace HitProxy.Triggers
 			
 			Response r = request.Response;
 			string expireString = r.GetHeader ("Expires");
-			if (expireString == null)
+			if (expireString == null || expireString == "")
 				return false;
-			DateTime expire = DateTime.Parse (expireString, CultureInfo.InvariantCulture.DateTimeFormat);
+			DateTime expire = DateTime.Parse (expireString);
 			
 			if ((expire - DateTime.Now).TotalHours < 1) {
 				r.Flags.Set ("shortdate");

@@ -103,7 +103,7 @@ namespace HitProxy.Http
 					return;
 			}
 			Console.Error.WriteLine ("Invalid URL: " + parts [1]);
-			throw new InvalidDataException ("Invalid URL");
+			throw new HeaderException ("Invalid URL", HttpStatusCode.BadRequest);
 		}
 
 		public new void Parse (string header)

@@ -126,6 +126,11 @@ namespace HitProxy.Filters
 				totalSent += inLength;
 			}
 			
+			public void EndOfData (IDataOutput output)
+			{
+				output.EndOfData ();
+			}
+			
 			public void Dispose ()
 			{
 				

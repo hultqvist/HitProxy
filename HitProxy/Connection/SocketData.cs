@@ -93,7 +93,7 @@ namespace HitProxy.Connection
 				if (received != 1)
 					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);
 				
-				b = header[index];
+				b = header [index];
 				index += 1;
 				
 				if (index >= header.Length)
@@ -110,7 +110,7 @@ namespace HitProxy.Connection
 					continue;
 				
 				//Remove last empty line
-				if (header[index - 2] == 0xd)
+				if (header [index - 2] == 0xd)
 					index -= 2;
 				else
 					index -= 1;
@@ -138,8 +138,10 @@ namespace HitProxy.Connection
 			byte[] buffer = new byte[0x10000];
 			while (true) {
 				int read = socket.Receive (buffer);
-				if (read == 0)
+				if (read == 0) {
+					output.EndOfData ();
 					return total;
+				}
 				output.Send (buffer, 0, read);
 				Received += read;
 				total += read;
@@ -169,8 +171,10 @@ namespace HitProxy.Connection
 				
 				Received += read;
 				totalRead += read;
-				if (totalRead >= length)
+				if (totalRead >= length) {
+					output.EndOfData ();
 					return;
+				}
 			}
 		}
 

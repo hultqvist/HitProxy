@@ -92,15 +92,11 @@
     <Compile Include="Triggers\CrossDomain.cs" />
     <Compile Include="Http\Html.cs" />
     <Compile Include="Filters\Saver.cs" />
-    <Compile Include="Connection\IDataOutput.cs" />
     <Compile Include="Connection\FilteredData.cs" />
     <Compile Include="Triggers\MediaTrigger.cs" />
-    <Compile Include="Connection\IDataIO.cs" />
-    <Compile Include="Connection\IDataInput.cs" />
     <Compile Include="Connection\ChunkedOutput.cs" />
     <Compile Include="Connection\ChunkedInput.cs" />
     <Compile Include="Connection\HtmlData.cs" />
-    <Compile Include="Connection\IDataFilter.cs" />
     <Compile Include="Http\Flags.cs" />
     <Compile Include="Filters\NoAccept.cs" />
     <Compile Include="Settings.cs" />
@@ -108,6 +104,12 @@
       <Link>Options.cs</Link>
     </Compile>
     <Compile Include="Triggers\ShortDate.cs" />
+    <Compile Include="Connection\DataFilters\GzipFilter.cs" />
+    <Compile Include="Connection\DataFilters\IDataFilter.cs" />
+    <Compile Include="Connection\DataFilters\IDataInput.cs" />
+    <Compile Include="Connection\DataFilters\IDataIO.cs" />
+    <Compile Include="Connection\DataFilters\IDataOutput.cs" />
+    <Compile Include="Connection\DataFilters\PassFilter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

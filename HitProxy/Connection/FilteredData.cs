@@ -1,4 +1,5 @@
 using System;
+
 namespace HitProxy.Connection
 {
 	/// <summary>
@@ -44,8 +45,7 @@ namespace HitProxy.Connection
 
 		public void EndOfData ()
 		{
-			filter.Send (null, 0, 0, output);
-			output.EndOfData ();
+			filter.EndOfData (output);
 		}
 		
 		#endregion

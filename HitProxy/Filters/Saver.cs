@@ -19,7 +19,7 @@ namespace HitProxy.Filters
 		{
 			if (request.Response == null)
 				return false;
-			if ((request.Flags["save"] || request.Response.Flags["save"]) == false)
+			if ((request.Flags ["save"] || request.Response.Flags ["save"]) == false)
 				return false;
 			
 			//Intercept data connection
@@ -74,11 +74,18 @@ namespace HitProxy.Filters
 				try {
 					if (file != null)
 						file.Write (inBuffer, start, inLength);
+				} catch (Exception) {
 				}
-				catch (Exception) {}
 				output.Send (inBuffer, start, inLength);
 			}
-
+			
+			public void EndOfData (IDataOutput output)
+			{
+				file.Flush ();
+				file.Close ();
+				output.EndOfData ();
+			}
+			
 			public override string ToString ()
 			{
 				return path;

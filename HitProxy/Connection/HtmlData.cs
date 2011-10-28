@@ -1,62 +1,64 @@
 using System;
 using HitProxy.Http;
 using System.Text;
+using System.IO;
+
 namespace HitProxy.Connection
 {
-	public class HtmlData : IDataIO
+	public class HtmlData : Stream
 	{
-		byte[] buffer;
+		byte[] htmlBuffer;
 
 		public HtmlData (Html html)
 		{
-			buffer = Encoding.UTF8.GetBytes (html.HtmlString);
+			htmlBuffer = Encoding.UTF8.GetBytes (html.HtmlString);
 		}
-
-		public int Length {
-			get { return buffer.Length; }
-		}
-
-		#region IDataInput
 		
-		public int PipeTo (IDataOutput output)
+		public override void Close ()
 		{
-			if (buffer == null)
-				throw new InvalidOperationException ("Buffer already sent");
+			htmlBuffer = null;
+		}
+		
+		public override void Flush ()
+		{
+		}
+
+		public override int Read (byte[] buffer, int offset, int count)
+		{
+			long toread = count;
+			if (Position + toread > Length)
+				toread = Length - Position;
 			
-			int total = buffer.Length;
-			output.Send (buffer, 0, buffer.Length);
-			buffer = null;
-			return total;
+			for (int n = 0; n < toread; n++)
+				buffer [offset + n] = htmlBuffer [Position + n];
+			Position += toread;
+			return (int)toread;
 		}
 
-		public void PipeTo (IDataOutput output, long length)
+		public override long Seek (long offset, SeekOrigin origin)
 		{
-			if (buffer.Length != length)
-				throw new InvalidOperationException ("Must send entire buffer in one go");
-			
-			PipeTo (output);
+			throw new NotImplementedException ();
 		}
 
-		#endregion
-		
-		#region IDataOutput
-		
-		public void Send (byte[] buffer, int start, int length)
+		public override void SetLength (long value)
 		{
-			throw new InvalidOperationException ("Can only read from HtmlData");
+			throw new InvalidOperationException ("Read only");
 		}
 
-		public void EndOfData ()
+		public override void Write (byte[] buffer, int offset, int count)
 		{
-			throw new InvalidOperationException ();
+			throw new InvalidOperationException ("Read only");
 		}
-		
-		#endregion
-		
-		public void Dispose ()
-		{
-			//nothing to dispose
-		}
+
+		public override bool CanRead { get { return true; } }
+
+		public override bool CanSeek { get { return true; } }
+
+		public override bool CanWrite { get { return false; } }
+
+		public override long Length { get { return htmlBuffer.Length; } }
+
+		public override long Position { get; set; }
 	}
 }
 

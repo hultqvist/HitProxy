@@ -16,7 +16,8 @@ namespace HitProxy.Session
 		/// Flag to signal that the thread should stop
 		/// </summary>
 		private bool active = true;
-		public Socket clientSocket;
+		public Socket ClientSocket;
+		public NetworkStream ClientStream;
 		Thread thread;
 		ConnectionManager connectionManager;
 		Proxy proxy;
@@ -27,14 +28,27 @@ namespace HitProxy.Session
 		public Request request;
 		string name;
 		public int served = 0;
+#if xDEBUG
+		public string Status {
+			get{ return _status;}
+			set {
+				_status = value;
+				Console.WriteLine(this + ": " + value);
+				Console.Out.Flush();
+			}
+		}
+		string _status = "Initialized";
+#else
 		public string Status = "Initialized";
+#endif
 
 		/// <summary>
 		/// Start a new session thread for the incoming client.
 		/// </summary>
 		public ProxySession (Socket socket, Proxy proxy, ConnectionManager connectionManager)
 		{
-			this.clientSocket = socket;
+			this.ClientSocket = socket;
+			this.ClientStream = new NetworkStream (socket);
 			this.proxy = proxy;
 			this.connectionManager = connectionManager;
 			thread = new Thread (Run);
@@ -47,7 +61,8 @@ namespace HitProxy.Session
 		{
 			proxy.Remove (this);
 			request.NullSafeDispose ();
-			clientSocket.Close ();
+			ClientStream.Close ();
+			ClientSocket.Close ();
 		}
 
 		public void Start ()
@@ -83,13 +98,16 @@ namespace HitProxy.Session
 				return true;
 			}
 			
-			if (active == false && watchdogTimeout.Ticks == 0 && clientSocket.IsConnected () == false) {
+			if (active == false && watchdogTimeout.Ticks == 0 && ClientSocket.IsConnected () == false) {
 				Console.Error.WriteLine ("Watchdog: Countdown " + this);
 				watchdogTimeout = DateTime.Now.AddSeconds (10);
 			}
 			return false;
 		}
-
+		
+#if DEBUG
+		static int activeCount = 0;
+#endif
 		/// <summary>
 		/// Main loop for handling requests on a single proxy connection
 		/// </summary>
@@ -105,15 +123,25 @@ namespace HitProxy.Session
 					Status = "Waiting for new request";
 					
 					//Waiting for new request
-					if (GotNewRequest (clientSocket) == false)
+					if (GotNewRequest (ClientSocket) == false)
 						break;
+					
+#if DEBUG
+					activeCount += 1;
+					Console.WriteLine("Active: " + activeCount);
+#endif
 					
 					bool keepAlive = RunRequest ();
 					
+#if DEBUG
+					activeCount -= 1;
+					Console.WriteLine("Active: " + activeCount);
+#endif
+					
 					//Flush the TCP connection, temporarily disable Nagle's algorithm
 					if (keepAlive) {
-						clientSocket.NoDelay = true;
-						clientSocket.NoDelay = false;
+						ClientSocket.NoDelay = true;
+						ClientSocket.NoDelay = false;
 					}
 					
 					served += 1;
@@ -138,8 +166,8 @@ namespace HitProxy.Session
 		private bool RunRequest ()
 		{
 			try {
-				request = new Request (clientSocket);
-				string header = request.DataSocket.ReadHeader ();
+				request = new Request (ClientStream);
+				string header = request.ReadHeader ();
 				if (header.Length > 10000)
 					Console.Error.WriteLine ("Large header");
 				ParseRequest (header);
@@ -238,17 +266,20 @@ namespace HitProxy.Session
 			
 			//Check so there is no extra data sent from the remote server
 			try {
-				if (remoteConnection.remoteSocket.Available > 0 && clientSocket.IsConnected ()) {
+				if (remoteConnection.remoteSocket.Available > 0 && ClientSocket.IsConnected ()) {
 					byte[] buffer = new byte[remoteConnection.remoteSocket.Available];
 					remoteConnection.remoteSocket.Receive (buffer);
 					string data = System.Text.Encoding.ASCII.GetString (buffer);
-					Console.Error.WriteLine ("More data than meets the eye: " + data);
+					Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
 					return false;
 				}
 			} catch (ObjectDisposedException) {
 				return false;
 			}
 			
+#if DEBUG
+			return false;
+#endif
 			return request.KeepAlive;
 		}
 
@@ -259,22 +290,26 @@ namespace HitProxy.Session
 		{
 			try {
 				//Send back headers
-				request.Response.SendHeaders (request.DataSocket);
+				request.Response.SendHeaders (ClientStream);
 				
 				if (request.Response.HasBody == false)
 					return true;
 				
-				if (request.Response.DataFiltered == null)
+				if (request.Response.DataStream == null)
 					return false;
 				
 				//Pipe result back to client
 				if (request.Response.ContentLength > 0)
-					request.Response.DataFiltered.PipeTo (request.DataFiltered, request.Response.ContentLength);
+					request.Response.DataStream.PipeTo (request.DataStream, request.Response.ContentLength);
 				if (request.Response.ContentLength < 0)
-					request.Response.DataFiltered.PipeTo (request.DataFiltered);
-				
+					request.Response.DataStream.PipeTo (request.DataStream);
+				request.Response.DataStream.Close ();
+				request.DataStream.Close ();
 				return true;
 				
+			} catch (IOException ioe) {
+				Console.Error.WriteLine (ioe.GetType ().ToString () + ": " + ioe.Message);
+				return false;
 			} catch (SocketException se) {
 				Console.Error.WriteLine (se.GetType ().ToString () + ": " + se.Message);
 				return false;

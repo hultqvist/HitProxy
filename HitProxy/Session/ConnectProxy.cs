@@ -1,4 +1,3 @@
-
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -29,17 +28,18 @@ namespace HitProxy.Session
 			request.Response.HTTPMessage = HttpStatusCode.OK.ToString ();
 			request.Response.KeepAlive = false;
 			request.Response.Add ("Proxy-Agent: HitProxy");
-			request.Response.SendHeaders (request.DataSocket);
+			request.Response.SendHeaders (this.ClientStream);
 			
 			Thread t = new Thread (InputThread);
 			t.Name = Thread.CurrentThread.Name + "ConnectInput";
 			t.Start ();
 			Status = "Connected";
 			try {
-				request.DataFiltered.PipeTo (request.Response.DataFiltered);
+				request.DataStream.PipeTo (request.Response.DataStream);
 			} catch (Exception) {
 			} finally {
-				request.Response.DataSocket.CloseClientSocket ();
+				remote.Stream.NullSafeDispose ();
+				ClientStream.NullSafeDispose ();
 			}
 			Status = "Connection closed";
 			
@@ -50,10 +50,9 @@ namespace HitProxy.Session
 		private void InputThread ()
 		{
 			try {
-				request.Response.DataFiltered.PipeTo (request.DataFiltered);
+				request.Response.DataStream.PipeTo (request.DataStream);
 			} catch (Exception) {
 			} finally {
-				request.DataSocket.CloseClientSocket ();
 			}
 		}
 	}

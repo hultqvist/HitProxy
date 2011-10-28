@@ -1,62 +1,85 @@
 using System;
 using System.Text;
+using System.IO;
+
 namespace HitProxy.Connection
 {
-	public class ChunkedOutput : IDataIO
+	public class ChunkedOutput : Stream
 	{
-		bool endOfData = false;
+		readonly Stream output;
 		
-		readonly IDataOutput output;
-		public ChunkedOutput (IDataOutput output)
+		public ChunkedOutput (Stream output)
 		{
 			this.output = output;
 		}
 
-		#region IDataOutput
-
-		public void Send (byte[] buffer, int start, int length)
+		public override void Flush ()
 		{
-			if ((length == 0) && (endOfData == false))
+			output.Flush ();
+		}
+
+		public override int Read (byte[] buffer, int offset, int count)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override long Seek (long offset, SeekOrigin origin)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override void SetLength (long value)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override void Write (byte[] buffer, int offset, int count)
+		{
+			if (count == 0)
 				return;
 			
-			if (endOfData == false)
-			{
-				string header = length.ToString ("X") + "\r\n";
-				byte[] cHeader = Encoding.ASCII.GetBytes (header);
-				output.Send (cHeader, 0, cHeader.Length);
+			string header = count.ToString ("X") + "\r\n";
+			byte[] cHeader = Encoding.ASCII.GetBytes (header);
+			output.Write (cHeader, 0, cHeader.Length);
+			
+			output.Write (buffer, offset, count);
+			
+			output.Write (new byte[] { 0xd, 0xa }, 0, 2);
+		}
+
+		public override bool CanRead { get { return false; } }
+
+		public override bool CanSeek { get { return false; } }
+
+		public override bool CanWrite { get { return true; } }
+
+		public override long Length {
+			get {
+				throw new NotImplementedException ();
 			}
-			output.Send (buffer, start, length);
-			
-			output.Send (new byte[] { 0xd, 0xa }, 0, 2);
 		}
 
-		public void EndOfData ()
-		{
-			byte[] cHeader = Encoding.ASCII.GetBytes ("0\r\n");
-			output.Send (cHeader, 0, cHeader.Length);
-			
-			endOfData = true;
-			return;
-		}
-		#endregion
-
-		#region IDataInput
-
-		public void Dispose ()
-		{
+		public override long Position {
+			get {
+				throw new NotImplementedException ();
+			}
+			set {
+				throw new InvalidOperationException ();
+			}
 		}
 
-		public int PipeTo (IDataOutput output)
-		{
-			throw new InvalidOperationException ();
-		}
-
-		public void PipeTo (IDataOutput output, long length)
-		{
-			throw new InvalidOperationException ();
-		}
+		bool closed = false;
 		
-		#endregion
+		public override void Close ()
+		{
+			if (closed)
+				return;
+			closed = true;
+			
+			byte[] cHeader = Encoding.ASCII.GetBytes ("0\r\n\r\n");
+			output.Write (cHeader, 0, cHeader.Length);
+			output.Close ();	
+		}
 	}
 }
 

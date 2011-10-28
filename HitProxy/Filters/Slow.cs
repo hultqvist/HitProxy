@@ -88,53 +88,94 @@ namespace HitProxy.Filters
 			Thread.Sleep (delay);
 			
 			//Intercept data connection
-			request.Response.FilterData (new SlowOutput (this));
+			request.Response.DataStream = new SlowReader (request.Response.DataStream, this);
 			
 			return true;
 		}
 
-		class SlowOutput : IDataFilter
+		class SlowReader : Stream
 		{
-			readonly Slow settings;
+			public override void Close ()
+			{
+				backend.Close ();
+			}
+			
+			public override void Flush ()
+			{
+				backend.Flush ();
+			}
 
-			public SlowOutput (Slow slow)
+			public override long Seek (long offset, SeekOrigin origin)
+			{
+				return backend.Seek (offset, origin);
+			}
+
+			public override void SetLength (long value)
+			{
+				backend.SetLength (value);
+			}
+
+			public override void Write (byte[] buffer, int offset, int count)
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override bool CanRead { get { return backend.CanRead; } }
+
+			public override bool CanSeek {
+				get { return backend.CanSeek; }
+			}
+
+			public override bool CanWrite {
+				get { return backend.CanWrite; }
+			}
+
+			public override long Length {
+				get { return backend.Length; }
+			}
+
+			public override long Position {
+				get { return backend.Position; }
+				set { backend.Position = value; }
+			}
+
+			readonly Slow settings;
+			readonly Stream backend;
+
+			public SlowReader (Stream input, Slow slow)
 			{
 				this.settings = slow;
+				this.backend = input;
 			}
 			
 			DateTime starttime;
 			int totalSent = 0;
 
-			public void Send (byte[] inBuffer, int start, int inLength, IDataOutput output)
+			public override int Read (byte[] buffer, int offset, int count)
 			{
-				if (totalSent == 0) {
+				if (totalSent == 0)
 					starttime = DateTime.Now;
-				}
 				
-				int sent = 0;
-				while (sent < inLength) {
-					int tosend = (int)(DateTime.Now - starttime).TotalSeconds * settings.speedLimit - sent - totalSent;
-					if (start + sent + tosend > inLength)
-						tosend = inLength - start - sent;
+				if (count == 0)
+					return 0;
+				
+				int tosend = 0;
+				while (true) {
+					tosend = (int)(DateTime.Now - starttime).TotalSeconds * settings.speedLimit - totalSent;
+					if (tosend > count)
+						tosend = count;
 					if (tosend == 0) {
 						Thread.Sleep (10);
 						continue;
 					}
-					output.Send (inBuffer, start + sent, tosend);
-					sent += tosend;
+					break;
 				}
-				totalSent += inLength;
+				int read = backend.Read (buffer, offset, tosend);
+				totalSent += read;
+				return read;
 			}
+
 			
-			public void EndOfData (IDataOutput output)
-			{
-				output.EndOfData ();
-			}
-			
-			public void Dispose ()
-			{
-				
-			}
 		}
 	}
 }

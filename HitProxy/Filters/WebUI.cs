@@ -207,10 +207,10 @@ namespace HitProxy.Filters
 			if (req != null) {
 				data += "<p>Request: <a href=\"" + req.Uri + "\">" + req.Uri.Scheme + "://" + req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port) + "/</a></p>";
 				data += "<p>" + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s ago</p>";
-				if (req.DataSocket.Received > 0)
-					data += "Sent " + (req.DataSocket.Received / 1000) + " Kbytes";
-				if (req.Response != null && req.Response.DataSocket != null && req.Response.DataSocket.Received > 0)
-					data += " Recv " + (req.Response.DataSocket.Received / 1000) + " Kbytes";
+				if (req.DataStream.Position > 0)
+					data += "Sent " + (req.DataStream.Position / 1000) + " Kbytes";
+				if (req.Response != null && req.Response.DataStream != null && req.Response.DataStream.Position > 0)
+					data += " Recv " + (req.Response.DataStream.Position / 1000) + " Kbytes";
 				
 				data += HeaderData (req);
 			} else
@@ -245,13 +245,13 @@ namespace HitProxy.Filters
 					
 					data += Html.Format (@"<p>Request: {0} <a href=""{1}"">{2}://{3}</a>", req.Method, req.Uri, req.Uri.Scheme, req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port));
 					data += " " + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s";
-					if (req.DataSocket.Received > 0)
-						data += "Sent: " + (req.DataSocket.Received / 1000) + " Kbytes";
+					if (req.DataStream.Position > 0)
+						data += "Sent: " + (req.DataStream.Position / 1000) + " Kbytes";
 					data += Html.Format ("</p>");
-					if (resp != null && resp.DataSocket != null) {
+					if (resp != null && resp.DataStream != null) {
 						data += Html.Format ("<p>Response: ") + ((int)resp.HttpCode) + " " + resp.HttpCode;
-						if (resp.DataSocket.Received > 0)
-							data += " Recv: " + (resp.DataSocket.Received / 1000) + " Kbytes";
+						if (resp.DataStream.Position > 0)
+							data += " Recv: " + (resp.DataStream.Position / 1000) + " Kbytes";
 						if (resp.HasBody)
 							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes"; else if (resp.Chunked)
 							data += " Total: chunked";

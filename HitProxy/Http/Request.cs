@@ -50,8 +50,8 @@ namespace HitProxy.Http
 			get { return response; }
 			set {
 				if (response != null) {
-					if (response.DataSocket != null)
-					if (value == null || response.DataSocket.Equals (value.DataSocket) == false)
+					if (response.DataStream != null)
+					if (value == null || response.DataStream != value.DataStream)
 						response.Dispose ();
 				}
 				response = value;
@@ -70,7 +70,7 @@ namespace HitProxy.Http
 			}
 		}
 
-		public Request (Socket socket) : base(new SocketData (socket))
+		public Request (NetworkStream stream) : base(stream)
 		{
 			Method = "NULL";
 			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);
@@ -204,24 +204,6 @@ namespace HitProxy.Http
 			case "user-agent":
 				UserAgent = value;
 				break;
-			}
-		}
-
-		/// <summary>
-		/// Send Headers and POST data.
-		/// </summary>
-		public override void SendHeaders (IDataOutput output)
-		{
-			base.SendHeaders (output);
-			
-			//Send POST data, if available
-			if (Method == "POST") {
-				if (ContentLength > 0) {
-					DataFiltered.PipeTo (output, ContentLength);
-				} else {
-					//Ignore, assume content-length of 0 is ok.
-					//throw new HeaderException ("Missing Content-Length in POST request", HttpStatusCode.BadRequest);
-				}
 			}
 		}
 

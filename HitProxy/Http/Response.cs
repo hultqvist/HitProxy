@@ -14,14 +14,12 @@ namespace HitProxy.Http
 		public string HttpVersion;
 		public HttpStatusCode HttpCode;
 		public string HTTPMessage;
-
 		public string AcceptRanges;
 		public string Age;
 		public long ContentLength = -1;
 		public string ETag;
 		public string Location;
 		public string ProxyAuthenticate;
-
 		public string RetryAfter;
 		public string Server;
 		public string Vary;
@@ -40,7 +38,12 @@ namespace HitProxy.Http
 		public override string FirstLine {
 			get { return HttpVersion + " " + ((int)HttpCode) + " " + HTTPMessage; }
 		}
-
+		
+		public override string ToString ()
+		{
+			return string.Format ("[Response: {0}]", FirstLine);
+		}
+		
 		/// <summary>
 		/// Used for local generated data such as
 		/// error, block and configuration pages.
@@ -57,7 +60,7 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Default constructor for incoming responses.
 		/// </summary>
-		public Response (CachedConnection connection) : base(new SocketData (connection))
+		public Response (CachedConnection connection) : base(connection.Stream)
 		{
 		}
 
@@ -95,14 +98,15 @@ namespace HitProxy.Http
 		{
 			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
 			if (parts.Length == 3)
-				HTTPMessage = parts[2]; else if (parts.Length == 2)
+				HTTPMessage = parts [2];
+			else if (parts.Length == 2)
 				HTTPMessage = "";
 			else
 				throw new HeaderException ("Invalid header: " + firstLine, HttpStatusCode.BadGateway);
 			
-			HttpVersion = parts[0];
+			HttpVersion = parts [0];
 			try {
-				HttpCode = (HttpStatusCode)int.Parse (parts[1]);
+				HttpCode = (HttpStatusCode)int.Parse (parts [1]);
 			} catch (FormatException e) {
 				throw new HeaderException ("StatusCode format " + e.Message + "\n" + firstLine, HttpStatusCode.BadRequest);
 			}
@@ -132,7 +136,8 @@ namespace HitProxy.Http
 					break;
 				case "connection":
 					if (s.ToLowerInvariant () == "close")
-						KeepAlive = false; else if (s.ToLowerInvariant ().Contains ("keep-alive"))
+						KeepAlive = false;
+					else if (s.ToLowerInvariant ().Contains ("keep-alive"))
 						KeepAlive = true;
 					else
 						Console.WriteLine ("ResponseHeader: unknown Connection: " + s);
@@ -185,11 +190,10 @@ namespace HitProxy.Http
 		/// </param>
 		public void SetData (Html data)
 		{
-			if (DataSocket != null)
-				throw new InvalidOperationException ("Data is not null, therefore cannot be set to any html");
+			DataStream.NullSafeDispose ();
 			
 			HtmlData htmlData = new HtmlData (data);
-			DataProtocol = htmlData;
+			DataStream = htmlData;
 			
 			ReplaceHeader ("Content-Length", htmlData.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");

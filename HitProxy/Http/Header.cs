@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using HitProxy.Connection;
+using System.Text;
 
 namespace HitProxy.Http
 {
@@ -18,48 +19,22 @@ namespace HitProxy.Http
 		/// </summary>
 		public abstract string FirstLine { get; }
 
-		/// <summary>
-		/// The raw, outermost Data
-		/// </summary>
-		public readonly SocketData DataSocket;
-
-		public readonly Flags Flags = new Flags();
+		public readonly Flags Flags = new Flags ();
 		
-		/// <summary>
-		/// Temporary protocol filters, e.g. chunked http encoding
-		/// </summary>
-		public IDataIO DataProtocol {
-			get {
-				if (dataProtocol == null)
-					return DataSocket;
-				return dataProtocol;
-			}
-			set { dataProtocol = value; }
-		}
-		private IDataIO dataProtocol = null;
-
 		/// <summary>
 		/// Chain of filters applied
 		/// </summary>
-		public IDataIO DataFiltered {
-			get {
-				if (dataFiltered == null)
-					return DataProtocol;
-				return dataFiltered;
-			}
-		}
-		private IDataIO dataFiltered = null;
-
-		protected Header (SocketData dataRaw)
+		public Stream DataStream { get; set; }
+		
+		protected Header (NetworkStream datastream)
 		{
-			this.DataSocket = dataRaw;
+			if(datastream != null)
+				this.DataStream = new DataStream (datastream);
 		}
 
 		public virtual void Dispose ()
 		{
-			DataSocket.NullSafeDispose ();
-			DataProtocol.NullSafeDispose ();
-			DataFiltered.NullSafeDispose ();
+			DataStream.NullSafeDispose ();
 		}
 
 		protected abstract void ParseFirstLine (string firstLine);
@@ -88,21 +63,55 @@ namespace HitProxy.Http
 			}
 		}
 
-		#region Data Filter
-
 		/// <summary>
-		/// Set filter to be used on data.
+		/// Return the http headers read from the socket in a single string.
+		/// This data can be sent directly to Header.Parse(string).
 		/// </summary>
-		public void FilterData (IDataFilter filter)
+		/// <returns>
+		/// Complete http headers.
+		/// </returns>
+		public string ReadHeader ()
 		{
-			dataFiltered = new FilteredData (filter, DataFiltered);
+			byte[] header = new byte[16 * 1024];
+			int index = 0;
+			int nlcount = 0;
+			byte b;
+			
+			while (true) {
+				int received = DataStream.Read (header, index, 1);
+				;
+				if (received != 1)
+					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);
+				
+				b = header [index];
+				index += 1;
+				
+				if (index >= header.Length)
+					throw new HeaderException ("Header too large, limit is at " + header.Length, HttpStatusCode.RequestEntityTooLarge);
+				
+				if (b != 0xa) {
+					if (b != 0xd)
+						nlcount = 0;
+					continue;
+				}
+				//Test for end of header
+				nlcount += 1;
+				if (nlcount < 2 && !(nlcount == 1 && index <= 2))
+					continue;
+				
+				//Remove last empty line
+				if (header [index - 2] == 0xd)
+					index -= 2;
+				else
+					index -= 1;
+				
+				return Encoding.ASCII.GetString (header, 0, index);
+			}
 		}
-
-		#endregion
 
 		#region Header operations
 
-		public virtual void SendHeaders (IDataOutput output)
+		public virtual void SendHeaders (Stream output)
 		{
 			//Headers
 			string header = FirstLine + "\r\n";
@@ -110,7 +119,7 @@ namespace HitProxy.Http
 				header += line + "\r\n";
 			header += "\r\n";
 			byte[] buffer = System.Text.Encoding.ASCII.GetBytes (header);
-			output.Send (buffer, 0, buffer.Length);
+			output.Write (buffer, 0, buffer.Length);
 		}
 
 		/// <summary>
@@ -121,7 +130,8 @@ namespace HitProxy.Http
 		/// </param>
 		public void RemoveHeader (string header)
 		{
-			this.RemoveAll (line => { return line.ToLowerInvariant ().StartsWith (header.ToLowerInvariant () + ":"); });
+			this.RemoveAll (line => {
+				return line.ToLowerInvariant ().StartsWith (header.ToLowerInvariant () + ":"); });
 		}
 
 		/// <summary>
@@ -132,7 +142,7 @@ namespace HitProxy.Http
 			string needle = key.ToLowerInvariant () + ":";
 			int index;
 			for (index = 0; index < this.Count; index++) {
-				if (this[index].ToLowerInvariant ().StartsWith (needle)) {
+				if (this [index].ToLowerInvariant ().StartsWith (needle)) {
 					this.RemoveAt (index);
 					this.Insert (index, key + ": " + value);
 					return;
@@ -152,20 +162,20 @@ namespace HitProxy.Http
 			
 			foreach (string header in this) {
 				if (header.ToLowerInvariant ().StartsWith (key))
-					return header.Split (new char[] { ':' }, 2)[1].Trim ();
+					return header.Split (new char[] { ':' }, 2) [1].Trim ();
 			}
 			return null;
 		}
 
 		public List<string> GetHeaderList (string key)
 		{
-			List<string> headers = new List<string> ();
+			List<string > headers = new List<string> ();
 			
 			key = key.ToLowerInvariant () + ":";
 			
 			foreach (string header in this) {
 				if (header.ToLowerInvariant ().StartsWith (key)) {
-					headers.Add (header.Split (new char[] { ':' }, 2)[1].Trim ());
+					headers.Add (header.Split (new char[] { ':' }, 2) [1].Trim ());
 				}
 			}
 			

@@ -82,7 +82,6 @@
     <Compile Include="Connection\ConnectionManager.cs" />
     <Compile Include="Connection\SocketExtensions.cs" />
     <Compile Include="LockExtensions.cs" />
-    <Compile Include="Connection\SocketData.cs" />
     <Compile Include="Session\SocksProxy.cs" />
     <Compile Include="Http\HeaderException.cs" />
     <Compile Include="Http\Filter.cs" />
@@ -92,7 +91,6 @@
     <Compile Include="Triggers\CrossDomain.cs" />
     <Compile Include="Http\Html.cs" />
     <Compile Include="Filters\Saver.cs" />
-    <Compile Include="Connection\FilteredData.cs" />
     <Compile Include="Triggers\MediaTrigger.cs" />
     <Compile Include="Connection\ChunkedOutput.cs" />
     <Compile Include="Connection\ChunkedInput.cs" />
@@ -104,12 +102,8 @@
       <Link>Options.cs</Link>
     </Compile>
     <Compile Include="Triggers\ShortDate.cs" />
-    <Compile Include="Connection\DataFilters\GzipFilter.cs" />
-    <Compile Include="Connection\DataFilters\IDataFilter.cs" />
-    <Compile Include="Connection\DataFilters\IDataInput.cs" />
-    <Compile Include="Connection\DataFilters\IDataIO.cs" />
-    <Compile Include="Connection\DataFilters\IDataOutput.cs" />
-    <Compile Include="Connection\DataFilters\PassFilter.cs" />
+    <Compile Include="Connection\StreamExtensions.cs" />
+    <Compile Include="Http\DataStream.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

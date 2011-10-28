@@ -13,7 +13,7 @@ namespace HitProxy.Filters
 	/// </summary>
 	public class Saver : Filter
 	{
-		List<FileOutput> savings = new List<FileOutput> ();
+		List<FileSaver> savings = new List<FileSaver> ();
 
 		public override bool Apply (Request request)
 		{
@@ -23,11 +23,11 @@ namespace HitProxy.Filters
 				return false;
 			
 			//Intercept data connection
-			FileOutput save = new FileOutput (request, this);
+			FileSaver save = new FileSaver (request, this, request.Response.DataStream);
 			lock (savings) {
 				savings.Add (save);
 			}
-			request.Response.FilterData (save);
+			request.Response.DataStream = save;
 			
 			return true;
 		}
@@ -36,7 +36,7 @@ namespace HitProxy.Filters
 		{
 			Html html = Html.Format (@"<p>Saves request data with flag <strong>save</strong> onto disk.</p><ul>");
 			lock (savings) {
-				foreach (FileOutput fo in savings) {
+				foreach (FileSaver fo in savings) {
 					html += Html.Format (@"<li>{0}</li>", fo);
 				}
 			}
@@ -44,14 +44,17 @@ namespace HitProxy.Filters
 			return html + Html.Format ("</ul>");
 		}
 
-
-		class FileOutput : IDataFilter
+		/// <summary>
+		/// Save the data read into a separate file
+		/// </summary>
+		class FileSaver : Stream
 		{
 			FileStream file;
 			string path;
 			Saver saver;
-
-			public FileOutput (Request request, Saver saver)
+			Stream input;
+			
+			public FileSaver (Request request, Saver saver, Stream input)
 			{
 				try {
 					path = Path.Combine (Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments), "Downloads");
@@ -61,6 +64,7 @@ namespace HitProxy.Filters
 					path += request.Uri.Host + " " + new Random ().Next (100) + " " + Path.GetFileName (request.Uri.AbsolutePath);
 					
 					file = new FileStream (path, FileMode.Create);
+					this.input = input;
 				} catch (Exception) {
 					file.NullSafeDispose ();
 					file = null;
@@ -69,29 +73,54 @@ namespace HitProxy.Filters
 				this.saver = saver;
 			}
 
-			public void Send (byte[] inBuffer, int start, int inLength, IDataOutput output)
+			#region implemented abstract members of System.IO.Stream
+			public override void Flush ()
 			{
-				try {
-					if (file != null)
-						file.Write (inBuffer, start, inLength);
-				} catch (Exception) {
-				}
-				output.Send (inBuffer, start, inLength);
-			}
-			
-			public void EndOfData (IDataOutput output)
-			{
-				file.Flush ();
-				file.Close ();
-				output.EndOfData ();
-			}
-			
-			public override string ToString ()
-			{
-				return path;
+				throw new NotImplementedException ();
 			}
 
-			public void Dispose ()
+			public override int Read (byte[] buffer, int offset, int count)
+			{
+				int read = input.Read (buffer, offset, count);
+				try {
+					if (file != null)
+						file.Write (buffer, offset, read);
+				} catch (Exception) {
+				}
+				return read;
+			}
+
+			public override long Seek (long offset, SeekOrigin origin)
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override void SetLength (long value)
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override void Write (byte[] buffer, int offset, int count)
+			{
+				throw new NotImplementedException ();
+			}
+
+			public override bool CanRead { get { return true; } }
+
+			public override bool CanSeek { get { return false; } }
+
+			public override bool CanWrite { get { return false; } }
+
+			public override long Length { get { return input.Length; } }
+
+			public override long Position {
+				get { return input.Position; }
+				set { throw new NotImplementedException (); }
+			}
+
+			#endregion			
+			
+			protected override void Dispose (bool disposing)
 			{
 				file.NullSafeDispose ();
 				lock (saver.savings) {

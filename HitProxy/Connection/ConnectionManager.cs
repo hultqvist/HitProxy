@@ -122,7 +122,7 @@ namespace HitProxy.Connection
 				if (hold == false)
 					return null;
 				
-				//Maximum number of connections to all servers were already reched.
+				//Maximum number of connections to all servers were already reached.
 				//Wait for new connections
 				releasedConnection.WaitOne (TimeSpan.FromSeconds (5));
 			}

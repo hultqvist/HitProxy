@@ -2,22 +2,24 @@ using System;
 using HitProxy.Http;
 using System.Net;
 using System.Text;
+using System.IO;
+
 namespace HitProxy.Connection
 {
-	public class ChunkedInput : IDataIO
+	public class ChunkedInput : Stream
 	{
-		readonly SocketData input;
+		readonly Stream input;
 
-		public ChunkedInput (SocketData input)
+		public ChunkedInput (Stream input)
 		{
 			this.input = input;
 		}
 
 		/// <summary>
 		/// Read headers in a chunked encoding
-		/// Return a string with the chunk header
+		/// Return the number of bytes following in the next chunk
 		/// </summary>
-		string ReadChunkedHeader ()
+		int ReadChunkedHeader ()
 		{
 			byte[] header = new byte[30];
 			int index = 0;
@@ -26,78 +28,110 @@ namespace HitProxy.Connection
 					throw new HeaderException ("Chunked header is too large", HttpStatusCode.BadGateway);
 				
 				//Read one byte
-				input.Receive (header, index, 1);
+				int read = input.Read (header, index, 1);
+				if (read == 0)
+					throw new EndOfStreamException ("While reading chunked header");
 				
 				//Skip leading space
 				if (index == 0) {
-					if (header[index] == 0x20)
+					if (header [index] == 0x20)
 						continue;
 				}
 				
 				index++;
 				
-				if (index > 2 && header[index - 1] == 0xa) {
-					return Encoding.ASCII.GetString (header, 0, index);
+				if (index > 2 && header [index - 1] == 0xa) {
+					string hex = Encoding.ASCII.GetString (header, 0, index);
+					int length = int.Parse (hex, System.Globalization.NumberStyles.HexNumber);
+					
+					if (length == 0) {
+						//Skip remaining 2 cr/nl
+						byte[] end = new byte[2];
+						if (input.Read (end, 0, 2) != 2) {
+							throw new InvalidDataException ();
+						}
+						if (end [0] != 13 || end [1] != 10)
+							throw new InvalidDataException ();
+					}
+						
+					return length;
 				}
 			}
 		}
 
-		#region IDataInput
-
-		public int PipeTo (IDataOutput output)
+		#region implemented abstract members of System.IO.Stream
+		public override void Flush ()
 		{
-			int total = 0;
-			while (true) {
-				string header = ReadChunkedHeader ();
-				int length = int.Parse (header, System.Globalization.NumberStyles.HexNumber);
+			throw new NotImplementedException ();
+		}
+
+		int chunkLeft = 0;
+		
+		public override int Read (byte[] buffer, int offset, int count)
+		{
+			if (chunkLeft == 0) {
+				chunkLeft = ReadChunkedHeader ();
+#if DEBUG
+				Console.WriteLine("Got chunked chunk: " + chunkLeft);
+#endif
+				if (chunkLeft == 0)
+					return 0;
+			}
 				
-				if (length == 0) {
-					//End of Stream
-					output.EndOfData ();
-					
-					//Footer
-					string footer = input.ReadHeader ();
-					byte[] footerBytes = Encoding.ASCII.GetBytes (footer + "\r\n");
-					output.Send (footerBytes, 0, footerBytes.Length);
-					
-					return total + header.Length + footerBytes.Length;
-				}
+			int toread = count;
+			if (toread > chunkLeft)
+				toread = chunkLeft;
 				
-				byte[] buffer = new byte[length];
-				input.Receive (buffer, 0, length);
-				output.Send (buffer, 0, length);
-				
-				total += length + header.Length;
+			int read = input.Read (buffer, offset, toread);
+			if (read == 0)
+				throw new EndOfStreamException ();
+			offset += read;
+			count -= read;
+			chunkLeft -= read;
+			return read;
+		}
+		
+		public override long Seek (long offset, SeekOrigin origin)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override void SetLength (long value)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override void Write (byte[] buffer, int offset, int count)
+		{
+			throw new InvalidOperationException ();
+		}
+
+		public override bool CanRead { get { return true; } }
+
+		public override bool CanSeek { get { return false; } }
+
+		public override bool CanWrite { get { return false; } }
+
+		public override long Length {
+			get {
+				throw new InvalidOperationException ();
 			}
 		}
 
-		public void PipeTo (IDataOutput output, long length)
-		{
-			int sent = PipeTo (output);
-			if (length != sent)
-				Console.Error.WriteLine ("Content-Length={0} DOES NOT EQUAL Chunked={1}", length, sent);
-		}
-
-		public void Dispose ()
-		{
-			input.Dispose ();
-		}
-
-		#endregion
-
-		#region IDataOutput
-
-		public void Send (byte[] buffer, int start, int length)
-		{
-			throw new InvalidOperationException ();
+		public override long Position {
+			get {
+				throw new NotImplementedException ();
+			}
+			set {
+				throw new InvalidOperationException ();
+			}
 		}
 		
-		public void EndOfData ()
+		public override void Close ()
 		{
-			throw new InvalidOperationException ();
+			input.Close ();
 		}
 		#endregion
-		
 	}
 }
 

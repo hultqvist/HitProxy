@@ -50,7 +50,18 @@ namespace HitProxy.Session
 			
 			Status = "Sending request to server";
 			try {
-				request.SendHeaders (request.Response.DataSocket);
+				request.SendHeaders (remoteConnection.Stream);
+				
+				//Send POST data, if available
+				if (request.Method == "POST") {
+					if (request.ContentLength > 0) {
+						ClientStream.PipeTo (remoteConnection.Stream, request.ContentLength);
+					} else {
+						//Ignore, assume content-length of 0 is ok.
+						//throw new HeaderException ("Missing Content-Length in POST request", HttpStatusCode.BadRequest);
+					}
+				}
+
 			} catch (IOException e) {
 				throw new HeaderException ("While sending request to remote: " + e.Message, HttpStatusCode.BadGateway, e);
 			}
@@ -59,14 +70,14 @@ namespace HitProxy.Session
 			while (true) {
 				Status = "Waiting for response";
 				
-				string respHeader = request.Response.DataSocket.ReadHeader ();
+				string respHeader = request.Response.ReadHeader ();
 				request.Response = new Response (remoteConnection);
 				request.Response.Parse (respHeader, request);
 				
 				//Apply chunked data
 				if (request.Response.Chunked) {
-					request.Response.DataProtocol = new ChunkedInput (request.Response.DataSocket);
-					request.DataProtocol = new ChunkedOutput (request.DataProtocol);
+					request.Response.DataStream = new ChunkedInput (request.Response.DataStream);
+					request.DataStream = new ChunkedOutput (request.DataStream);
 				}
 				
 				//Filter Response

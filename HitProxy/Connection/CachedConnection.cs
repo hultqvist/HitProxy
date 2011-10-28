@@ -1,11 +1,9 @@
-
 using System;
 using System.Net.Sockets;
 using System.IO;
 
 namespace HitProxy.Connection
 {
-
 	public class CachedConnection : IDisposable
 	{
 		/// <summary>
@@ -14,8 +12,10 @@ namespace HitProxy.Connection
 		public bool Busy {
 			get { return busy; }
 		}
+
 		private bool busy = true;
 		public Socket remoteSocket;
+		public NetworkStream Stream;
 		
 		/// <summary>
 		/// Statistics: Number of requests served using this connection
@@ -29,14 +29,17 @@ namespace HitProxy.Connection
 		{
 			this.server = server;
 		}
+
 		public void Connect ()
 		{
 			remoteSocket = new Socket (server.endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			remoteSocket.Connect (server.endpoint);
+			this.Stream = new NetworkStream (remoteSocket);
 		}
 
 		public void Dispose ()
 		{
+			Stream.NullSafeDispose ();
 			remoteSocket.Close ();
 			server.Remove (this);
 		}
@@ -65,7 +68,7 @@ namespace HitProxy.Connection
 				byte[] buffer = new byte[remoteSocket.Available];
 				remoteSocket.Receive (buffer);
 				string data = System.Text.Encoding.ASCII.GetString (buffer);
-				Console.Error.WriteLine ("More data than meets the eye: " + data);
+				Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
 				Dispose ();
 			}
 		}

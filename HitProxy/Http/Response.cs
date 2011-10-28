@@ -190,10 +190,10 @@ namespace HitProxy.Http
 		/// </param>
 		public void SetData (Html data)
 		{
-			DataStream.NullSafeDispose ();
+			Stream.NullSafeDispose ();
 			
 			HtmlData htmlData = new HtmlData (data);
-			DataStream = htmlData;
+			Stream = htmlData;
 			
 			ReplaceHeader ("Content-Length", htmlData.Length.ToString ());
 			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");

@@ -24,17 +24,22 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Chain of filters applied
 		/// </summary>
-		public Stream DataStream { get; set; }
+		public Stream Stream { get; set; }
 		
-		protected Header (NetworkStream datastream)
+		/// <summary>
+		/// Chain of filters applied
+		/// </summary>
+		public DataStream DataStream { get; private set; }
+		
+		protected Header (NetworkStream networkstream)
 		{
-			if(datastream != null)
-				this.DataStream = new DataStream (datastream);
+			this.DataStream = new DataStream (networkstream);
+			this.Stream = this.DataStream;
 		}
 
 		public virtual void Dispose ()
 		{
-			DataStream.NullSafeDispose ();
+			Stream.NullSafeDispose ();
 		}
 
 		protected abstract void ParseFirstLine (string firstLine);
@@ -78,7 +83,7 @@ namespace HitProxy.Http
 			byte b;
 			
 			while (true) {
-				int received = DataStream.Read (header, index, 1);
+				int received = Stream.Read (header, index, 1);
 				;
 				if (received != 1)
 					throw new HeaderException ("ReadHeader: did not get data", HttpStatusCode.BadGateway);

@@ -165,6 +165,7 @@ namespace HitProxy.Session
 		/// </summary>
 		private bool RunRequest ()
 		{
+			//Client side read request
 			try {
 				request = new Request (ClientStream);
 				string header = request.ReadHeader ();
@@ -179,33 +180,62 @@ namespace HitProxy.Session
 				return false;
 			}
 			
+			//Client side request filtering
 			Status = "Got request, filtering";
 			FilterRequest (request);
 			
 			//If there is no error generated response, make connection to remote server
 			CachedConnection remoteConnection = null;
-			if (request.Response == null) {
+			try {
+				if (request.Response == null) {
 				
-				try {
-					remoteConnection = ConnectRequest ();
-				} catch (TimeoutException e) {
-					request.Response = new Response (e, Html.Escape ("Connection Timeout"));
-				} catch (HeaderException e) {
-					request.Response = new Response (e, new Html ());
+					try {
+						remoteConnection = ConnectRequest ();
+					} catch (TimeoutException e) {
+						request.Response = new Response (e, Html.Escape ("Connection Timeout"));
+					} catch (HeaderException e) {
+						request.Response = new Response (e, new Html ());
+					}
+				
 				}
-				
-			}
 			
-			if (request.Response != null) {
-				//Fix response keep alive header
-				if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
-					request.Response.ReplaceHeader ("Connection", "Keep-Alive");
+				if (request.Response != null) {
+					//Fix response keep alive header
+					if (request.KeepAlive && request.HttpVersion == "HTTP/1.0")
+						request.Response.ReplaceHeader ("Connection", "Keep-Alive");
 				
-				Status = "Sending response";
-				SendResponse ();
-				return request.KeepAlive;
-			}
+					Status = "Sending response";
+					SendResponse ();
+					return request.KeepAlive;
+				}
 			
+				bool keepAlive = ProcessRequest (remoteConnection);
+				
+				//Check so there is no extra data sent from the remote server
+				try {
+					if (remoteConnection.remoteSocket.Available > 0 && ClientSocket.IsConnected ()) {
+						byte[] buffer = new byte[remoteConnection.remoteSocket.Available];
+						remoteConnection.remoteSocket.Receive (buffer);
+						string data = System.Text.Encoding.ASCII.GetString (buffer);
+						Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
+						remoteConnection.Dispose ();
+						return false;
+					}
+				} catch (ObjectDisposedException) {
+					return false;
+				} 
+			
+				return keepAlive;
+				
+			} finally {
+				if (remoteConnection != null) {
+					remoteConnection.Release ();
+				}
+			}
+		}
+		
+		bool ProcessRequest (CachedConnection remoteConnection)
+		{
 			try {
 				//Begin connection communication
 				
@@ -264,25 +294,9 @@ namespace HitProxy.Session
 			if (request.Response.KeepAlive == false)
 				return false;
 			
-			//Check so there is no extra data sent from the remote server
-			try {
-				if (remoteConnection.remoteSocket.Available > 0 && ClientSocket.IsConnected ()) {
-					byte[] buffer = new byte[remoteConnection.remoteSocket.Available];
-					remoteConnection.remoteSocket.Receive (buffer);
-					string data = System.Text.Encoding.ASCII.GetString (buffer);
-					Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
-					return false;
-				}
-			} catch (ObjectDisposedException) {
-				return false;
-			}
-			
-#if DEBUG
-			return false;
-#endif
 			return request.KeepAlive;
 		}
-
+		
 		/// <summary>
 		/// Send response, headers and data, back to client
 		/// </summary>
@@ -295,16 +309,16 @@ namespace HitProxy.Session
 				if (request.Response.HasBody == false)
 					return true;
 				
-				if (request.Response.DataStream == null)
+				if (request.Response.Stream == null)
 					return false;
 				
 				//Pipe result back to client
 				if (request.Response.ContentLength > 0)
-					request.Response.DataStream.PipeTo (request.DataStream, request.Response.ContentLength);
+					request.Response.Stream.PipeTo (request.Stream, request.Response.ContentLength);
 				if (request.Response.ContentLength < 0)
-					request.Response.DataStream.PipeTo (request.DataStream);
-				request.Response.DataStream.Close ();
-				request.DataStream.Close ();
+					request.Response.Stream.PipeTo (request.Stream);
+				request.Response.Stream.Close ();
+				request.Stream.Close ();
 				return true;
 				
 			} catch (IOException ioe) {

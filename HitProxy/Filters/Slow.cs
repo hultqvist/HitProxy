@@ -88,7 +88,7 @@ namespace HitProxy.Filters
 			Thread.Sleep (delay);
 			
 			//Intercept data connection
-			request.Response.DataStream = new SlowReader (request.Response.DataStream, this);
+			request.Response.Stream = new SlowReader (request.Response.Stream, this);
 			
 			return true;
 		}

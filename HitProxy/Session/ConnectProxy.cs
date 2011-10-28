@@ -35,7 +35,7 @@ namespace HitProxy.Session
 			t.Start ();
 			Status = "Connected";
 			try {
-				request.DataStream.PipeTo (request.Response.DataStream);
+				request.Stream.PipeTo (request.Response.Stream);
 			} catch (Exception) {
 			} finally {
 				remote.Stream.NullSafeDispose ();
@@ -50,7 +50,7 @@ namespace HitProxy.Session
 		private void InputThread ()
 		{
 			try {
-				request.Response.DataStream.PipeTo (request.DataStream);
+				request.Response.Stream.PipeTo (request.Stream);
 			} catch (Exception) {
 			} finally {
 			}

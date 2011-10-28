@@ -50,8 +50,8 @@ namespace HitProxy.Http
 			get { return response; }
 			set {
 				if (response != null) {
-					if (response.DataStream != null)
-					if (value == null || response.DataStream != value.DataStream)
+					if (response.Stream != null)
+					if (value == null || response.Stream != value.Stream)
 						response.Dispose ();
 				}
 				response = value;

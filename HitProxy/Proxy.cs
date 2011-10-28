@@ -152,18 +152,15 @@ namespace HitProxy
 							continue;
 						}
 						
+						TcpClient c = listener.AcceptTcpClient ();
+						
 						//Limit proxy connections
-						while (true) {
-							lock (proxyList) {
-								if (proxyList.Count > 8) {
-									Thread.Sleep(200);
-									continue;
-								}
-								break;
+						lock (proxyList) {
+							if (proxyList.Count > 1000) {
+								c.Close ();
+								continue;
 							}
 						}
-						
-						TcpClient c = listener.AcceptTcpClient ();
 						
 						ProxySession ps = new ProxySession (c.Client, this, connectionManager);
 						lock (proxyList) {

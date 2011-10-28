@@ -207,10 +207,10 @@ namespace HitProxy.Filters
 			if (req != null) {
 				data += "<p>Request: <a href=\"" + req.Uri + "\">" + req.Uri.Scheme + "://" + req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port) + "/</a></p>";
 				data += "<p>" + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s ago</p>";
-				if (req.DataStream.Position > 0)
-					data += "Sent " + (req.DataStream.Position / 1000) + " Kbytes";
-				if (req.Response != null && req.Response.DataStream != null && req.Response.DataStream.Position > 0)
-					data += " Recv " + (req.Response.DataStream.Position / 1000) + " Kbytes";
+				if (req.Stream.Position > 0)
+					data += "Sent " + (req.Stream.Position / 1000) + " Kbytes";
+				if (req.Response != null && req.Response.Stream != null && req.Response.Stream.Position > 0)
+					data += " Recv " + (req.Response.Stream.Position / 1000) + " Kbytes";
 				
 				data += HeaderData (req);
 			} else
@@ -244,14 +244,14 @@ namespace HitProxy.Filters
 					Response resp = req.Response;
 					
 					data += Html.Format (@"<p>Request: {0} <a href=""{1}"">{2}://{3}</a>", req.Method, req.Uri, req.Uri.Scheme, req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port));
-					data += " " + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s";
-					if (req.DataStream.Position > 0)
-						data += "Sent: " + (req.DataStream.Position / 1000) + " Kbytes";
+					data += " " + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s ";
+					if (req.DataStream.TotalWritten > 0)
+						data += "Sent: " + (req.DataStream.TotalWritten / 1000) + " Kbytes";
 					data += Html.Format ("</p>");
-					if (resp != null && resp.DataStream != null) {
+					if (resp != null && resp.Stream != null) {
 						data += Html.Format ("<p>Response: ") + ((int)resp.HttpCode) + " " + resp.HttpCode;
-						if (resp.DataStream.Position > 0)
-							data += " Recv: " + (resp.DataStream.Position / 1000) + " Kbytes";
+						if (resp.DataStream.TotalRead > 0)
+							data += " Recv: " + (resp.DataStream.TotalRead / 1000) + " Kbytes";
 						if (resp.HasBody)
 							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes"; else if (resp.Chunked)
 							data += " Total: chunked";

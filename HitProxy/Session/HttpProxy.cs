@@ -76,8 +76,8 @@ namespace HitProxy.Session
 				
 				//Apply chunked data
 				if (request.Response.Chunked) {
-					request.Response.DataStream = new ChunkedInput (request.Response.DataStream);
-					request.DataStream = new ChunkedOutput (request.DataStream);
+					request.Response.Stream = new ChunkedInput (request.Response.Stream);
+					request.Stream = new ChunkedOutput (request.Stream);
 				}
 				
 				//Filter Response

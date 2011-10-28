@@ -23,11 +23,11 @@ namespace HitProxy.Filters
 				return false;
 			
 			//Intercept data connection
-			FileSaver save = new FileSaver (request, this, request.Response.DataStream);
+			FileSaver save = new FileSaver (request, this, request.Response.Stream);
 			lock (savings) {
 				savings.Add (save);
 			}
-			request.Response.DataStream = save;
+			request.Response.Stream = save;
 			
 			return true;
 		}

@@ -105,9 +105,6 @@ namespace HitProxy.Session
 			return false;
 		}
 		
-#if DEBUG
-		static int activeCount = 0;
-#endif
 		/// <summary>
 		/// Main loop for handling requests on a single proxy connection
 		/// </summary>
@@ -126,17 +123,7 @@ namespace HitProxy.Session
 					if (GotNewRequest (ClientSocket) == false)
 						break;
 					
-#if DEBUG
-					activeCount += 1;
-					Console.WriteLine("Active: " + activeCount);
-#endif
-					
 					bool keepAlive = RunRequest ();
-					
-#if DEBUG
-					activeCount -= 1;
-					Console.WriteLine("Active: " + activeCount);
-#endif
 					
 					//Flush the TCP connection, temporarily disable Nagle's algorithm
 					if (keepAlive) {

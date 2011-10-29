@@ -188,7 +188,6 @@ namespace HitProxy.Session
 			CachedConnection remoteConnection = null;
 			try {
 				if (request.Response == null) {
-				
 					try {
 						remoteConnection = ConnectRequest ();
 					} catch (TimeoutException e) {
@@ -196,7 +195,6 @@ namespace HitProxy.Session
 					} catch (HeaderException e) {
 						request.Response = new Response (e, new Html ());
 					}
-				
 				}
 			
 				if (request.Response != null) {
@@ -209,23 +207,7 @@ namespace HitProxy.Session
 					return request.KeepAlive;
 				}
 			
-				bool keepAlive = ProcessRequest (remoteConnection);
-				
-				//Check so there is no extra data sent from the remote server
-				try {
-					if (remoteConnection.remoteSocket.Available > 0 && ClientSocket.IsConnected ()) {
-						byte[] buffer = new byte[remoteConnection.remoteSocket.Available];
-						remoteConnection.remoteSocket.Receive (buffer);
-						string data = System.Text.Encoding.ASCII.GetString (buffer);
-						Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
-						remoteConnection.Dispose ();
-						return false;
-					}
-				} catch (ObjectDisposedException) {
-					return false;
-				} 
-			
-				return keepAlive;
+				return ProcessRequest (remoteConnection);
 				
 			} finally {
 				if (remoteConnection != null) {

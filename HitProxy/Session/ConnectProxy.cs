@@ -38,7 +38,7 @@ namespace HitProxy.Session
 				request.Stream.PipeTo (request.Response.Stream);
 			} catch (Exception) {
 			} finally {
-				remote.Stream.NullSafeDispose ();
+				remote.Dispose();
 				ClientStream.NullSafeDispose ();
 			}
 			Status = "Connection closed";

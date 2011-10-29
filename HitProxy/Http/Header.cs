@@ -27,13 +27,14 @@ namespace HitProxy.Http
 		public Stream Stream { get; set; }
 		
 		/// <summary>
-		/// Chain of filters applied
+		/// Raw datastream
 		/// </summary>
-		public DataStream DataStream { get; private set; }
+		public readonly DataStream DataStream;
 		
-		protected Header (NetworkStream networkstream)
+		protected Header (Stream dataStream)
 		{
-			this.DataStream = new DataStream (networkstream);
+			//class DataStream prevent network stream to be closed when the request datastream is closed
+			this.DataStream = new DataStream (dataStream);
 			this.Stream = this.DataStream;
 		}
 

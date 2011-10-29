@@ -10,10 +10,12 @@ namespace HitProxy.Http
 	/// </summary>
 	public class DataStream : Stream
 	{
-		readonly NetworkStream backend;
+		readonly Stream backend;
 		
-		public DataStream (NetworkStream ns)
+		public DataStream (Stream ns)
 		{
+			if (ns == null)
+				throw new ArgumentNullException ();
 			backend = ns;
 		}
 

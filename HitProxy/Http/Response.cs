@@ -48,8 +48,12 @@ namespace HitProxy.Http
 		/// Used for local generated data such as
 		/// error, block and configuration pages.
 		/// </summary>
-		public Response (HttpStatusCode code) : base(null)
+		public Response (HttpStatusCode code, Html html) : base(new HtmlData(html))
 		{
+			ReplaceHeader ("Content-Length", Stream.Length.ToString ());
+			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
+			ContentLength = Stream.Length;
+		
 			this.HttpVersion = "HTTP/1.1";
 			this.HttpCode = code;
 			this.HTTPMessage = code.ToString ();
@@ -67,9 +71,9 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Generated response with message from the proxy
 		/// </summary>
-		public Response (HttpStatusCode code, string title, string message) : this(code)
+		public Response (HttpStatusCode code, string title, string message) 
+			: this(code, HtmlTemplate.Message( HttpStatusCode.OK, title, Html.Format ("<p>{0}</p>", message)))
 		{
-			Template (title, Html.Format ("<p>{0}</p>", message));
 		}
 
 		/// <summary>
@@ -82,7 +86,13 @@ namespace HitProxy.Http
 		/// <summary>
 		/// Generated response with message from the proxy
 		/// </summary>
-		public Response (Exception e, Html message) : this((e is TimeoutException) ? HttpStatusCode.GatewayTimeout : HttpStatusCode.BadGateway)
+		public Response (Exception e, Html message) 
+			: this((e is TimeoutException) ? HttpStatusCode.GatewayTimeout : HttpStatusCode.BadGateway, FormatException(e, message))
+		{
+			
+		}
+		
+		static Html FormatException (Exception e, Html message)
 		{
 			Exception ne = e;
 			while (ne != null) {
@@ -91,9 +101,9 @@ namespace HitProxy.Http
 				ne = ne.InnerException;
 			}
 			
-			Template (e.GetType ().Name, message);
+			return HtmlTemplate.Message (HttpStatusCode.InternalServerError, e.GetType ().Name, message);
 		}
-
+		
 		protected override void ParseFirstLine (string firstLine)
 		{
 			string[] parts = firstLine.Split (new char[] { ' ' }, 3);
@@ -180,41 +190,5 @@ namespace HitProxy.Http
 			else
 				HasBody = true;
 		}
-
-		/// <summary>
-		/// Generates a custom data for the response.
-		/// Content-Length and Content-Type headers are added automatically
-		/// </summary>
-		/// <param name="data">
-		/// the content data
-		/// </param>
-		public void SetData (Html data)
-		{
-			Stream.NullSafeDispose ();
-			
-			HtmlData htmlData = new HtmlData (data);
-			Stream = htmlData;
-			
-			ReplaceHeader ("Content-Length", htmlData.Length.ToString ());
-			ReplaceHeader ("Content-Type", "text/html; charset=UTF-8");
-			ContentLength = htmlData.Length;
-		}
-
-		public void Template (string title, Html htmlContents)
-		{
-			SetData (Html.Format (@"<!DOCTYPE html>
-<html>
-<head>
-	<meta http-equiv=""Content-Type"" content=""text/html; charset=UTF-8"" />
-	<link rel=""stylesheet"" type=""text/css"" href=""http://{0}/style.css"" />
-	<title>{2} - HitProxy</title>
-</head>
-<body class=""{1}"">
-	<h1>{2}</h1>
-	{3}
-</body>
-</html>", Filters.WebUI.ConfigHost, HttpCode, title, htmlContents));
-		}
-		
 	}
 }

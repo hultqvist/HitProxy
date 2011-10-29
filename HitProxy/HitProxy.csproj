@@ -104,6 +104,7 @@
     <Compile Include="Triggers\ShortDate.cs" />
     <Compile Include="Connection\StreamExtensions.cs" />
     <Compile Include="Http\DataStream.cs" />
+    <Compile Include="Http\HtmlTemplate.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

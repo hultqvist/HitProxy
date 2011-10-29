@@ -20,7 +20,6 @@ namespace HitProxy.Filters
 	{
 		public static readonly string ConfigHost = "hit.silentorbit.com";
 		public static WebUI webUI;
-
 		readonly Proxy proxy;
 		readonly ConnectionManager connectionManager;
 
@@ -49,7 +48,11 @@ namespace HitProxy.Filters
 			
 			NameValueCollection httpGet = HttpUtility.ParseQueryString (request.Uri.Query);
 			
-			switch (path[1]) {
+			switch (path [1]) {
+			case "": //About page
+				request.Response = ResponseTemplate ("About HitProxy",
+					Html.Format ("Go to the <a href=\"http://silentorbit.com/hitproxy/\">project  website</a>"));
+				break;
 			case "Session":
 				request.Response = SessionPage (path, httpGet);
 				break;
@@ -61,18 +64,17 @@ namespace HitProxy.Filters
 			case "RequestTrigger":
 			case "ResponseFilter":
 			case "ResponseTrigger":
-				request.Response = new Response (HttpStatusCode.OK);
+				request.Response = new Response (HttpStatusCode.OK, new Html ());
 				FiltersPage (path, httpGet, request);
 				break;
 			case "style.css":
-				request.Response = new Response (HttpStatusCode.OK);
 				Html data = new Html ();
 				string configPath = ConfigPath ("style.css");
 				if (File.Exists (configPath) == false)
 					configPath = Path.Combine (Path.GetDirectoryName (Assembly.GetExecutingAssembly ().Location), "style.css");
 				if (File.Exists (configPath))
 					data = Html.Format (File.ReadAllText (configPath));
-				request.Response.SetData (data);
+				request.Response = new Response (HttpStatusCode.OK, data);
 				request.Response.ReplaceHeader ("Content-Type", "text/css");
 				break;
 			case "favicon.ico":
@@ -85,7 +87,7 @@ namespace HitProxy.Filters
 			
 			if (httpGet.Count > 0) {
 				if (request.Response.GetHeader ("Location") == null) {
-					request.Response = new Response (HttpStatusCode.Found);
+					request.Response = new Response (HttpStatusCode.Found, new Html ());
 					string location = "http://" + request.Uri.Host;
 					if (request.Uri.IsDefaultPort == false)
 						location += ":" + request.Uri.Port;
@@ -97,7 +99,7 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		private void Template (Response response, string title, Html html)
+		private Response ResponseTemplate (string title, Html html)
 		{
 			Html menu = Html.Format (@"<ul class=""menu"">
 	<li><a href=""/"">About</a></li>
@@ -105,16 +107,15 @@ namespace HitProxy.Filters
 	<li><a href=""/Connection/"">Connection</a></li>
 	<li><a href=""/Filters/"">Filters</a></li>
 </ul>");
-			response.Template (title, menu + html);
+			Html page = HtmlTemplate.Message (HttpStatusCode.OK, title, menu + html);
+			return new Response (HttpStatusCode.OK, page);
 		}
 
 		private Response MainPage (Request request, NameValueCollection httpGet)
 		{
-			Response response = new Response (HttpStatusCode.OK);
-			
-			Html data = new Html ();
+			Html message = new Html ();
 			if (request.Uri.IsLoopback) {
-				data += Html.Format (@"
+				message += Html.Format (@"
 <p>Your proxy is running but you are currently accessing it directly via the localhost address.</p>
 <p>Try to visit it via <a href=""http://{0}"">proxy mode</a>.</p>
 <p>If it did not work you must first configure you proxy settings.</p>
@@ -122,31 +123,30 @@ namespace HitProxy.Filters
 			}
 			
 			if (proxy.Browser.CanSetProxy) {
-				if (httpGet["active"] == "true")
+				if (httpGet ["active"] == "true")
 					proxy.Browser.Enabled = true;
-				if (httpGet["active"] == "false")
+				if (httpGet ["active"] == "false")
 					proxy.Browser.Enabled = false;
 				
-				data += Html.Format ("<h1>Browser Proxy Status</h1>");
+				message += Html.Format ("<h1>Browser Proxy Status</h1>");
 				if (proxy.Browser.Enabled)
-					data += Html.Format (@"<p><strong>Enabled</strong> <a href=""?active=false"">Disable proxy settings</a></p>");
+					message += Html.Format (@"<p><strong>Enabled</strong> <a href=""?active=false"">Disable proxy settings</a></p>");
 				else
-					data += Html.Format (@"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>");
+					message += Html.Format (@"<p><strong>Disabled</strong> <a href=""?active=true"">Enable proxy settings</a></p>");
 			}
 			
-			Template (response, "HitProxy", data);
+			Response response = ResponseTemplate ("HitProxy", message);
+			
 			return response;
 		}
 
 		private Response SessionPage (string[] path, NameValueCollection httpGet)
 		{
-			Response response = new Response (HttpStatusCode.OK);
-			
 			int closeID;
-			int.TryParse (httpGet["close"], out closeID);
+			int.TryParse (httpGet ["close"], out closeID);
 			
 			int showID;
-			int.TryParse (httpGet["show"], out showID);
+			int.TryParse (httpGet ["show"], out showID);
 			
 			ProxySession[] sessionList = proxy.ToArray ();
 			
@@ -169,10 +169,8 @@ namespace HitProxy.Filters
 				data = SessionList (sessionList);
 			else
 				data = SessionStatus (showSession);
-			
-			Template (response, "Session", data);
-			
-			return response;
+
+			return ResponseTemplate ("Session", data);
 		}
 
 		private Html SessionStatus (HitProxy.Session.ProxySession session)
@@ -219,6 +217,7 @@ namespace HitProxy.Filters
 			
 			return "<div>" + data + "</div>";
 		}
+
 		private Html HeaderData (Header header)
 		{
 			Html data = new Html ();
@@ -253,7 +252,8 @@ namespace HitProxy.Filters
 						if (resp.DataStream.TotalRead > 0)
 							data += " Recv: " + (resp.DataStream.TotalRead / 1000) + " Kbytes";
 						if (resp.HasBody)
-							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes"; else if (resp.Chunked)
+							data += " Total: " + (resp.ContentLength / 1000) + " Kbytes";
+						else if (resp.Chunked)
 							data += " Total: chunked";
 						else
 							data += " Total: unknown";
@@ -269,15 +269,12 @@ namespace HitProxy.Filters
 
 		private Response ConnectionPage (string[] path, NameValueCollection httpGet)
 		{
-			Response response = new Response (HttpStatusCode.OK);
-			
 			Html data = Html.Format ("<h2>Remote connections</h2>");
 			foreach (CachedServer s in connectionManager.ServerArray) {
 				data += PrintCachedServer (s);
 			}
 			
-			Template (response, "Connections", data);
-			return response;
+			return ResponseTemplate ("Connections", data);
 		}
 
 		Html PrintCachedServer (CachedServer server)
@@ -315,9 +312,8 @@ namespace HitProxy.Filters
 
 		private void FiltersPage (string[] path, NameValueCollection httpGet, Request request)
 		{
-			Response response = request.Response;
 			Html data = new Html ();
-			string page = path[1].ToLowerInvariant ();
+			string page = path [1].ToLowerInvariant ();
 			
 			if (page == "filters" || path.Length < 3) {
 				//Add and remove commands
@@ -338,27 +334,29 @@ namespace HitProxy.Filters
 				data += Html.Format ("<h2>Response Filters</h2>");
 				data += ListFilters (proxy.ResponseFilters);
 				
-				Template (response, "Filters", data);
+				request.Response = ResponseTemplate ("Filters", data);
 				return;
 			}
 			
 			Filter f = null;
 			if (page == "requesttrigger")
-				f = Find (proxy.RequestTriggers, path[2]);
+				f = Find (proxy.RequestTriggers, path [2]);
 			if (page == "requestfilter")
-				f = Find (proxy.RequestFilters, path[2]);
+				f = Find (proxy.RequestFilters, path [2]);
 			if (page == "responsetrigger")
-				f = Find (proxy.ResponseTriggers, path[2]);
+				f = Find (proxy.ResponseTriggers, path [2]);
 			if (page == "responsefilter")
-				f = Find (proxy.ResponseFilters, path[2]);
+				f = Find (proxy.ResponseFilters, path [2]);
 			
 			if (f == null) {
-				response.HttpCode = HttpStatusCode.Found;
-				Template (response, "Filter not found", Html.Format (@"<p><a href=""{0}"">back</a></p>", FilterUrl ()));
-				response.ReplaceHeader ("Location", FilterUrl ());
+				Html message = Html.Format (@"<p><a href=""{0}"">back</a></p>", FilterUrl ());
+				request.Response = ResponseTemplate ("Filter not found", message);
+				request.Response.ReplaceHeader ("Location", FilterUrl ());
 				return;
 			}
-			Template (response, f.ToString (), f.Status (httpGet, request));
+			
+			request.Response = ResponseTemplate (f.ToString (), f.Status (httpGet, request));
+				
 			return;
 		}
 
@@ -366,7 +364,7 @@ namespace HitProxy.Filters
 
 		private void ActivateFilter (NameValueCollection keys)
 		{
-			string args = keys["active"];
+			string args = keys ["active"];
 			if (args == null)
 				return;
 			
@@ -429,6 +427,7 @@ namespace HitProxy.Filters
 			data += Html.Format ("</ul>");
 			return data;
 		}
+
 		private Html ListFilters (List<Trigger> filters)
 		{
 			Html data = Html.Format ("<ul>");

@@ -18,13 +18,12 @@ namespace HitProxy.Http
 		{
 		}
 
-		public BlockedResponse (string title, Html htmlMessage) : base(HttpStatusCode.Gone)
+		public BlockedResponse (string title, Html htmlMessage) 
+			: base(HttpStatusCode.Gone, HtmlTemplate.Message(HttpStatusCode.Gone, title, htmlMessage))
 		{
 			//Console.WriteLine ("Blocked: " + message);
 			KeepAlive = true;
 		
-			Template (title, htmlMessage);
-			
 			ReplaceHeader ("Cache-Control", "no-cache, must-revalidate");
 			ReplaceHeader ("Pragma", "no-cache");
 			HttpCode = HttpStatusCode.ServiceUnavailable;

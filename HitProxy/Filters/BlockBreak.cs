@@ -1,5 +1,6 @@
 using System;
 using HitProxy.Http;
+using System.Net;
 
 namespace HitProxy.Filters
 {
@@ -10,14 +11,11 @@ namespace HitProxy.Filters
 	{
 		public override bool Apply (Request request)
 		{
-			if (request.Flags["break"] == false)
+			if (request.Flags ["break"] == false)
 				return false;
 			
-			Response resp = new Response (System.Net.HttpStatusCode.ServiceUnavailable);
-			request.Response = resp;
-			
-			resp.Template ("Take a break", Html.Format(@"<p>It's now time for a break.</p>"));
-			
+			Html page = HtmlTemplate.Message (HttpStatusCode.ServiceUnavailable, "Take a break", Html.Format (@"<p>It's now time for a break.</p>"));
+			request.Response = new Response (HttpStatusCode.ServiceUnavailable, page);
 			return true;
 		}
 		

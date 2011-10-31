@@ -71,9 +71,6 @@ namespace HitProxy.Connection
 		{
 			if (chunkLeft == 0) {
 				chunkLeft = ReadChunkedHeader ();
-#if DEBUG
-				Console.WriteLine("Got chunked chunk: " + chunkLeft);
-#endif
 				if (chunkLeft == 0)
 					return 0;
 			}

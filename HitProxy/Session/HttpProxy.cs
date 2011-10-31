@@ -71,7 +71,6 @@ namespace HitProxy.Session
 				Status = "Waiting for response";
 				
 				string respHeader = request.Response.ReadHeader ();
-				request.Response = new Response (remoteConnection);
 				request.Response.Parse (respHeader, request);
 				
 				//Apply chunked data

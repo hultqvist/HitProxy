@@ -10,7 +10,7 @@ using HitProxy.Filters;
 
 namespace HitProxy.Session
 {
-	public partial class ProxySession : IDisposable
+	public partial class ProxySession
 	{
 		/// <summary>
 		/// Flag to signal that the thread should stop
@@ -48,21 +48,13 @@ namespace HitProxy.Session
 		public ProxySession (Socket socket, Proxy proxy, ConnectionManager connectionManager)
 		{
 			this.ClientSocket = socket;
-			this.ClientStream = new NetworkStream (socket);
+			this.ClientStream = new NetworkStream (socket, true);
 			this.proxy = proxy;
 			this.connectionManager = connectionManager;
 			thread = new Thread (Run);
 			
 			name = "[Session " + (socket.RemoteEndPoint as IPEndPoint).Port + "]";
 			thread.Name = name;
-		}
-
-		public void Dispose ()
-		{
-			proxy.Remove (this);
-			request.NullSafeDispose ();
-			ClientStream.Close ();
-			ClientSocket.Close ();
 		}
 
 		public void Start ()
@@ -73,36 +65,7 @@ namespace HitProxy.Session
 		public void Stop ()
 		{
 			active = false;
-			try {
-				if (request.Response != null)
-					request.Response.Dispose ();
-			} catch (NullReferenceException) {
-			}
-		}
-
-		private DateTime watchdogTimeout = new DateTime (0);
-		/// <summary>
-		/// Check if Thread is ok, force it to close otherwise
-		/// </summary>
-		/// <returns>
-		/// True if session is to be removed.
-		/// </returns>
-		public bool WatchDog ()
-		{
-			if (active == false && thread.IsAlive == false)
-				return true;
-			
-			if (watchdogTimeout.Ticks > 0 && watchdogTimeout < DateTime.Now) {
-				Console.Error.WriteLine ("Watchdog: Stopping " + this);
-				Stop ();
-				return true;
-			}
-			
-			if (active == false && watchdogTimeout.Ticks == 0 && ClientSocket.IsConnected () == false) {
-				Console.Error.WriteLine ("Watchdog: Countdown " + this);
-				watchdogTimeout = DateTime.Now.AddSeconds (10);
-			}
-			return false;
+			ClientStream.Close ();
 		}
 		
 		/// <summary>
@@ -140,9 +103,10 @@ namespace HitProxy.Session
 					request = null;
 				}
 			} finally {
-				request.NullSafeDispose ();
-				Dispose ();
 				active = false;
+				proxy.Remove (this);
+				request.NullSafeDispose ();
+				ClientStream.Close ();
 			}
 		}
 

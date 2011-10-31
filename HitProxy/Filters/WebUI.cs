@@ -148,7 +148,7 @@ namespace HitProxy.Filters
 			int showID;
 			int.TryParse (httpGet ["show"], out showID);
 			
-			ProxySession[] sessionList = proxy.ToArray ();
+			ProxySession[] sessionList = proxy.SessionArray ();
 			
 			ProxySession showSession = null;
 			foreach (ProxySession session in sessionList) {
@@ -160,6 +160,7 @@ namespace HitProxy.Filters
 			
 			foreach (ProxySession session in sessionList) {
 				if (closeID == session.GetHashCode ()) {
+					session.Status = "Stopping...";
 					session.Stop ();
 				}
 			}
@@ -205,10 +206,10 @@ namespace HitProxy.Filters
 			if (req != null) {
 				data += "<p>Request: <a href=\"" + req.Uri + "\">" + req.Uri.Scheme + "://" + req.Uri.Host + (req.Uri.IsDefaultPort ? "" : ":" + req.Uri.Port) + "/</a></p>";
 				data += "<p>" + ((int)(DateTime.Now - req.Start).TotalSeconds) + " s ago</p>";
-				if (req.Stream.Position > 0)
-					data += "Sent " + (req.Stream.Position / 1000) + " Kbytes";
-				if (req.Response != null && req.Response.Stream != null && req.Response.Stream.Position > 0)
-					data += " Recv " + (req.Response.Stream.Position / 1000) + " Kbytes";
+				if (req.DataStream.TotalRead > 0)
+					data += "Sent " + (req.DataStream.TotalRead / 1000) + " Kbytes";
+				if (req.Response != null && req.Response.DataStream != null && req.Response.DataStream.TotalWritten > 0)
+					data += " Recv " + (req.Response.DataStream.TotalWritten / 1000) + " Kbytes";
 				
 				data += HeaderData (req);
 			} else

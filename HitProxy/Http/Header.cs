@@ -31,11 +31,17 @@ namespace HitProxy.Http
 		/// </summary>
 		public readonly DataStream DataStream;
 		
-		protected Header (Stream dataStream)
+		/// <summary>
+		/// The original incoming stream, usually a NetworkStream.
+		/// </summary>
+		private readonly Stream originalStream;
+		
+		protected Header (Stream s)
 		{
 			//class DataStream prevent network stream to be closed when the request datastream is closed
-			this.DataStream = new DataStream (dataStream);
+			this.DataStream = new DataStream (s);
 			this.Stream = this.DataStream;
+			this.originalStream = s;
 		}
 
 		public virtual void Dispose ()

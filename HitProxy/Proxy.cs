@@ -28,7 +28,6 @@ namespace HitProxy
 		public Settings Settings { get; private set; }
 
 		public readonly Filters.WebUI WebUI;
-		Thread thread;
 		public readonly BrowserProxy Browser;
 
 		/// <summary>
@@ -95,35 +94,11 @@ namespace HitProxy
 				Serializer.Serialize<Settings> (s, this.Settings);
 			}
 		}
-
-		public void Start ()
-		{
-			ApplyFilterSettings ();
-			
-			thread = new Thread (Run);
-			thread.Name = "Proxy Listener";
-			thread.Start ();
-		}
-
-		public void Wait ()
-		{
-			thread.Join ();
-		}
-
-		public void Stop ()
-		{
-			thread.Interrupt ();
-			if (thread.Join (500) == false) {
-				Console.Error.WriteLine ("Bye bye " + this);
-				thread.Abort ();
-			}
-			
-			foreach (ProxySession ps in ToArray ()) {
-				ps.Stop ();
-			}
-		}
-
-		public void Run ()
+		
+		/// <summary>
+		/// Listen for incoming connections.
+		/// </summary>
+		public void Listen ()
 		{
 			TcpListener listener = new TcpListener (new IPEndPoint (address, Port));
 			
@@ -138,13 +113,6 @@ namespace HitProxy
 						
 						//Cached connection cleaning
 						connectionManager.Cleanup ();
-						
-						//Watchdog
-						foreach (ProxySession session in ToArray ()) {
-							if (session.WatchDog ()) {
-								Remove (session);
-							}
-						}
 						
 						if (listener.Server.Poll (5000000, SelectMode.SelectRead) == false) {
 							GC.Collect ();
@@ -182,6 +150,10 @@ namespace HitProxy
 					Thread.Sleep (500);
 				} finally {
 					listener.Stop ();
+					
+					foreach (ProxySession ps in SessionArray ()) {
+						ps.Stop ();
+					}
 				}
 			}
 		}
@@ -193,7 +165,7 @@ namespace HitProxy
 			}
 		}
 
-		public ProxySession[] ToArray ()
+		public ProxySession[] SessionArray ()
 		{
 			lock (proxyList) {
 				return proxyList.ToArray ();

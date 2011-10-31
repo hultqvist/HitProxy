@@ -92,7 +92,6 @@ namespace HitProxy
 			
 			#endregion
 			
-			proxy.Start ();
 			if (startBrowser) {
 				try {
 					System.Threading.Thread.Sleep (3000);
@@ -101,8 +100,8 @@ namespace HitProxy
 					Console.Error.WriteLine ("Failed to launch browser: " + e.Message);
 				}
 			}
-			proxy.Wait ();
-			proxy.Stop ();
+			
+			proxy.Listen ();
 		}
 	}
 }

@@ -14,7 +14,7 @@ namespace HitProxy.Connection
 		/// <summary>
 		/// Maximum number of simultaneous connections
 		/// </summary>
-		int max = 8;
+		int max = 4;
 		private List<CachedConnection> connections = new List<CachedConnection> ();
 		public ConnectionManager manager;
 

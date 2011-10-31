@@ -30,30 +30,31 @@ namespace HitProxy.Session
 			request.Response.Add ("Proxy-Agent: HitProxy");
 			request.Response.SendHeaders (this.ClientStream);
 			
-			Thread t = new Thread (InputThread);
-			t.Name = Thread.CurrentThread.Name + "ConnectInput";
+			Thread t = new Thread (() => {
+				try {
+					request.Stream.PipeTo (request.Response.Stream);
+				} catch (Exception) {
+					remote.Dispose ();
+				} finally {
+				}
+			});
+			t.Name = Thread.CurrentThread.Name + "ConnectOutput";
 			t.Start ();
 			Status = "Connected";
 			try {
-				request.Stream.PipeTo (request.Response.Stream);
-			} catch (Exception) {
+				request.Response.Stream.PipeTo (request.Stream);				
+			} catch (Exception e) {
+				Console.WriteLine (this + " " + e.GetType ().Name + " :" + e.Message);
+				request.Stream.NullSafeDispose ();
 			} finally {
-				remote.Dispose();
+				remote.Dispose ();
 				ClientStream.NullSafeDispose ();
 			}
+			t.Join ();
 			Status = "Connection closed";
 			
 			request.Response.Dispose ();
 			request.Response = null;
-		}
-
-		private void InputThread ()
-		{
-			try {
-				request.Response.Stream.PipeTo (request.Stream);
-			} catch (Exception) {
-			} finally {
-			}
 		}
 	}
 }

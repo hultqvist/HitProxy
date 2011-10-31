@@ -1,4 +1,3 @@
-
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -13,8 +12,10 @@ namespace HitProxy
 		{
 			if (dis == null)
 				return;
-			
-			dis.Dispose ();
+			try {
+				dis.Dispose ();
+			} catch (ObjectDisposedException) {
+			}
 		}
 	}
 }

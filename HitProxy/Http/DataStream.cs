@@ -89,6 +89,7 @@ namespace HitProxy.Http
 		{
 			//Block close to allow Keep alive
 		}
+		
 		#endregion
 	}
 }

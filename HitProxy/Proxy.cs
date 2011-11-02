@@ -100,6 +100,8 @@ namespace HitProxy
 		/// </summary>
 		public void Listen ()
 		{
+			ApplyFilterSettings ();
+			
 			TcpListener listener = new TcpListener (new IPEndPoint (address, Port));
 			
 			bool retrying = false;

@@ -51,7 +51,7 @@ namespace HitProxy.Filters
 			}
 		}
 		
-		public override Html Status (NameValueCollection httpGet, Request request)
+		public override Response Status (NameValueCollection httpGet, Request request)
 		{
 			if (httpGet ["action"] != null) {
 				int.TryParse (httpGet ["speedlimit"], out speedLimit);
@@ -74,7 +74,7 @@ namespace HitProxy.Filters
 					</tr>
 				</form>", this.speedLimit, this.delay);
 			
-			return html;
+			return WebUI.ResponseTemplate (ToString (), html);
 		}
 
 		public override bool Apply (Request request)

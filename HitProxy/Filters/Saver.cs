@@ -32,7 +32,7 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override Html Status (NameValueCollection httpGet, Request request)
+		public override Response Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = Html.Format (@"<p>Saves request data with flag <strong>save</strong> onto disk.</p><ul>");
 			lock (savings) {
@@ -40,8 +40,7 @@ namespace HitProxy.Filters
 					html += Html.Format (@"<li>{0}</li>", fo);
 				}
 			}
-			
-			return html + Html.Format ("</ul>");
+			return WebUI.ResponseTemplate (ToString (), html + Html.Format ("</ul>"));
 		}
 
 		/// <summary>

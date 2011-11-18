@@ -1,8 +1,8 @@
-
 using System;
 using System.Collections.Specialized;
 using System.IO;
 using HitProxy.Http;
+using HitProxy.Filters;
 
 namespace HitProxy.Http
 {
@@ -17,6 +17,7 @@ namespace HitProxy.Http
 		public string Name {
 			get { return this.GetType ().Name; }
 		}
+
 		public bool Active { get; set; }
 
 		/// <summary>
@@ -26,13 +27,14 @@ namespace HitProxy.Http
 		/// <returns>True if some filter was applied</returns>
 		public abstract bool Apply (Request request);
 
-		public virtual Html Status (NameValueCollection httpGet, Request request)
+		public virtual Response Status (NameValueCollection httpGet, Request request)
 		{
-			return Status ();
+			return WebUI.ResponseTemplate (ToString (), Status ());
 		}
 
 		public virtual Html Status ()
 		{
+			
 			return Html.Format ("<p>(no description)</p>");
 		}
 

@@ -159,7 +159,7 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		public override Html Status (NameValueCollection httpGet, Request request)
+		public override Response Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = Html.Format ("<p>Replaces the User-Agent and Accept-Language headers with random ones</p>");
 			html += Html.Format ("<p><strong>Your: </strong> {0}</p>", request.GetHeader ("User-Agent"));
@@ -218,7 +218,7 @@ namespace HitProxy.Filters
 				listLock.ExitReadLock ();
 			}
 			
-			return html;
+			return WebUI.ResponseTemplate (ToString (), html);
 		}
 
 		private class UserAgentRule

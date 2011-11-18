@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading;
 using HitProxy.Http;
 using ProtoBuf;
+using HitProxy.Filters;
 
 namespace HitProxy.Triggers
 {
@@ -118,7 +119,7 @@ namespace HitProxy.Triggers
 			httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p style=""text-align:center""><a href=""{0}"">{2}</a></p>", httpRequest.Uri, httpRequest.Uri.Host, httpRequest.Uri.PathAndQuery));
-			httpRequest.SetTriggerHtml (Form (referer, httpRequest.Uri.ToString ()));
+			httpRequest.SetTriggerHtml (Form (referer, httpRequest.Uri.Host, httpRequest.Uri.ToString ()));
 			
 			return true;
 		}
@@ -164,14 +165,9 @@ namespace HitProxy.Triggers
 </form>", Filters.WebUI.FilterUrl (this), returnHtml, fromHost, toHost);
 		}
 
-		public override Html Status (NameValueCollection httpGet, Request request)
+		public override Response Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = new Html ();
-			
-			if (httpGet ["return"] != null) {
-				request.Response.ReplaceHeader ("Location", httpGet ["return"]);
-				request.Response.HttpCode = HttpStatusCode.Redirect;
-			}
 			
 			if (httpGet ["delete"] != null) {
 				int item = int.Parse (httpGet ["delete"]);
@@ -208,6 +204,12 @@ namespace HitProxy.Triggers
 				}
 				SaveFilters ();
 			}
+						
+			if (httpGet ["return"] != null) {
+				Response resp = new Response (HttpStatusCode.Redirect, new Html ());
+				resp.ReplaceHeader ("Location", httpGet ["return"]);
+				return resp;
+			}
 			
 			html += Html.Format (@"<h2>Blocked <a href=""?clear=yes"">clear</a></h2>");
 			html += Html.Format ("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
@@ -241,7 +243,7 @@ namespace HitProxy.Triggers
 				<p>Example: *example.com matches xyz.example.com and example.com but not badexample.com</p>
 			</div>");
 			
-			return html;
+			return WebUI.ResponseTemplate (ToString (), html);
 		}
 	}
 

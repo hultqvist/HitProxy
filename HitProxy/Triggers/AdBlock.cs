@@ -7,6 +7,7 @@ using HitProxy.Http;
 using System.Net;
 using System.Threading;
 using System.Collections.Specialized;
+using HitProxy.Filters;
 
 namespace HitProxy.Triggers
 {
@@ -136,7 +137,7 @@ namespace HitProxy.Triggers
 			return false;
 		}
 
-		public override Html Status (NameValueCollection httpGet, Request request)
+		public override Response Status (NameValueCollection httpGet, Request request)
 		{
 			Html html = new Html ();
 			
@@ -202,8 +203,8 @@ namespace HitProxy.Triggers
 			}
 
 			html += Html.Format ("</table>");
-
-			return html;
+			
+			return WebUI.ResponseTemplate (ToString (), html);
 		}
 
 		class RegexFilter : Regex

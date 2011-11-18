@@ -99,7 +99,7 @@ namespace HitProxy.Filters
 			return true;
 		}
 
-		private Response ResponseTemplate (string title, Html html)
+		public static Response ResponseTemplate (string title, Html html)
 		{
 			Html menu = Html.Format (@"<ul class=""menu"">
 	<li><a href=""/"">About</a></li>
@@ -356,7 +356,7 @@ namespace HitProxy.Filters
 				return;
 			}
 			
-			request.Response = ResponseTemplate (f.ToString (), f.Status (httpGet, request));
+			request.Response = f.Status (httpGet, request);
 				
 			return;
 		}

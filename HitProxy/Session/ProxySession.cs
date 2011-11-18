@@ -277,8 +277,12 @@ namespace HitProxy.Session
 				foreach (Filter f in proxy.RequestFilters.ToArray ())
 					if (f.Active)
 						f.Apply (request);
+#if !DEBUG
 			} catch (Exception e) {
 				request.Response = new Response (e, Html.Format (@"<h1>In Filter</h1><p><a href=""{0}"">Manage filters</a></p>", Filters.WebUI.FilterUrl ()));
+#else
+			} finally {
+#endif
 			}
 		}
 

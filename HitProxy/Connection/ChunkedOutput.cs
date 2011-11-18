@@ -77,7 +77,10 @@ namespace HitProxy.Connection
 			closed = true;
 			
 			byte[] cHeader = Encoding.ASCII.GetBytes ("0\r\n\r\n");
-			output.Write (cHeader, 0, cHeader.Length);
+			try {
+				output.Write (cHeader, 0, cHeader.Length);
+			} catch (Exception) {
+			}
 			output.Close ();	
 		}
 	}

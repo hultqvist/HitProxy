@@ -15,7 +15,6 @@ namespace HitProxy.Connection
 	public class ConnectionManager
 	{
 		private Proxy proxy;
-		private Dictionary<string, List<IPAddress>> dnsCache = new Dictionary<string, List<IPAddress>> ();
 		private Dictionary<IPEndPoint, CachedServer> serverCache = new Dictionary<IPEndPoint, CachedServer> ();
 		/// <summary>
 		/// This event is triggered to let pending connections start.
@@ -42,43 +41,21 @@ namespace HitProxy.Connection
 		}
 		
 		/// <summary>
-		/// Get or create a new connection from cache.
-		/// This call will hold until there is a connection available
-		/// or return null on error, error message will be in request.Response
-		/// </summary>
-		public CachedConnection Connect (Uri uri)
-		{
-			//DNS lookup caching
-			List<IPAddress> 	dns = GetCachedDns (uri.Host);
-			
-			if (dns == null)
-				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
-			
-			return GetCachedConnection (dns, uri.Port, true, true);
-		}
-
-		/// <summary>
-		/// Create a new connection - used for CONNECT where connections must be new.
-		/// If the limit of simultaneous connections to a server is reached
-		/// this call will hold until one is available.
-		/// or return null on error, error message will be in request.Response
-		/// </summary>
-		public CachedConnection ConnectNew (Uri uri, bool hold)
-		{
-			//DNS lookup caching
-			List<IPAddress> dns = GetCachedDns (uri.Host);
-			if (dns == null)
-				throw new HeaderException ("Lookup of " + uri.Host + " failed", HttpStatusCode.BadGateway);
-			
-			CachedConnection connection = GetCachedConnection (dns, uri.Port, false, hold);
-			
-			return connection;
-		}
-
-		/// <summary>
 		/// Get cached or create a new connection to specific ip-addresses.
 		/// </summary>
-		private CachedConnection GetCachedConnection (List<IPAddress> ipaddress, int port, bool reuse, bool hold)
+		/// <param name='dns'>
+		/// Dns.
+		/// </param>
+		/// <param name='port'>
+		/// Port.
+		/// </param>
+		/// <param name='forceNew'>
+		/// Don't reuse, always start a new connection
+		/// </param>
+		/// <param name='wait'>
+		/// Wait until there is a slot free, otherwise it will return null.
+		/// </param>
+		public CachedConnection Connect (DnsLookup dns, int port, bool forceNew, bool wait)
 		{
 			CachedConnection c = null;
 			while (true) {
@@ -87,7 +64,7 @@ namespace HitProxy.Connection
 				CachedServer leastUsedServer = null;
 				lock (serverCache) {
 					//Search for open connection and least used server
-					foreach (IPAddress ip in ipaddress) {
+					foreach (IPAddress ip in dns.AList) {
 						IPEndPoint ep = new IPEndPoint (ip, port);
 						CachedServer server;
 						if (serverCache.TryGetValue (ep, out server) == false) {
@@ -102,7 +79,7 @@ namespace HitProxy.Connection
 						if (server.ConnectionCount < leastUsedServer.ConnectionCount)
 							leastUsedServer = server;
 						
-						if (reuse == false)
+						if (forceNew == false)
 							continue;
 						
 						c = server.GetActiveConnection ();
@@ -112,47 +89,19 @@ namespace HitProxy.Connection
 				}
 				
 				//No cached connection found, create one
-				if (reuse)
+				if (forceNew)
 					c = leastUsedServer.GetNewConnection ();
 				else
 					c = leastUsedServer.GetUnlimitedNewConnection ();
 				if (c != null)
 					return c;
 				
-				if (hold == false)
+				if (wait == false)
 					return null;
 				
 				//Maximum number of connections to all servers were already reached.
 				//Wait for new connections
 				releasedConnection.WaitOne (TimeSpan.FromSeconds (5));
-			}
-		}
-
-		/// <summary>
-		/// Get a new dns cache from hostname
-		/// </summary>
-		private List<IPAddress> GetCachedDns (string host)
-		{
-			lock (dnsCache) {
-				if (dnsCache.ContainsKey (host))
-					return dnsCache [host];
-				else {
-					IPAddress[] address = Dns.GetHostAddresses (host);
-					List<IPAddress> iplist = new List<IPAddress>();
-					foreach(IPAddress ip in address)
-					{
-						if(ip.AddressFamily == AddressFamily.InterNetworkV6 && proxy.IPv6 == false)
-							continue;
-						iplist.Add(ip);
-					}
-					
-					if (iplist.Count == 0)
-						return null;
-					
-					dnsCache.Add (host, iplist);
-					
-					return iplist;
-				}
 			}
 		}
 

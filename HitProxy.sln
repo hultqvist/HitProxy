@@ -3,12 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HitProxy", "HitProxy\HitProxy.csproj", "{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DnDns", "Libraries\DnDns\DnDns\DnDns.csproj", "{53089CAB-AE06-4BE6-9E23-CCCC03730EEA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53089CAB-AE06-4BE6-9E23-CCCC03730EEA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{53089CAB-AE06-4BE6-9E23-CCCC03730EEA}.Debug|x86.Build.0 = Debug|Any CPU
+		{53089CAB-AE06-4BE6-9E23-CCCC03730EEA}.Release|x86.ActiveCfg = Release|Any CPU
+		{53089CAB-AE06-4BE6-9E23-CCCC03730EEA}.Release|x86.Build.0 = Release|Any CPU
 		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Debug|x86.ActiveCfg = Debug|x86
 		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Debug|x86.Build.0 = Debug|x86
 		{E4FE5AB2-4B76-4C0A-A590-0144BF3F0BDA}.Release|x86.ActiveCfg = Release|x86

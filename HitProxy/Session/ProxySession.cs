@@ -130,7 +130,10 @@ namespace HitProxy.Session
 			} catch (HeaderException) {
 				return false;
 			}
-			
+
+			//Lookup DNS for request
+			request.Dns = DnsLookup.Get (request.Uri.Host);
+
 			//Client side request filtering
 			Status = "Got request, filtering";
 			FilterRequest (request);
@@ -159,7 +162,16 @@ namespace HitProxy.Session
 				}
 			
 				return ProcessRequest (remoteConnection);
-				
+
+
+			} catch (Exception ioe) {
+				Console.WriteLine (ioe.GetType ().Name);
+				Console.WriteLine (ioe.StackTrace);
+				Console.WriteLine ();
+				if (remoteConnection != null)
+					remoteConnection.Dispose ();
+				return false;
+					
 			} finally {
 				if (remoteConnection != null) {
 					remoteConnection.Release ();
@@ -312,13 +324,17 @@ namespace HitProxy.Session
 				Status = "Connecting to " + request.Uri.Host;
 				
 				Uri remoteUri = request.Uri;
-				if (request.Proxy != null)
+				DnsLookup dns = request.Dns;
+				if (request.Proxy != null) {
 					remoteUri = request.Proxy;
+					dns = request.ProxyDns;
+				}
+				
 				
 				if (request.Method == "CONNECT" || request.Proxy != null && request.Proxy.Scheme == "socks")
-					remote = connectionManager.ConnectNew (remoteUri, false);
+					remote = connectionManager.Connect (dns, remoteUri.Port, false, false);
 				else
-					remote = connectionManager.Connect (remoteUri);
+					remote = connectionManager.Connect (dns, remoteUri.Port, true, true);
 				
 				if (remote == null) {
 					request.Response = new Response (HttpStatusCode.GatewayTimeout, "Connection Failed", "Failed to get connection to " + request);

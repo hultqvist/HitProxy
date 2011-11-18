@@ -51,7 +51,7 @@ namespace HitProxy
 
 			//Prepare proxy			
 			Proxy proxy = new Proxy (listenIP, port);
-			proxy.IPv6 = ipv6;
+			Proxy.IPv6 = ipv6;
 			Thread.CurrentThread.Name = "Main";
 			
 			#region Request

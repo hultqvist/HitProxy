@@ -57,20 +57,21 @@ namespace HitProxy.Connection
 		/// </summary>
 		public void Release ()
 		{
-			served += 1;
-			busy = false;
-			
-			server.manager.releasedConnection.Set ();
-			
+			//Make sure there is no data left on the line
 			if (remoteSocket.IsConnected () == false) {
 				Dispose ();
 			} else if (remoteSocket.Available > 0) {
 				byte[] buffer = new byte[remoteSocket.Available];
 				remoteSocket.Receive (buffer);
 				string data = System.Text.Encoding.ASCII.GetString (buffer);
-					Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
+				Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
 				Dispose ();
 			}
+
+			//Release connection
+			served += 1;
+			busy = false;
+			server.manager.releasedConnection.Set ();
 		}
 
 		public override string ToString ()

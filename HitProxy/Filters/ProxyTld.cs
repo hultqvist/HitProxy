@@ -6,12 +6,15 @@ namespace HitProxy.Filters
 	public abstract class ProxyTld : Filter
 	{
 		private readonly string tld;
-		private readonly string proxy;
+		DnsLookup proxyDns;
+		Uri proxyUri;
 		
-		public ProxyTld (string topLevelDomain,string proxy)
+		public ProxyTld (string topLevelDomain, string proxy)
 		{
 			this.tld = topLevelDomain;
-			this.proxy = proxy;
+			
+			this.proxyUri = new Uri (proxy);
+			this.proxyDns = DnsLookup.Get (proxyUri.Host);
 		}
 		
 		/// <summary>
@@ -22,7 +25,8 @@ namespace HitProxy.Filters
 			if (!request.Uri.Host.EndsWith ("." + tld))
 				return false;
 			
-			request.Proxy = new Uri (proxy);
+			request.Proxy = proxyUri;
+			request.ProxyDns = proxyDns;
 			return true;
 		}
 		

@@ -29,7 +29,7 @@ namespace HitProxy.Triggers
 	{
 		List<RefererPair> blocked = new List<RefererPair> ();
 		List<RefererPair> watchlist = new List<RefererPair> ();
-		ReaderWriterLockSlim listLock = new ReaderWriterLockSlim ();
+		ReadWriteLock listLock = new ReadWriteLock ();
 
 		public CrossDomain ()
 		{
@@ -39,8 +39,7 @@ namespace HitProxy.Triggers
 
 		void LoadFilters ()
 		{
-			try {
-				listLock.EnterWriteLock ();
+			using (listLock.Write) {
 				string configPath = ConfigPath ();
 				if (File.Exists (configPath) == false)
 					return;
@@ -48,20 +47,14 @@ namespace HitProxy.Triggers
 				using (Stream s = new FileStream (configPath, FileMode.Open)) {
 					watchlist = Serializer.Deserialize<List<RefererPair>> (s);
 				}
-			} finally {
-				listLock.ExitWriteLock ();
 			}
 		}
 
 		void SaveFilters ()
 		{
-			try {
-				listLock.EnterReadLock ();
-				using (Stream writer = new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write)) {
-					ProtoBuf.Serializer.Serialize (writer, watchlist);
-				}
-			} finally {
-				listLock.ExitReadLock ();
+			using (listLock.Read) 
+			using (Stream writer = new FileStream (ConfigPath (), FileMode.Create, FileAccess.Write)) {
+				ProtoBuf.Serializer.Serialize (writer, watchlist);
 			}
 		}
 
@@ -78,47 +71,45 @@ namespace HitProxy.Triggers
 			if (request == referer)
 				return false;
 			
-			RefererPair requestPair = new RefererPair (referer, request);
-			
-			try {
-				listLock.EnterReadLock ();
+			using (listLock.Read) {
 				foreach (RefererPair pair in watchlist) {
 					
-					if (pair.Match (requestPair)) {
-						httpRequest.Flags.Set (pair.Flags);
+					if (pair.MatchFrom (referer) == false)
+						continue;
+					if (pair.MatchTo (httpRequest.Dns.NameList) == false)
+						continue;
+					
+					httpRequest.Flags.Set (pair.Flags);
 						
-						if (pair.Flags ["block"]) {
-							httpRequest.SetTriggerHtml (Html.Format (@"
+					if (pair.Flags ["block"]) {
+						httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p>Blocked by: {2} <a href=""{3}?delete={4}&amp;return={5}"">delete</a></p>", httpRequest.Uri, httpRequest.Uri.Host, pair, Filters.WebUI.FilterUrl (this), pair.GetHashCode (), Uri.EscapeUriString (httpRequest.Uri.ToString ())));
-							return true;
-						}
-						
-						httpRequest.SetTriggerHtml (Html.Escape (pair.ToString ()));
 						return true;
 					}
+						
+					httpRequest.SetTriggerHtml (Html.Escape (pair.ToString ()));
+					return true;
 				}
-			} finally {
-				listLock.ExitReadLock ();
 			}
 			
 			//Already blocked, don't add to blocked list
 			if (httpRequest.Flags ["block"])
 				return true;
 			
-			try {
-				listLock.EnterUpgradeableReadLock ();
-				if (blocked.Contains (requestPair) == false) {
-					listLock.EnterWriteLock ();
-					blocked.Insert (0, requestPair);
+			using (listLock.UpgradeableRead) {
+				foreach (string h in httpRequest.Dns.NameList) {
+					RefererPair rp = new RefererPair (referer, h);
+					if (blocked.Contains (rp) == false) {
+						using (listLock.Write) {
+							blocked.Insert (0, rp);
+						}
+					}
 				}
-			} finally {
-				if (listLock.IsWriteLockHeld)
-					listLock.ExitWriteLock ();
-				listLock.ExitUpgradeableReadLock ();
 			}
 			
-			if (requestPair.FromHost == "")
+			//Allow empty referers
+			if (referer == "")
 				return false;
 			
 			//Default action
@@ -127,7 +118,7 @@ namespace HitProxy.Triggers
 			httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
 <p style=""text-align:center""><a href=""{0}"">{2}</a></p>", httpRequest.Uri, httpRequest.Uri.Host, httpRequest.Uri.PathAndQuery));
-			httpRequest.SetTriggerHtml (Form (requestPair, httpRequest.Uri.ToString ()));
+			httpRequest.SetTriggerHtml (Form (referer, httpRequest.Uri.ToString ()));
 			
 			return true;
 		}
@@ -184,26 +175,20 @@ namespace HitProxy.Triggers
 			
 			if (httpGet ["delete"] != null) {
 				int item = int.Parse (httpGet ["delete"]);
-				try {
-					listLock.EnterWriteLock ();
+				using (listLock.Write) {
 					foreach (RefererPair rp in watchlist.ToArray ()) {
 						if (rp.GetHashCode () == item)
 							watchlist.Remove (rp);
 					}
-				} finally {
-					listLock.ExitWriteLock ();
 				}
 				
 				SaveFilters ();
 			}
 			
 			if (httpGet ["clear"] != null) {
-				try {
-					listLock.EnterWriteLock ();
+				using (listLock.Write) {
 					blocked.Clear ();
-				} finally {
-					listLock.ExitWriteLock ();
-				}
+				} 
 			}
 			
 			if (httpGet ["action"] != null || httpGet ["flags"] != null) {
@@ -213,16 +198,13 @@ namespace HitProxy.Triggers
 				if (httpGet ["action"].Contains (" ") == false)
 					p.Flags.Set (httpGet ["action"]);
 				
-				try {
-					listLock.EnterWriteLock ();
+				using (listLock.Write) {
 					watchlist.Add (p);
 					
 					foreach (RefererPair bp in blocked.ToArray ()) {
 						if (p.Match (bp))
 							blocked.Remove (bp);
 					}
-				} finally {
-					listLock.ExitWriteLock ();
 				}
 				SaveFilters ();
 			}
@@ -230,9 +212,7 @@ namespace HitProxy.Triggers
 			html += Html.Format (@"<h2>Blocked <a href=""?clear=yes"">clear</a></h2>");
 			html += Html.Format ("<table><tr><th>From Domain</th><th>To Domain</th><th>Flags</th></tr>");
 			html += Form ("", "");
-			try {
-				listLock.EnterReadLock ();
-				
+			using (listLock.Read) {
 				foreach (RefererPair pair in blocked) {
 					html += Form (pair);
 				}
@@ -245,8 +225,6 @@ namespace HitProxy.Triggers
 					html += Html.Format ("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td><a href=\"?delete={3}\">delete</a></td></tr>", pair.FromHost, pair.ToHost, pair.Flags, pair.GetHashCode ());
 				}
 				html += Html.Format ("</table>");
-			} finally {
-				listLock.ExitReadLock ();
 			}
 			
 			html += Html.Format (@"
@@ -294,7 +272,7 @@ namespace HitProxy.Triggers
 			this.FromHost = fromHost;
 			this.ToHost = toHost;
 		}
-
+		
 		public bool Match (RefererPair requestPair)
 		{
 			if (MatchStrings (FromHost, requestPair.FromHost) == false)
@@ -302,6 +280,19 @@ namespace HitProxy.Triggers
 			if (MatchStrings (ToHost, requestPair.ToHost) == false)
 				return false;
 			return true;
+		}
+		
+		public bool MatchFrom (string refererHost)
+		{
+			return MatchStrings (FromHost, refererHost);
+		}
+
+		public bool MatchTo (List<string> hosts)
+		{
+			foreach (string h in hosts)
+				if (MatchStrings (ToHost, h))
+					return true;
+			return false;
 		}
 
 		/// <summary>

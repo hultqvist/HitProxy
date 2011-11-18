@@ -11,6 +11,10 @@ namespace HitProxy.Http
 		//HTTP headers
 		public string Method;
 		public Uri Uri;
+		/// <summary>
+		/// DNS looked up for Uri
+		/// </summary>
+		public DnsLookup Dns;
 		public string HttpVersion;
 		public string Accept;
 		public string AcceptCharset;
@@ -39,6 +43,7 @@ namespace HitProxy.Http
 		/// Used to pipe to http proxies
 		/// </summary>
 		public Uri Proxy;
+		public DnsLookup ProxyDns;
 
 		/// <summary>
 		/// Start time of request

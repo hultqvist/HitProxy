@@ -19,7 +19,7 @@ namespace HitProxy
 		/// <summary>
 		/// True to enable IPv6 lookups and connections
 		/// </summary>
-		public bool IPv6 { get; set; }
+		public static bool IPv6 { get; set; }
 
 		public int Port {
 			get { return port; }

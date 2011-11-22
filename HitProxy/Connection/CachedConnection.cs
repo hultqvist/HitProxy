@@ -15,7 +15,10 @@ namespace HitProxy.Connection
 
 		private bool busy = true;
 		public Socket remoteSocket;
-		public NetworkStream Stream;
+		/// <summary>
+		/// Usually a NetworkStream but can be a SslStream when HTTP CONNECT is intercepted.
+		/// </summary>
+		public Stream Stream;
 		
 		/// <summary>
 		/// Statistics: Number of requests served using this connection

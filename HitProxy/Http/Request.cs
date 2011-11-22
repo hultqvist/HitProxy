@@ -44,7 +44,12 @@ namespace HitProxy.Http
 		/// </summary>
 		public Uri Proxy;
 		public DnsLookup ProxyDns;
-
+		
+		/// <summary>
+		/// Set to true by filters to activate ssl interception
+		/// </summary>
+		public bool InterceptSSL { get; set; }
+		
 		/// <summary>
 		/// Start time of request
 		/// </summary>
@@ -75,7 +80,7 @@ namespace HitProxy.Http
 			}
 		}
 
-		public Request (NetworkStream stream) : base(stream)
+		public Request (Stream stream) : base(stream)
 		{
 			Method = "NULL";
 			Uri = new Uri ("http://localhost:" + MainClass.ProxyPort);

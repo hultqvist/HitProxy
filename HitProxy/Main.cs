@@ -65,6 +65,7 @@ namespace HitProxy
 			proxy.RequestFilters.Add (new Filters.BlockBreak ());
 			proxy.RequestFilters.Add (new Filters.Tamper ("Before filtering"));
 			proxy.RequestFilters.Add (new Filters.TransparentSSL ());
+			proxy.RequestFilters.Add (new Filters.InterceptSSL ());
 			proxy.RequestFilters.Add (new Filters.Referer ());
 			proxy.RequestFilters.Add (new Filters.Rewrite ());
 			proxy.RequestFilters.Add (new Filters.UserAgent ());

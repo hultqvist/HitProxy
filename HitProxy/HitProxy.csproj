@@ -50,7 +50,6 @@
     <Compile Include="Filters\Referer.cs" />
     <Compile Include="Filters\Rewrite.cs" />
     <Compile Include="Filters\Tamper.cs" />
-    <Compile Include="Filters\TransparentSSL.cs" />
     <Compile Include="Filters\WebUI.cs" />
     <Compile Include="Filters\Joke.cs" />
     <Compile Include="Filters\Cache.cs" />
@@ -105,6 +104,9 @@
     <Compile Include="Http\HtmlTemplate.cs" />
     <Compile Include="Dns\DnsLookup.cs" />
     <Compile Include="Misc\ReadWriteLock.cs" />
+    <Compile Include="Filters\TransparentSSL.cs" />
+    <Compile Include="Filters\InterceptSSL.cs" />
+    <Compile Include="Certificate.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

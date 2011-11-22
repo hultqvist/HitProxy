@@ -14,7 +14,6 @@ namespace HitProxy.Connection
 	/// </summary>
 	public class ConnectionManager
 	{
-		private Proxy proxy;
 		private Dictionary<IPEndPoint, CachedServer> serverCache = new Dictionary<IPEndPoint, CachedServer> ();
 		/// <summary>
 		/// This event is triggered to let pending connections start.
@@ -35,9 +34,8 @@ namespace HitProxy.Connection
 			}
 		}
 
-		public ConnectionManager (Proxy proxy)
+		public ConnectionManager ()
 		{
-			this.proxy = proxy;
 		}
 		
 		/// <summary>

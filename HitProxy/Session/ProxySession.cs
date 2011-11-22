@@ -17,11 +17,16 @@ namespace HitProxy.Session
 		/// </summary>
 		private bool active = true;
 		public Socket ClientSocket;
-		public NetworkStream ClientStream;
+		public Stream ClientStream;
 		Thread thread;
 		ConnectionManager connectionManager;
 		Proxy proxy;
-
+		
+		/// <summary>
+		/// When HTTPS is intercepted, all future requests will be sent to the following connection.
+		/// </summary>
+		CachedConnection sslConnect = null;
+			
 		/// <summary>
 		/// Current request being served
 		/// </summary>
@@ -131,19 +136,27 @@ namespace HitProxy.Session
 				return false;
 			}
 
-			//Lookup DNS for request
-			request.Dns = DnsLookup.Get (request.Uri.Host);
+			try {
+				//Lookup DNS for request
+				Status = "Looking up " + request.Uri.Host;
+				request.Dns = DnsLookup.Get (request.Uri.Host);
 
-			//Client side request filtering
-			Status = "Got request, filtering";
-			FilterRequest (request);
-			
+				//Client side request filtering
+				Status = "Filtering request";
+				FilterRequest (request);
+			} catch (HeaderException e) {
+				request.Response = new Response (e, new Html ());
+			}
+				
 			//If there is no error generated response, make connection to remote server
 			CachedConnection remoteConnection = null;
 			try {
 				if (request.Response == null) {
 					try {
-						remoteConnection = ConnectRequest ();
+						if (sslConnect != null)
+							remoteConnection = sslConnect;
+						else
+							remoteConnection = ConnectRequest ();
 					} catch (TimeoutException e) {
 						request.Response = new Response (e, Html.Escape ("Connection Timeout"));
 					} catch (HeaderException e) {
@@ -173,12 +186,15 @@ namespace HitProxy.Session
 				return false;
 					
 			} finally {
-				if (remoteConnection != null) {
+				if (remoteConnection != sslConnect && remoteConnection != null) {
 					remoteConnection.Release ();
 				}
 			}
 		}
 		
+		/// <returns>
+		/// True if Keep-alive
+		/// </returns>
 		bool ProcessRequest (CachedConnection remoteConnection)
 		{
 			try {
@@ -191,8 +207,18 @@ namespace HitProxy.Session
 				//initiate HTTP CONNECT request
 				if (request.Method == "CONNECT") {
 					Status = "Connecting Socket";
-					ProcessHttpConnect (remoteConnection);
-					return false;
+					if (request.InterceptSSL) {
+						//Intercept SSL
+						this.ClientStream = ConnectProxy.InterceptConnect (request, ClientStream, remoteConnection);
+						this.sslConnect = remoteConnection;
+						return true;
+					} else {
+						//Pass connect stream unmodified
+						Status = "Connected";
+						ConnectProxy.ProcessHttpConnect (request, ClientStream, remoteConnection);
+						Status = "Connection closed";
+						return false;
+					}
 				}
 				
 				//All done, send the traffic to the remote server

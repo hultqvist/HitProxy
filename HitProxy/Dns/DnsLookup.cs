@@ -58,17 +58,21 @@ namespace HitProxy
 			
 			//TODO also do AAAA lookup if Proxy.ipv6 is enabled
 			
-			// UDP request
-			DnsQueryResponse ur = request.Resolve (address, NsType.A, NsClass.INET, ProtocolType.Udp);
-			if (ParseDnsResponse (ur))
-				return;
+			DnsQueryResponse dr;
+			try {
+				// UDP request
+				dr = request.Resolve (address, NsType.A, NsClass.INET, ProtocolType.Udp);
+				if (ParseDnsResponse (dr))
+					return;
 			
-			// TCP request
-			DnsQueryResponse tr = request.Resolve (address, NsType.A, NsClass.INET, ProtocolType.Tcp);
-			if (ParseDnsResponse (tr))
-				return;
-			
-			throw new HeaderException ("Lookup of " + address + " failed: " + ur.RCode + ", " + tr.RCode, HttpStatusCode.BadGateway);
+				// TCP request
+				dr = request.Resolve (address, NsType.A, NsClass.INET, ProtocolType.Tcp);
+				if (ParseDnsResponse (dr))
+					return;
+			} catch (Exception e) {
+				throw new HeaderException ("DNS lookup failed", HttpStatusCode.NotFound, e);
+			}
+			throw new HeaderException ("Lookup of " + address + " failed: " + dr.RCode, HttpStatusCode.BadGateway);
 #endif	
 		}
 

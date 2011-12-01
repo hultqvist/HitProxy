@@ -113,8 +113,13 @@ namespace HitProxy.Triggers
 			if (referer == "")
 				return false;
 			
-			//Default action
+			//Default action: none(pass)
+			return false;
+			
+			//Default action: Remove
 			//httpRequest.Flags.Set ("remove");
+			//Default action: Block
+			/*
 			httpRequest.Flags.Set ("block");
 			httpRequest.SetTriggerHtml (Html.Format (@"
 <h1 style=""text-align:center""><a href=""{0}"" style=""font-size: 3em;"">{1}</a></h1>
@@ -122,6 +127,7 @@ namespace HitProxy.Triggers
 			httpRequest.SetTriggerHtml (Form (referer, httpRequest.Uri.Host, httpRequest.Uri.ToString ()));
 			
 			return true;
+			*/
 		}
 
 		private Html Form (RefererPair pair)

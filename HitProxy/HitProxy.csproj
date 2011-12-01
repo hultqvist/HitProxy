@@ -93,7 +93,6 @@
     <Compile Include="Connection\ChunkedInput.cs" />
     <Compile Include="Connection\HtmlData.cs" />
     <Compile Include="Http\Flags.cs" />
-    <Compile Include="Filters\NoAccept.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="..\Libraries\ndesk-options\src\NDesk.Options\NDesk.Options\Options.cs">
       <Link>Options.cs</Link>
@@ -107,6 +106,7 @@
     <Compile Include="Filters\TransparentSSL.cs" />
     <Compile Include="Filters\InterceptSSL.cs" />
     <Compile Include="Certificate.cs" />
+    <Compile Include="Filters\Accept.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

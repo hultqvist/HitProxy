@@ -82,7 +82,7 @@ namespace HitProxy
 				return false;
 			
 			foreach (IDnsRecord record in ur.Answers) {
-				Console.WriteLine (record.Answer + ", " + record.DnsHeader.NsType);
+				//Console.WriteLine (record.Answer + ", " + record.DnsHeader.NsType);
 				if (record.DnsHeader.NsType == NsType.A)
 					AList.Add (IPAddress.Parse (record.Answer.Replace ("Address: ", "")));
 				if (record.DnsHeader.NsType == NsType.AAAA && Proxy.IPv6)

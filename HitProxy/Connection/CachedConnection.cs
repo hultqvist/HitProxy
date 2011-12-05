@@ -66,8 +66,7 @@ namespace HitProxy.Connection
 			} else if (remoteSocket.Available > 0) {
 				byte[] buffer = new byte[remoteSocket.Available];
 				remoteSocket.Receive (buffer);
-				string data = System.Text.Encoding.ASCII.GetString (buffer);
-				Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length + ": " + data);
+				Console.Error.WriteLine ("More data than meets the eye: " + buffer.Length);
 				Dispose ();
 			}
 
